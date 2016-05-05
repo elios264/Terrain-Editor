@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PakalEditor", "PakalEditor\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Poly2Tri", "polytri\Poly2Tri.csproj", "{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrainEditor", "TerrainEditor\TerrainEditor.csproj", "{A884AAAB-3881-46B8-8983-AB483202A17B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Release|x64.Build.0 = Release|Any CPU
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Release|x86.ActiveCfg = Release|x86
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Release|x86.Build.0 = Release|x86
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|x64.Build.0 = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Debug|x86.Build.0 = Debug|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x64.ActiveCfg = Release|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x64.Build.0 = Release|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x86.ActiveCfg = Release|Any CPU
+		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

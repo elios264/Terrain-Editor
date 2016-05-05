@@ -196,7 +196,7 @@ namespace PakalEditor
 
         public bool Closed { get; set; } = true;
         public bool ShowWireFrame { get; set; } = false;
-        public int SmoothFactor { get; set; } = 1;
+        public int SmoothFactor { get; set; } = 5;
         public Color AmbientColor { get; set; } = Colors.White;
         public double StrechThreshold { get; set; } = 0.5;
         public int  SplitCornersThreshold { get; set; } = 90;
