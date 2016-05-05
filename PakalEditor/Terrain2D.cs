@@ -625,8 +625,11 @@ namespace PakalEditor
                 return;
             }
 
-            if (!Closed)
-                m_fill_vertices.Add(m_path.Last());
+            if (Closed == false)
+            {
+                m_fill_vertices.Add(Mode != FillMode.Inverted ? m_path.Last() : m_path.First());
+            }
+                
 
             var polygon = new Polygon(m_fill_vertices.Select(d => new PolygonPoint(d.X, d.Z)));
 

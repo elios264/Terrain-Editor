@@ -80,11 +80,11 @@ namespace TerrainEditor.Utilities
                 MeshEdgeData.TriangleIndices.Batch(3)
                     .Select(ints =>
                     {
-                        int[] indices = ints.ToArray();
-                        return new { vertices = indices, z = MeshEdgeData.Positions[indices[0]].Z };
+                        var indices = ints.ToArray();
+                        return new {indices, z = MeshEdgeData.Positions[indices[0]].Z };
                     })
-                    .OrderByDescending(arg => arg.z)
-                    .SelectMany(arg => arg.vertices)
+                    .OrderBy(arg => arg.z)
+                    .SelectMany(arg => arg.indices)
                     .ToList();
 
             MeshEdgeData.TriangleIndices.Clear();
@@ -252,8 +252,9 @@ namespace TerrainEditor.Utilities
             if (m_mesh.Vertices.Count <= 2 || m_mesh.FillMode == FillMode.None)
                 return;
 
-            if (m_mesh.IsClosed)
-                fillVertices.Add(m_mesh.Vertices.Last().Position);
+            if (!m_mesh.IsClosed)
+                fillVertices.Add(m_mesh.FillMode != FillMode.Inverted ? m_mesh.Vertices.Last().Position : m_mesh.Vertices.First().Position);
+
 
             var polygon = new Polygon(fillVertices.Select(v => new PolygonPoint(v.X,v.Y)));
 

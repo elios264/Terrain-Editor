@@ -29,7 +29,7 @@ namespace TerrainEditor.ViewModels
                     new VertexInfo(5, -4),
                     new VertexInfo(-5, -4)
                 },
-                UvMapping = UvMapping.Pipe,FillMode = FillMode.None,IsClosed = false
+                UvMapping = UvMapping.Mossy,FillMode = FillMode.Fill,IsClosed = true,SplitCornersThreshold = 90
             });
         }
 
