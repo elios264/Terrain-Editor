@@ -315,7 +315,9 @@ namespace TerrainEditor.UserControls
         private Point3D ScreenPointToWorld(Point point)
         {
             var ray = this.GetViewport3D().Point2DtoRay3D(point);
-            return ray.PlaneIntersection(Source.Mesh.Bounds.Location, new Vector3D(0, 0, -1)).Value;
+            var swp = ray.PlaneIntersection(Source.Mesh.Bounds.Location, new Vector3D(0, 0, -1)).Value;
+
+            return Transform.Inverse.Transform(swp);
         }
         private void VerticesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
@@ -437,7 +439,14 @@ namespace TerrainEditor.UserControls
             m_changeDirectionCallouts.ForEach(Children.Add);
 
             //Transform
-            Transform = new TranslateTransform3D(0, 0, Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z + 0.01);
+            Transform = new Transform3DGroup
+            {
+                Children = new Transform3DCollection
+                {
+                    Source.Mesh.Transform,
+                    new TranslateTransform3D(0, 0, Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z + 0.01)
+                }
+            };
         }
 
     }
