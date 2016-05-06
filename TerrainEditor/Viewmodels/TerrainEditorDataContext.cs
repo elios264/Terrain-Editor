@@ -9,6 +9,18 @@ namespace TerrainEditor.ViewModels
 {
     public class TerrainEditorDataContext : ViewModelBase
     {
+        private DynamicMesh m_selectedTerrain;
+
+        public DynamicMesh SelectedTerrain
+        {
+            get { return m_selectedTerrain; }
+            set
+            {
+                if (Equals(value, m_selectedTerrain)) return;
+                m_selectedTerrain = value;
+                OnPropertyChanged();
+            }
+        }
         public ObservableCollection<DynamicMesh> Terrains { get; }
         public Model3DCollection TerrainsMeshes
         {
@@ -20,17 +32,22 @@ namespace TerrainEditor.ViewModels
             Terrains = new ObservableCollection<DynamicMesh>();
             Terrains.CollectionChanged += OnTerrainsChanged;
 
-            Terrains.Add(new DynamicMesh
+            Terrains.Add(new DynamicMesh(new[]
             {
-                Vertices = new ObservableCollection<VertexInfo>
-                {
-                    new VertexInfo(-5, 5),
-                    new VertexInfo(5, 5),
-                    new VertexInfo(5, -4),
-                    new VertexInfo(-5, -4)
-                },
-                UvMapping = UvMapping.Mossy,FillMode = FillMode.Fill,IsClosed = true,SplitCornersThreshold = 90
+                new VertexInfo(-5, 5),
+                new VertexInfo(5, 5),
+                new VertexInfo(5, -4),
+                new VertexInfo(-5, -4)
+            })
+            {
+                UvMapping = UvMapping.Mossy,
+                FillMode = FillMode.Fill,
+                IsClosed = true,
+                SplitCornersThreshold = 90,
+                SmoothFactor = 5
             });
+
+            SelectedTerrain = Terrains[0];
         }
 
         private void OnTerrainsChanged(object sender, NotifyCollectionChangedEventArgs e)

@@ -80,6 +80,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="UserControls\VertexManipulator.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Viewmodels\DynamicMesh.cs" />
     <Compile Include="Utilities\DynamicMeshBuilder.cs" />
@@ -157,6 +158,7 @@
     <Resource Include="Resources\pipe.png" />
     <Resource Include="Resources\Rocky.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

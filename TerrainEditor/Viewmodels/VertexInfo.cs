@@ -33,5 +33,11 @@ namespace TerrainEditor.ViewModels
             Position = new Vector(x, y);
             Direction = dir;
         }
+
+        public VertexInfo(Vector v, VertexDirection dir = VertexDirection.Auto)
+        {
+            Position = v;
+            Direction = dir;
+        }
     }
 }

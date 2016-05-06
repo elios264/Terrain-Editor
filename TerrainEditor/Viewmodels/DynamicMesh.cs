@@ -1,7 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
+using MoreLinq;
 using TerrainEditor.Utilities;
 
 namespace TerrainEditor.ViewModels
@@ -22,7 +28,6 @@ namespace TerrainEditor.ViewModels
         private string m_name = "New Terrain";
 
         private UvMapping m_uvMapping;
-        private ObservableCollection<VertexInfo> m_vertices = new ObservableCollection<VertexInfo>();
 
         private Model3DGroup m_meshCache;
         private bool m_isDirty = true;
@@ -139,21 +144,37 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        public ObservableCollection<VertexInfo> Vertices
+        public ObservableCollection<VertexInfo> Vertices { get; }
+
+        public DynamicMesh(IEnumerable<VertexInfo> vertices = null)
         {
-            get { return m_vertices; }
-            set
-            {
-                if (Equals(value, m_vertices)) return;
-                m_vertices = value;
-                OnPropertyChanged();
-            }
+            vertices = vertices ?? Enumerable.Empty<VertexInfo>();
+            Vertices = new ObservableCollection<VertexInfo>(vertices);
+
+            PropertyChanged += (sender, args) => m_isDirty = true;
+            Vertices.CollectionChanged += VerticesOnCollectionChanged;
+
+            VerticesOnCollectionChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,Vertices));
         }
 
-        public DynamicMesh()
+        private void VerticesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
-            PropertyChanged += (sender, args) => m_isDirty = true;
-            Vertices.CollectionChanged += (sender, args) => m_isDirty = true;
+            switch (args.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    args.NewItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged += VertexChanged);
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    args.OldItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged -= VertexChanged);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            OnPropertyChanged(nameof(Vertices));
+        }
+        private void VertexChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            OnPropertyChanged(nameof(Vertices));
         }
 
         public Model3DGroup Mesh

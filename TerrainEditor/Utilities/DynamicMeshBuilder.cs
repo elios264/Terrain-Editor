@@ -249,7 +249,7 @@ namespace TerrainEditor.Utilities
         }
         private void DrawFill(List<Vector> fillVertices)
         {
-            if (m_mesh.Vertices.Count <= 2 || m_mesh.FillMode == FillMode.None)
+            if (m_mesh.Vertices.Count <= 2 || m_mesh.FillMode == FillMode.None || m_mesh.UvMapping.FillTexture == null)
                 return;
 
             if (!m_mesh.IsClosed)
@@ -279,7 +279,14 @@ namespace TerrainEditor.Utilities
                 polygon = invertedPolygon;
             }
 
-            P2T.Triangulate(polygon);
+            try
+            {
+                P2T.Triangulate(polygon);
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
             var unitsPerFill = CalculateUnitsPerFillUv();
             foreach (var triangle in polygon.Triangles)

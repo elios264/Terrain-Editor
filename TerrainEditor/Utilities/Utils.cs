@@ -17,12 +17,17 @@ namespace TerrainEditor.Utilities
             lhs = rhs;
             rhs = temp;
         }
-        public static T CircularIndex<T>(this IReadOnlyList<T> source, int i, bool looped = false) where  T : class
+        public static T CircularIndex<T>(this IReadOnlyList<T> source, int i, bool looped = false)
         {
+            if (default(T) != null)
+                throw new InvalidOperationException("CircularIndex<T> requires T to be a nullable type.");
+
             int n = source.Count;
 
-            return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : null) : source[i];
+            return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
         }
+
+
         public static Vector Normal(this Vector v)
         {
             var normal = new Vector(-v.Y,v.X);
@@ -31,6 +36,10 @@ namespace TerrainEditor.Utilities
             return normal;
         }
 
+        public static Vector LinearLerp(Vector a, Vector b, double t)
+        {
+            return new Vector(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+        }
         public static Vector HermiteLerp(Vector a, Vector b, Vector c, Vector d, double percentage, double tension = 0, double bias = 0)
         {
             return new Vector(
@@ -92,6 +101,15 @@ namespace TerrainEditor.Utilities
                 pathInApplication = pathInApplication.Substring(1);
             }
             return new BitmapImage(new Uri(@"pack://application:,,,/" + assembly.GetName().Name + ";component/" + pathInApplication, UriKind.Absolute));
+        }
+
+        public static Point3D ToPoint3D(this Vector vector, double z = 0)
+        {
+            return new Point3D(vector.X,vector.Y,z);
+        }
+        public static Vector ToVector(this Point3D point)
+        {
+            return new Vector(point.X,point.Y);
         }
     }
 }
