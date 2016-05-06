@@ -15,15 +15,6 @@ using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-    public enum HitType
-    {
-        None,
-        Vertex,
-        AddNew,
-        Direction
-    }
-    public delegate void HitTest2DDelegate(int index, HitType type);
-
 
     public class VertexManipulator : ModelVisual3D
     {
@@ -41,11 +32,26 @@ namespace TerrainEditor.UserControls
         public static readonly Material DotRightMaterial;
         public static readonly Material DotDownMaterial;
 
+        private enum HitType
+        {
+            None,
+            Vertex,
+            AddNew,
+            Direction
+        }
+        private delegate void HitTest2DDelegate(int index, HitType type);
+        private struct PreviewInfo
+        {
+            public Vector Position;
+            public int InsertionIndex;
+        }
+
         private int m_currentVertexIndex = -1;
-        private ModifierKeys m_modifierKeys = ModifierKeys.None;
         private Material m_vertexMaterial = DotVertexMaterial;
+        private PreviewInfo m_previewInfo = new PreviewInfo { InsertionIndex = -1 };
 
         private readonly LinesVisual3D m_lines;
+        private readonly LinesVisual3D m_previewLines;
         private List<BillboardVisual3D> m_vertices;
         private List<BillboardVisual3D> m_addVertexCallouts;
         private List<BillboardVisual3D> m_changeDirectionCallouts;
@@ -92,6 +98,7 @@ namespace TerrainEditor.UserControls
         public VertexManipulator()
         {
             m_lines = new LinesVisual3D {Color =  Colors.White, Thickness = 2};
+            m_previewLines = new LinesVisual3D {Color =  Colors.PaleGreen, Thickness = 2};
         }
 
         private static void OnSourceChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
@@ -159,7 +166,7 @@ namespace TerrainEditor.UserControls
             var element = (UIElement)sender;
             var position = e.GetPosition(element);
 
-            switch (m_modifierKeys)
+            switch (Keyboard.Modifiers)
             {
                 case ModifierKeys.None:
                     FeedHitTest(position, (index, type) =>
@@ -189,7 +196,6 @@ namespace TerrainEditor.UserControls
 
                             if (Source.Vertices.Count < 3)
                             {
-                                m_modifierKeys &= ~ModifierKeys.Control;
                                 m_vertexMaterial = DotVertexMaterial;
                                 Tesellate();
                             }
@@ -197,7 +203,14 @@ namespace TerrainEditor.UserControls
                     });
                     break;
                 case ModifierKeys.Shift:
-                    break;
+                    if (m_previewInfo.InsertionIndex != -1)
+                    {
+                        var index = m_previewInfo.InsertionIndex;
+                        Source.Vertices.Insert(index, new VertexInfo(m_previewInfo.Position, index == 0 ? VertexDirection.Auto : Source.Vertices[index - 1].Direction));
+                        Children.Remove(m_previewLines);
+                        m_previewInfo.InsertionIndex = -1;
+                    }
+                break;
             }
 
         }
@@ -214,6 +227,49 @@ namespace TerrainEditor.UserControls
                 VertexInfo vertex = Source.Vertices[m_currentVertexIndex];
                 vertex.Position = ScreenPointToWorld(position).ToVector();
             }
+
+            if (Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                var worldPos = ScreenPointToWorld(position).ToVector();
+
+                var closestPoints = 
+                    Source.Vertices.Select((p, i) => new { Distance = (p.Position - worldPos).LengthSquared, Index = i, Point = p.Position })
+                        .OrderBy(arg => arg.Distance)
+                        .ToArray();
+
+                var closest = closestPoints[0];
+                var secondClosest = closestPoints.First(arg => Math.Abs(arg.Index - closest.Index) == 1);
+
+                var vectorA = worldPos - closest.Point;
+                var vectorB = secondClosest.Point - closest.Point;
+
+                vectorA.Normalize();
+                vectorB.Normalize();
+
+                var dotProduct = vectorA * vectorB;
+
+                m_previewLines.Points.Clear();
+
+
+                if (( closest.Index == 0 || closest.Index == Source.Vertices.Count - 1 ) && dotProduct < 0.5)
+                {
+                    m_previewLines.Points.Add(worldPos.ToPoint3D());
+                    m_previewLines.Points.Add(Source.Vertices[closest.Index].Position.ToPoint3D());
+                    m_previewInfo.Position = worldPos;
+                    m_previewInfo.InsertionIndex = closest.Index == 0 ? 0 : closest.Index + 1;
+                }
+                else
+                {
+                    m_previewLines.Points.Add(closest.Point.ToPoint3D());
+                    m_previewLines.Points.Add(worldPos.ToPoint3D());
+                    m_previewLines.Points.Add(worldPos.ToPoint3D());
+                    m_previewLines.Points.Add(secondClosest.Point.ToPoint3D());
+                    m_previewInfo.Position = worldPos;
+                    m_previewInfo.InsertionIndex = closest.Index > secondClosest.Index ? closest.Index : secondClosest.Index;
+                }
+
+
+            }
         }
         private void EndManipulation(object sender, MouseButtonEventArgs e)
         {
@@ -222,19 +278,21 @@ namespace TerrainEditor.UserControls
 
             m_currentVertexIndex = -1;
         }
-
         private void ModifierActivated(object sender, KeyEventArgs e)
         {
             if (Source == null || (e.Key != Key.LeftShift && e.Key != Key.RightShift && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl))
                 return;
 
-            if (Keyboard.Modifiers == ModifierKeys.Control && Source.Vertices.Count > 2 && m_vertexMaterial == DotVertexMaterial)
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && Source.Vertices.Count > 2 && m_vertexMaterial == DotVertexMaterial)
             {
                 m_vertexMaterial = DotDeleteMaterial;
                 Tesellate();
             }
-
-            m_modifierKeys = Keyboard.Modifiers;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && m_previewInfo.InsertionIndex == -1 && !Children.Contains(m_previewLines))
+            {
+                Children.Add(m_previewLines);
+                DeltaManipulation(InputSource,new MouseEventArgs(Mouse.PrimaryDevice,0));
+            }
         }
         private void ModifierDeactivated(object sender, KeyEventArgs e)
         {
@@ -246,8 +304,12 @@ namespace TerrainEditor.UserControls
                 m_vertexMaterial = DotVertexMaterial;
                 Tesellate();
             }
-
-            m_modifierKeys = Keyboard.Modifiers;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) == false)
+            {
+                if (Children.Contains(m_previewLines))
+                    Children.Remove(m_previewLines);
+                m_previewInfo.InsertionIndex = -1;
+            }
         }
 
         private Point3D ScreenPointToWorld(Point point)
@@ -332,14 +394,20 @@ namespace TerrainEditor.UserControls
             //Vertices
             m_vertices = vertices.Select(info => new BillboardVisual3D
             {
-                Position = info.Position.ToPoint3D(0.02), Width = 15, Height = 15, Material = m_vertexMaterial
+                Position = info.Position.ToPoint3D(0.02),
+                Width = 15,
+                Height = 15,
+                Material = m_vertexMaterial
             }).ToList();
             m_vertices.ForEach(Children.Add);
 
             //AddVertex
             m_addVertexCallouts = vertices.Pairwise((fst, snd) => new {fst, snd}).Select(info => new BillboardVisual3D
             {
-                Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.5).ToPoint3D(0.01), Width = 15, Height = 15, Material = DotAddMaterial
+                Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.5).ToPoint3D(0.01),
+                Width = 15,
+                Height = 15,
+                Material = DotAddMaterial
             }).ToList();
             m_addVertexCallouts.ForEach(Children.Add);
 
@@ -350,28 +418,20 @@ namespace TerrainEditor.UserControls
 
                 switch (info.fst.Direction)
                 {
-                    case VertexDirection.Auto:
-                        mat = DotAutoMaterial;
-                        break;
-                    case VertexDirection.Top:
-                        mat = DotTopMaterial;
-                        break;
-                    case VertexDirection.Down:
-                        mat = DotDownMaterial;
-                        break;
-                    case VertexDirection.Left:
-                        mat = DotLeftMaterial;
-                        break;
-                    case VertexDirection.Right:
-                        mat = DotRightMaterial;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                case VertexDirection.Auto: mat = DotAutoMaterial; break;
+                case VertexDirection.Top:  mat = DotTopMaterial; break;
+                case VertexDirection.Down: mat = DotDownMaterial; break;
+                case VertexDirection.Left: mat = DotLeftMaterial; break;
+                case VertexDirection.Right:mat = DotRightMaterial; break;
+                default: throw new ArgumentOutOfRangeException();
                 }
 
                 return new BillboardVisual3D
                 {
-                    Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.1).ToPoint3D(0.01), Width = 15, Height = 15, Material = mat
+                    Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.1).ToPoint3D(0.01),
+                    Width = 15,
+                    Height = 15,
+                    Material = mat
                 };
             }).ToList();
             m_changeDirectionCallouts.ForEach(Children.Add);
@@ -379,5 +439,6 @@ namespace TerrainEditor.UserControls
             //Transform
             Transform = new TranslateTransform3D(0, 0, Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z + 0.01);
         }
+
     }
 }
