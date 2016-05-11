@@ -8,7 +8,9 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MoreLinq;
+using PropertyTools.DataAnnotations;
 using TerrainEditor.Utilities;
+using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 
 namespace TerrainEditor.ViewModels
 {
@@ -20,7 +22,7 @@ namespace TerrainEditor.ViewModels
         private int m_smoothFactor = 5;
         private double m_strechThreshold  = 0.5;
         private int m_splitCornersThreshold = 90;
-        private int m_pixelsPerUnit = 96; 
+        private int m_pixelsPerUnit = 64; 
 
         private FillMode m_fillMode = FillMode.None;
         private Color m_ambientColor = Colors.White;
@@ -42,6 +44,7 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        [Slidable(1,100)]
         public int SmoothFactor
         {
             get { return m_smoothFactor; }
@@ -62,6 +65,9 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        [FormatString("0.00")]
+        [Slidable(0.0, 1.0)]
         public double StrechThreshold
         {
             get { return m_strechThreshold; }
@@ -82,6 +88,7 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        [Slidable(0, 360)]
         public int SplitCornersThreshold
         {
             get { return m_splitCornersThreshold; }
@@ -92,6 +99,8 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        [Slidable(16, 256)]
         public int PixelsPerUnit
         {
             get { return m_pixelsPerUnit; }
@@ -144,6 +153,8 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        [ListAttribute(false,false)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
         public DynamicMesh(IEnumerable<VertexInfo> vertices = null)
@@ -177,6 +188,7 @@ namespace TerrainEditor.ViewModels
             OnPropertyChanged(nameof(Vertices));
         }
 
+        [Browsable(false)]
         public Model3DGroup Mesh
         {
             get
@@ -192,5 +204,5 @@ namespace TerrainEditor.ViewModels
                 return m_meshCache;
             }
         }
-}
+    }
 }

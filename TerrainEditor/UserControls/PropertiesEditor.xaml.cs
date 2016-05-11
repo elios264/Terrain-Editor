@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,27 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Windows.Threading;
-using MahApps.Metro.Controls;
 
-namespace TerrainEditor
+namespace TerrainEditor.UserControls
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for PropertiesEditor.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class PropertiesEditor : UserControl
     {
-        public MainWindow()
+        public PropertiesEditor()
         {
             InitializeComponent();
-
-            Dispatcher.BeginInvoke(DispatcherPriority.Input,
-                new Action(() =>
-                {
-                    HelixViewport3D.Focus();
-                    Keyboard.Focus(HelixViewport3D);
-                }));
         }
-
     }
 }

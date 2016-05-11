@@ -107,9 +107,9 @@ namespace TerrainEditor.Utilities
         {
             return new Point3D(vector.X,vector.Y,z);
         }
-        public static Vector ToVector(this Point3D point)
+        public static Vector ToVector(this Point3D point,int decimalRounds = 2)
         {
-            return new Vector(point.X,point.Y);
+            return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
         }
     }
 }

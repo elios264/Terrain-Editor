@@ -439,14 +439,17 @@ namespace TerrainEditor.UserControls
             m_changeDirectionCallouts.ForEach(Children.Add);
 
             //Transform
+            var transform = Source.Mesh.Transform;
+            Source.Mesh.Transform = Transform3D.Identity;
             Transform = new Transform3DGroup
             {
                 Children = new Transform3DCollection
                 {
-                    Source.Mesh.Transform,
+                    transform,
                     new TranslateTransform3D(0, 0, Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z + 0.01)
                 }
             };
+            Source.Mesh.Transform = transform;
         }
 
     }
