@@ -5,6 +5,21 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media.Media3D;
 
+/*
+ * TODO
+mapping editor & property editor mapping
+assets window
+multiple terrains
+
+fix mesh generation algorithm
+fix focus add new vertex
+physics
+buttons on the top
+status bar
+update VertexManipulator when property changed  
+*/
+
+
 namespace TerrainEditor.ViewModels
 {
     public class TerrainEditorDataContext : ViewModelBase

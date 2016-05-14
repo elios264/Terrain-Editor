@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="TerrainEditor.UserControls.UvMappingPropertyEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
+             xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
+             xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
+             mc:Ignorable="d" HorizontalAlignment="Stretch"
+             d:DesignHeight="50" d:DesignWidth="200" d:DataContext="{x:Static viewModels:UvMapping.Mossy}" >
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Margin="0,0,5,0" Click="SelectNewMapping">
+            <Image Source="{Binding EdgeTexture}" Stretch="Fill"  />
+        </Button>
+        <StackPanel Grid.Column="1" >
+            <TextBlock Text="Material Name" TextAlignment="Center" />
+            <TextBlock Margin="0,5" Text="{Binding Name}" TextAlignment="Center"  />
+        </StackPanel>
+    </Grid>
+</UserControl>
+
+
+
+
+
+
+

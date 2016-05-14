@@ -1,0 +1,178 @@
+﻿<simpleChildWindow:ChildWindow x:Class="TerrainEditor.UserControls.UvMappingEditor"
+                               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                               xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
+                               xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+                               xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
+                               xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
+                               xmlns:pt="http://propertytools.org/wpf"
+                               mc:Ignorable="d"
+                               IsOpen="True"
+                               Title="UV Mapping Editor" 
+                               AllowMove="True"  ChildWindowWidth="800"
+                               OverlayBrush="{StaticResource AccentColorBrush4}" 
+                               IsModal="True" ShowCloseButton="True" 
+                               EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"
+                               d:DesignHeight="600" d:DesignWidth="800"  d:DataContext="{x:Static viewModels:UvMapping.Mossy}">
+    <Grid>
+        <Grid.Resources>
+            <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type viewModels:Segment}">
+                <Grid>
+                    <StackPanel controls:VisibilityHelper.IsCollapsed="{Binding Path=Editor.IsAdvanced, FallbackValue=true}">
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Advanced Mode" VerticalAlignment="Center" />
+                            <CheckBox Width="150" HorizontalAlignment="Right" IsChecked="{Binding Editor.IsAdvanced}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Z Offset" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right" Text="{Binding ZOffset }" />
+                        </DockPanel>
+
+                        <DockPanel>
+                            <TextBlock Text="Position" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding Editor.Position, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Height" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding Editor.Height, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Cap Width" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding Editor.CapWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Body Width" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding Editor.BodyWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Body Slices" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding Editor.BodySlices, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                    </StackPanel>
+                    <StackPanel controls:VisibilityHelper.IsVisible="{Binding Path=Editor.IsAdvanced,FallbackValue=false}">
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Advanced Mode" VerticalAlignment="Center" />
+                            <CheckBox Width="150" HorizontalAlignment="Right" IsChecked="{Binding Editor.IsAdvanced}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Z Offset" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right" Text="{Binding ZOffset}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Left Cap" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding LeftCap, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock Text="Right Cap" VerticalAlignment="Center" />
+                            <TextBox Width="150" HorizontalAlignment="Right"
+                                     Text="{Binding RightCap, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <DockPanel Margin="0,1">
+                            <TextBlock DockPanel.Dock="Left" Text="Bodies" VerticalAlignment="Center" />
+                            <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Content="Add" Click="OnAddBody"
+                                    CommandParameter="{Binding}" />
+                            <pt:DataGrid Width="150" HorizontalAlignment="Right" AutoGenerateColumns="False" ItemsSource="{Binding Bodies}" CanInsert="False" >
+                                <pt:DataGrid.ColumnDefinitions>
+                                    <pt:ColumnDefinition Width="*" Header="" />
+                                </pt:DataGrid.ColumnDefinitions>
+                            </pt:DataGrid>
+                        </DockPanel>
+
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+            <ControlTemplate x:Key="PreviewRectsTemplate" TargetType="ContentControl" >
+                <ItemsControl ItemsSource="{TemplateBinding Content}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type Rect}">
+                            <Rectangle Stroke="#CBCBCB" StrokeThickness="1" Width="{Binding Width}" Height="{Binding Height}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                            <Setter Property="Canvas.Left" Value="{Binding X}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </ControlTemplate>
+            <utilities:NullToBooleanConveter x:Key="NullToBooleanConveter" />
+            <utilities:SelectManyConverter x:Key="SelectManyConverter" />
+        </Grid.Resources>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" HorizontalAlignment="Stretch">
+                    <Expander IsExpanded="True">
+                        <Expander.Header>
+                            <CheckBox Margin="5,0" Content="Use Top" IsChecked="True" IsEnabled="False" />
+                        </Expander.Header>
+                        <ContentControl Content="{Binding Top}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                    </Expander>
+                    <Expander >
+                        <Expander.Header>
+                            <CheckBox Margin="5,0" Content="Use Left" CommandParameter="Left"  IsChecked="{Binding Left, Converter={StaticResource NullToBooleanConveter}}" />
+                        </Expander.Header>
+                        <ContentControl Content="{Binding Left}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                    </Expander>
+                    <Expander>
+                        <Expander.Header>
+                            <CheckBox Margin="5,0" Content="Use Right" CommandParameter="Right" IsChecked="{Binding Right, Converter={StaticResource NullToBooleanConveter}}" />
+                        </Expander.Header>
+                        <ContentControl Content="{Binding Right}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                    </Expander>
+                    <Expander>
+                        <Expander.Header>
+                            <CheckBox Margin="5,0" Content="Use Bottom" CommandParameter="Bottom" IsChecked="{Binding Bottom, Converter={StaticResource NullToBooleanConveter}}" />
+                        </Expander.Header>
+                        <ContentControl Content="{Binding Bottom}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                    </Expander>
+                </StackPanel>
+
+                <Viewbox Grid.Column="1" Margin="0" Stretch="Uniform">
+                    <Grid Width="{Binding EdgeTexture.PixelWidth}" Height="{Binding EdgeTexture.PixelHeight}">
+                        <Image Source="{Binding EdgeTexture}" Stretch="Uniform" />
+                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Top.Bodies}"/>
+                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Left.Bodies}"/>
+                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Right.Bodies}"/>
+                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Bottom.Bodies}"/>
+                        <ContentControl Template="{StaticResource PreviewRectsTemplate}">
+                            <ContentControl.Content>
+                                <MultiBinding Converter="{StaticResource SelectManyConverter}" ConverterParameter="{x:Type Rect}">
+                                    <Binding Path="Top.LeftCap" />
+                                    <Binding Path="Top.RightCap" />
+                                    <Binding Path="Left.LeftCap" />
+                                    <Binding Path="Left.RightCap" />
+                                    <Binding Path="Right.LeftCap" />
+                                    <Binding Path="Right.RightCap" />
+                                    <Binding Path="Bottom.LeftCap" />
+                                    <Binding Path="Bottom.RightCap" />
+                                </MultiBinding>
+                            </ContentControl.Content>
+                        </ContentControl>
+                    </Grid>
+                </Viewbox>
+
+            </Grid>
+        </ScrollViewer>
+
+    </Grid>
+</simpleChildWindow:ChildWindow>

@@ -52,6 +52,10 @@
       <HintPath>..\packages\MahApps.Metro.1.2.4.0\lib\net45\MahApps.Metro.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="MahApps.Metro.SimpleChildWindow, Version=1.3.0.0, Culture=neutral, PublicKeyToken=bbbfdff7f500a992, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.SimpleChildWindow.1.3.0\lib\net45\MahApps.Metro.SimpleChildWindow.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MoreLinq, Version=1.4.18916.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
@@ -89,10 +93,22 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="UserControls\PropertiesEditor.xaml.cs">
+    <Compile Include="UserControls\PropertiesEditorControl\PropertyControlFactory.cs" />
+    <Compile Include="UserControls\PropertiesEditorControl\PropertiesEditor.xaml.cs">
       <DependentUpon>PropertiesEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\PropertiesEditorControl\CustomEditorAttribute.cs" />
+    <Compile Include="UserControls\SelectMappingDialog.xaml.cs">
+      <DependentUpon>SelectMappingDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\UvMappingEditor.xaml.cs">
+      <DependentUpon>UvMappingEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\UvMappingPropertyEditor.xaml.cs">
+      <DependentUpon>UvMappingPropertyEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\VertexManipulator.cs" />
+    <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Viewmodels\DynamicMesh.cs" />
     <Compile Include="Utilities\DynamicMeshBuilder.cs" />
@@ -114,7 +130,19 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="UserControls\PropertiesEditor.xaml">
+    <Page Include="UserControls\PropertiesEditorControl\PropertiesEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SelectMappingDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\UvMappingEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\UvMappingPropertyEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

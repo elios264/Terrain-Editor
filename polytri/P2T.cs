@@ -79,14 +79,12 @@ namespace Poly2Tri
         
         public static void Triangulate(TriangulationAlgorithm algorithm, ITriangulatable t)
         {
-            TriangulationContext tcx;
-
-            System.Console.WriteLine("Triangulating " + t.FileName);
+            //System.Console.WriteLine("Triangulating " + t.FileName);
             //        long time = System.nanoTime();
-            tcx = CreateContext(algorithm);
+            var tcx = CreateContext(algorithm);
             tcx.PrepareTriangulation(t);
             Triangulate(tcx);
-            //        logger.info( "Triangulation of {} points [{}ms]", tcx.getPoints().size(), ( System.nanoTime() - time ) / 1e6 );
+            //logger.info( "Triangulation of {} points [{}ms]", tcx.getPoints().size(), ( System.nanoTime() - time ) / 1e6 );
         }
 
         

@@ -144,7 +144,7 @@ namespace TerrainEditor.Utilities
         {
             var segmentUvMapping = GetUvMappingOf(segment.Direction);
 
-            if (segmentUvMapping == null)
+            if (segmentUvMapping == null || segmentUvMapping.Bodies.Count == 0)
             {
                 return new List<Vector>
                 {
@@ -316,7 +316,7 @@ namespace TerrainEditor.Utilities
 
             return angle == 180 && !(side == SegmentSide.Left ? segment.Prev.HasValue : segment.Next.HasValue);
         }
-        private UvMapping.Segment GetUvMappingOf(VertexDirection direction)
+        private ViewModels.Segment GetUvMappingOf(VertexDirection direction)
         {
             switch (direction)
             {

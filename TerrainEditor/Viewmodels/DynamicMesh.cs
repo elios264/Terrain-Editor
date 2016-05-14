@@ -4,20 +4,24 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MoreLinq;
 using PropertyTools.DataAnnotations;
+using TerrainEditor.UserControls;
+using TerrainEditor.UserControls.PropertiesEditorControl;
 using TerrainEditor.Utilities;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
+using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 
 namespace TerrainEditor.ViewModels
 {
     public class DynamicMesh  : ViewModelBase
     {
         private bool m_isClosed = true;
-        private bool m_splitWhenDifferent = false;
+        private bool m_splitWhenDifferent;
 
         private int m_smoothFactor = 5;
         private double m_strechThreshold  = 0.5;
@@ -34,84 +38,8 @@ namespace TerrainEditor.ViewModels
         private Model3DGroup m_meshCache;
         private bool m_isDirty = true;
 
-        public bool IsClosed
-        {
-            get { return m_isClosed; }
-            set
-            {
-                if (value == m_isClosed) return;
-                m_isClosed = value;
-                OnPropertyChanged();
-            }
-        }
-        [Slidable(1,100)]
-        public int SmoothFactor
-        {
-            get { return m_smoothFactor; }
-            set
-            {
-                if (value == m_smoothFactor) return;
-                m_smoothFactor = value;
-                OnPropertyChanged();
-            }
-        }
-        public Color AmbientColor
-        {
-            get { return m_ambientColor; }
-            set
-            {
-                if (value.Equals(m_ambientColor)) return;
-                m_ambientColor = value;
-                OnPropertyChanged();
-            }
-        }
 
-        [FormatString("0.00")]
-        [Slidable(0.0, 1.0)]
-        public double StrechThreshold
-        {
-            get { return m_strechThreshold; }
-            set
-            {
-                if (value.Equals(m_strechThreshold)) return;
-                m_strechThreshold = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool SplitWhenDifferent
-        {
-            get { return m_splitWhenDifferent; }
-            set
-            {
-                if (value == m_splitWhenDifferent) return;
-                m_splitWhenDifferent = value;
-                OnPropertyChanged();
-            }
-        }
-        [Slidable(0, 360)]
-        public int SplitCornersThreshold
-        {
-            get { return m_splitCornersThreshold; }
-            set
-            {
-                if (value == m_splitCornersThreshold) return;
-                m_splitCornersThreshold = value;
-                OnPropertyChanged();
-            }
-        }
-
-        [Slidable(16, 256)]
-        public int PixelsPerUnit
-        {
-            get { return m_pixelsPerUnit; }
-            set
-            {
-                if (value == m_pixelsPerUnit) return;
-                m_pixelsPerUnit = value;
-                OnPropertyChanged();
-            }
-        }
-
+        [Category("Misc")]
         public string Name
         {
             get { return m_name; }
@@ -132,7 +60,19 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        
 
+        [Category("Terrain Type")]
+        public bool SplitWhenDifferent
+        {
+            get { return m_splitWhenDifferent; }
+            set
+            {
+                if (value == m_splitWhenDifferent) return;
+                m_splitWhenDifferent = value;
+                OnPropertyChanged();
+            }
+        }
         public FillMode FillMode
         {
             get { return m_fillMode; }
@@ -143,6 +83,76 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        [Slidable(1,50)]
+        public int SmoothFactor
+        {
+            get { return m_smoothFactor; }
+            set
+            {
+                if (value == m_smoothFactor) return;
+                m_smoothFactor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [Category("Visuals")]
+        public bool IsClosed
+        {
+            get { return m_isClosed; }
+            set
+            {
+                if (value == m_isClosed) return;
+                m_isClosed = value;
+                OnPropertyChanged();
+            }
+        }
+        [Slidable(0.0, 1.0)]
+        [FormatString("0.00")]
+        public double StrechThreshold
+        {
+            get { return m_strechThreshold; }
+            set
+            {
+                if (value.Equals(m_strechThreshold)) return;
+                m_strechThreshold = value;
+                OnPropertyChanged();
+            }
+        }
+        [Slidable(0, 360)]
+        public int SplitCornersThreshold
+        {
+            get { return m_splitCornersThreshold; }
+            set
+            {
+                if (value == m_splitCornersThreshold) return;
+                m_splitCornersThreshold = value;
+                OnPropertyChanged();
+            }
+        }
+        [Slidable(16, 256)]
+        public int PixelsPerUnit
+        {
+            get { return m_pixelsPerUnit; }
+            set
+            {
+                if (value == m_pixelsPerUnit) return;
+                m_pixelsPerUnit = value;
+                OnPropertyChanged();
+            }
+        }
+        public Color AmbientColor
+        {
+            get { return m_ambientColor; }
+            set
+            {
+                if (value.Equals(m_ambientColor)) return;
+                m_ambientColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [Category("Terrain Data")]
+        [CustomEditor(typeof(UvMappingPropertyEditor))]
         public UvMapping UvMapping
         {
             get { return m_uvMapping; }
@@ -153,8 +163,7 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-
-        [ListAttribute(false,false)]
+        [List(false,true)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
         public DynamicMesh(IEnumerable<VertexInfo> vertices = null)
