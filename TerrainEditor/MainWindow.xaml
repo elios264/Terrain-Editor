@@ -4,11 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns:dialogs="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
         xmlns:h="http://helix-toolkit.org/wpf"
         xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
         xmlns:lcl="clr-namespace:TerrainEditor.UserControls"
-        xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
         xmlns:propertiesEditorControl="clr-namespace:TerrainEditor.UserControls.PropertiesEditorControl"
         mc:Ignorable="d"
         GlowBrush="Black"
@@ -118,6 +116,8 @@
             </h:HelixViewport3D>
 
             <propertiesEditorControl:PropertiesEditor Grid.Column="2" Grid.RowSpan="3" Grid.Row="0" Source="{Binding SelectedTerrain}"/>
+
+            <lcl:AssetExplorer Grid.Row="2"  />
 
         </Grid>
 

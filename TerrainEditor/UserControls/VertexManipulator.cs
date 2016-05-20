@@ -207,7 +207,6 @@ namespace TerrainEditor.UserControls
                     {
                         var index = m_previewInfo.InsertionIndex;
                         Source.Vertices.Insert(index, new VertexInfo(m_previewInfo.Position, index == 0 ? VertexDirection.Auto : Source.Vertices[index - 1].Direction));
-                        Children.Remove(m_previewLines);
                         m_previewInfo.InsertionIndex = -1;
                     }
                 break;
@@ -248,8 +247,8 @@ namespace TerrainEditor.UserControls
 
                 var dotProduct = vectorA * vectorB;
 
+                Children.Remove(m_previewLines);
                 m_previewLines.Points.Clear();
-
 
                 if (( closest.Index == 0 || closest.Index == Source.Vertices.Count - 1 ) && dotProduct < 0.5)
                 {
@@ -268,6 +267,7 @@ namespace TerrainEditor.UserControls
                     m_previewInfo.InsertionIndex = closest.Index > secondClosest.Index ? closest.Index : secondClosest.Index;
                 }
 
+                Children.Add(m_previewLines);
 
             }
         }

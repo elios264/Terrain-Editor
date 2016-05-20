@@ -26,6 +26,10 @@ namespace TerrainEditor.Utilities
 
             return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
         }
+        public static T[] ToNewArray<T>(this T head)
+        {
+            return new[] {head};
+        }
 
 
         public static Vector Normal(this Vector v)

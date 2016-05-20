@@ -35,7 +35,7 @@ namespace TerrainEditor.UserControls
         }
         private void OnEditSourceMapping(object sender, RoutedEventArgs e)
         {
-            Application.Current.MainWindow.ShowChildWindowAsync(new UvMappingEditor { DataContext = Options.SelectedItem});
+            Application.Current.MainWindow.ShowChildWindowAsync(new UvMappingEditor { Source = (UvMapping) Options.SelectedItem});
         }
     }
 }

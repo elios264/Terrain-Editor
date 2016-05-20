@@ -5,11 +5,22 @@ using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-    /// <summary>
-    /// Interaction logic for UvMappingEditor.xaml
-    /// </summary>
     public partial class UvMappingEditor : ChildWindow
     {
+        public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof (UvMapping), typeof (UvMappingEditor), new PropertyMetadata(default(UvMapping)));
+
+        public UvMapping Source
+        {
+            get
+            {
+                return (UvMapping) GetValue(SourceProperty);
+            }
+            set
+            {
+                SetValue(SourceProperty, value);
+            }
+        }
+
         public UvMappingEditor()
         {
             InitializeComponent();

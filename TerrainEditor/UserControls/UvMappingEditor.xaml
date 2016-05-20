@@ -15,7 +15,7 @@
                                OverlayBrush="{StaticResource AccentColorBrush4}" 
                                IsModal="True" ShowCloseButton="True" 
                                EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"
-                               d:DesignHeight="600" d:DesignWidth="800"  d:DataContext="{x:Static viewModels:UvMapping.Mossy}">
+                               d:DesignHeight="600" d:DesignWidth="800"  d:DataContext="{x:Static viewModels:UvMapping.Mossy}" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=Source}">
     <Grid>
         <Grid.Resources>
             <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type viewModels:Segment}">
