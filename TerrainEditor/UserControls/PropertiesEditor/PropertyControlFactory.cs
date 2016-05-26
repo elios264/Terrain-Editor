@@ -2,7 +2,7 @@
 using System.Windows;
 using PropertyTools.Wpf;
 
-namespace TerrainEditor.UserControls.PropertiesEditorControl
+namespace TerrainEditor.UserControls
 {
     public class PropertyControlFactory : DefaultPropertyControlFactory
     {

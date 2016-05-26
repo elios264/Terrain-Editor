@@ -1,10 +1,10 @@
-﻿<UserControl x:Class="TerrainEditor.UserControls.PropertiesEditorControl.PropertiesEditor"
+﻿<UserControl x:Class="TerrainEditor.UserControls.PropertiesEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:pt="http://propertytools.org/wpf"
-             xmlns:propertiesEditorControl="clr-namespace:TerrainEditor.UserControls.PropertiesEditorControl"
+             xmlns:userControls="clr-namespace:TerrainEditor.UserControls"
              mc:Ignorable="d" 
              Name="MainUserControl"
              d:DesignHeight="300" d:DesignWidth="300">
@@ -12,7 +12,7 @@
     <Grid>
         <Grid.Resources>
             <pt:DefaultPropertyItemFactory x:Key="ItemFactory" DefaultTabName="Properties" />
-            <propertiesEditorControl:PropertyControlFactory x:Key="ControlFactory" />
+            <userControls:PropertyControlFactory x:Key="ControlFactory" />
         </Grid.Resources>
         <pt:PropertyGrid SelectedObject="{Binding ElementName=MainUserControl, Path=Source}"
                          ShowDescriptionIcons="False"

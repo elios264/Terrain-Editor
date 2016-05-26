@@ -2,7 +2,7 @@ using System.Windows;
 
 namespace TerrainEditor.ViewModels
 {
-    public class VertexInfo : ViewModelBase
+    public class VertexInfo : PropertyChangeBase
     {
         private Vector m_position;
         private VertexDirection m_direction;

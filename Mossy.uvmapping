@@ -1,0 +1,31 @@
+<UvMapping Name="Mossy" EdgeTexture="pack://application:,,,/TerrainEditor;component/Resources/MossyEdges.png" FillTexture="pack://application:,,,/TerrainEditor;component/Resources/MossyFill.png">
+  <Top ZOffset="0.04">
+    <Bodies>
+      <Rect X="64" Y="0" Width="192" Height="220" />
+      <Rect X="256" Y="0" Width="192" Height="220" />
+    </Bodies>
+    <LeftCap X="0" Y="0" Width="64" Height="220" />
+    <RightCap X="448" Y="0" Width="64" Height="220" />
+  </Top>
+  <Left ZOffset="0.01">
+    <Bodies>
+      <Rect X="5" Y="231" Width="232" Height="64" />
+    </Bodies>
+    <LeftCap X="0" Y="0" Width="0" Height="0" />
+    <RightCap X="0" Y="0" Width="0" Height="0" />
+  </Left>
+  <Right ZOffset="0.02">
+    <Bodies>
+      <Rect X="5" Y="231" Width="232" Height="64" />
+    </Bodies>
+    <LeftCap X="0" Y="0" Width="0" Height="0" />
+    <RightCap X="0" Y="0" Width="0" Height="0" />
+  </Right>
+  <Bottom ZOffset="0.03">
+    <Bodies>
+      <Rect X="261" Y="199" Width="232" Height="98" />
+    </Bodies>
+    <LeftCap X="0" Y="0" Width="0" Height="0" />
+    <RightCap X="0" Y="0" Width="0" Height="0" />
+  </Bottom>
+</UvMapping>

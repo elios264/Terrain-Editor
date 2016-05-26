@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace TerrainEditor.UserControls.PropertiesEditorControl
+namespace TerrainEditor.UserControls
 {
     public class CustomEditorAttribute : Attribute
     {

@@ -4,21 +4,19 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MoreLinq;
 using PropertyTools.DataAnnotations;
 using TerrainEditor.UserControls;
-using TerrainEditor.UserControls.PropertiesEditorControl;
 using TerrainEditor.Utilities;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 
 namespace TerrainEditor.ViewModels
 {
-    public class DynamicMesh  : ViewModelBase
+    public class DynamicMesh  : PropertyChangeBase
     {
         private bool m_isClosed = true;
         private bool m_splitWhenDifferent;

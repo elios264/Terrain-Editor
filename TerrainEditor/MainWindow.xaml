@@ -7,7 +7,7 @@
         xmlns:h="http://helix-toolkit.org/wpf"
         xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
         xmlns:lcl="clr-namespace:TerrainEditor.UserControls"
-        xmlns:propertiesEditorControl="clr-namespace:TerrainEditor.UserControls.PropertiesEditorControl"
+        xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
         mc:Ignorable="d"
         GlowBrush="Black"
         Title="Terrain Editor" Width="1024" Height="768" TitleCaps="False" WindowState="Maximized">
@@ -82,7 +82,7 @@
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition MaxWidth="350"/>
             </Grid.ColumnDefinitions>
-            
+
             <GridSplitter Grid.Row="1" VerticalAlignment="Stretch"  HorizontalAlignment="Stretch" ResizeDirection="Rows"/>
             <GridSplitter Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" VerticalAlignment="Stretch"  HorizontalAlignment="Stretch" ResizeDirection="Columns"/>
 
@@ -109,22 +109,39 @@
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
 
-                <lcl:VertexManipulator 
-                    Source="{Binding SelectedTerrain}" 
-                    InputSource="{Binding ElementName=HelixViewport3D}"/>
+                <lcl:VertexManipulator  Source="{Binding SelectedTerrain}" InputSource="{Binding ElementName=HelixViewport3D}"/>
 
             </h:HelixViewport3D>
 
-            <propertiesEditorControl:PropertiesEditor Grid.Column="2" Grid.RowSpan="3" Grid.Row="0" Source="{Binding SelectedTerrain}"/>
+            <lcl:PropertiesEditor Background="#252525" Grid.Column="2" Grid.RowSpan="3" Grid.Row="0" Source="{Binding SelectedTerrain}"/>
 
-            <lcl:AssetExplorer Grid.Row="2"  />
+            <lcl:AssetExplorer Grid.Row="2" >
+                
+                <lcl:AssetExplorer.AssetTypes>
+                    <lcl:AssetTypeCollection>
+                        <lcl:AssetType Extension=".uvmapping" Handler="{x:Type utilities:UvAssetInfo}"/>
+                    </lcl:AssetTypeCollection>
+                </lcl:AssetExplorer.AssetTypes>
+            </lcl:AssetExplorer>
 
         </Grid>
 
-        
-        
+
+
     </DockPanel>
 </Controls:MetroWindow>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

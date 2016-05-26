@@ -1,14 +1,26 @@
-using System.Collections.Generic;
+using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using MoreLinq;
-using TerrainEditor.Utilities;
+using PersistDotNet.Persist;
+using TerrainEditor.Annotations;
+using Utils = TerrainEditor.Utilities.Utils;
 
 namespace TerrainEditor.ViewModels
 {
-    public class UvMapping : ViewModelBase
+    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+    [MetadataType(typeof(Rect))]
+    public class RectMeta
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+    }
+
+    public class UvMapping : PropertyChangeBase
     {
         private string m_name;
         private Segment m_top;
@@ -33,6 +45,46 @@ namespace TerrainEditor.ViewModels
             }
         }
 
+        [UsedImplicitly, Persist(nameof(EdgeTexture))]
+        public string EdgeTexturePath
+        {
+            get
+            {
+                return EdgeTexture?.UriSource.OriginalString;
+            }
+            set
+            {
+                if (EdgeTexturePath == value) return;
+
+                BitmapImage img = new BitmapImage();
+                img.BeginInit();
+                img.UriSource = new Uri(value);
+                img.EndInit();
+                img.Freeze();
+                EdgeTexture = img;
+            }
+        }
+        [UsedImplicitly, Persist(nameof(FillTexture))]
+        public string FillTexturePath
+        {
+            get
+            {
+                return FillTexture?.UriSource.OriginalString;
+            }
+            set
+            {
+                if (FillTexturePath == value) return;
+
+                BitmapImage img = new BitmapImage();
+                img.BeginInit();
+                img.UriSource = new Uri(value);
+                img.EndInit();
+                img.Freeze();
+                FillTexture = img;
+            }
+        }
+
+        [Persist(Ignore = true)]
         public BitmapImage EdgeTexture
         {
             set
@@ -43,6 +95,7 @@ namespace TerrainEditor.ViewModels
             }
             get { return m_edgeTexture; }
         }
+        [Persist(Ignore = true)]
         public BitmapImage FillTexture
         {
             set
@@ -176,7 +229,7 @@ namespace TerrainEditor.ViewModels
 
     }
 
-    public class Segment : ViewModelBase
+    public class Segment : PropertyChangeBase
     {
         private SegmentEditor m_editor;
         private ObservableCollection<Rect> m_bodies;
@@ -241,6 +294,7 @@ namespace TerrainEditor.ViewModels
             }
         }
 
+        [Persist(Ignore = true)]
         public SegmentEditor Editor
         {
             get
@@ -255,7 +309,7 @@ namespace TerrainEditor.ViewModels
         }
     }
 
-    public class SegmentEditor : ViewModelBase
+    public class SegmentEditor : PropertyChangeBase
     {
         private readonly Segment m_segment;
 

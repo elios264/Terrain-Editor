@@ -22,7 +22,7 @@ update VertexManipulator when property changed
 
 namespace TerrainEditor.ViewModels
 {
-    public class TerrainEditorDataContext : ViewModelBase
+    public class TerrainEditorDataContext : PropertyChangeBase
     {
         private DynamicMesh m_selectedTerrain;
 

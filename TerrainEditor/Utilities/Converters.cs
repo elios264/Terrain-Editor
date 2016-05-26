@@ -11,22 +11,14 @@ namespace TerrainEditor.Utilities
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            var type = (Type)parameter;
             var objects = new List<object>();
 
             foreach (object value in values.Where(value => value != null))
             {
-                if (value.GetType() == type)
-                {
-                    objects.Add(value);
-                }
+                if (value is IEnumerable)
+                    objects.AddRange(( (IEnumerable) value ).Cast<object>().Where(o => o != null));
                 else
-                {
-                    var valueList = value as IEnumerable;
-
-                    if (valueList != null)
-                        objects.AddRange(valueList.Cast<object>().Where(o => o != null));
-                }
+                    objects.Add(value);
             }
 
             return objects;

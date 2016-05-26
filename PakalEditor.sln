@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PakalEditor", "PakalEditor\PakalEditor.csproj", "{6EA7DBCC-FC48-4632-B36D-C11690A8F729}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Poly2Tri", "polytri\Poly2Tri.csproj", "{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrainEditor", "TerrainEditor\TerrainEditor.csproj", "{A884AAAB-3881-46B8-8983-AB483202A17B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistDotNet", "Persist\PersistDotNet.csproj", "{52A5CAA6-902E-4073-A956-AE35881269E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,18 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|x64.Build.0 = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Debug|x86.Build.0 = Debug|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|x64.ActiveCfg = Release|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|x64.Build.0 = Release|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|x86.ActiveCfg = Release|Any CPU
-		{6EA7DBCC-FC48-4632-B36D-C11690A8F729}.Release|x86.Build.0 = Release|Any CPU
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5E5802D-6A45-4FE9-BAE7-5F0AE91D72C1}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -55,6 +43,18 @@ Global
 		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x64.Build.0 = Release|Any CPU
 		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x86.ActiveCfg = Release|Any CPU
 		{A884AAAB-3881-46B8-8983-AB483202A17B}.Release|x86.Build.0 = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|x64.Build.0 = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Debug|x86.Build.0 = Debug|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|x64.ActiveCfg = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|x64.Build.0 = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|x86.ActiveCfg = Release|Any CPU
+		{52A5CAA6-902E-4073-A956-AE35881269E2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

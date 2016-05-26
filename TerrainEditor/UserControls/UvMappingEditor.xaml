@@ -15,8 +15,9 @@
                                OverlayBrush="{StaticResource AccentColorBrush4}" 
                                IsModal="True" ShowCloseButton="True" 
                                EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"
-                               d:DesignHeight="600" d:DesignWidth="800"  d:DataContext="{x:Static viewModels:UvMapping.Mossy}" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=Source}">
-    <Grid>
+                               x:Name="ParentControl"
+                               d:DesignHeight="600" d:DesignWidth="800" >
+    <Grid d:DataContext="{x:Static viewModels:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
         <Grid.Resources>
             <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type viewModels:Segment}">
                 <Grid>
@@ -156,7 +157,7 @@
                         <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Bottom.Bodies}"/>
                         <ContentControl Template="{StaticResource PreviewRectsTemplate}">
                             <ContentControl.Content>
-                                <MultiBinding Converter="{StaticResource SelectManyConverter}" ConverterParameter="{x:Type Rect}">
+                                <MultiBinding Converter="{StaticResource SelectManyConverter}" >
                                     <Binding Path="Top.LeftCap" />
                                     <Binding Path="Top.RightCap" />
                                     <Binding Path="Left.LeftCap" />

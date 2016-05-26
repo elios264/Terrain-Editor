@@ -4,7 +4,7 @@ using TerrainEditor.Annotations;
 
 namespace TerrainEditor.ViewModels
 {
-    public class ViewModelBase : INotifyPropertyChanged
+    public class PropertyChangeBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

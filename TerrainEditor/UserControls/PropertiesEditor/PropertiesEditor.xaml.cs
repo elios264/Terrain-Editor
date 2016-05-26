@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace TerrainEditor.UserControls.PropertiesEditorControl
+namespace TerrainEditor.UserControls
 {
     public partial class PropertiesEditor : UserControl
     {

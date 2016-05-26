@@ -27,7 +27,7 @@
             <utilities:SelectManyConverter x:Key="SelectManyConverter"/>
         </ListBox.Resources>
         <ListBox.ItemsSource>
-            <MultiBinding Converter="{StaticResource SelectManyConverter}" ConverterParameter="{x:Type viewModels:UvMapping}">
+            <MultiBinding Converter="{StaticResource SelectManyConverter}">
                 <Binding Source="{x:Static viewModels:UvMapping.Mossy }" />
                 <Binding Source="{x:Static viewModels:UvMapping.Pipe }" />
             </MultiBinding>
