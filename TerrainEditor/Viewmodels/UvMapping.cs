@@ -465,7 +465,7 @@ namespace TerrainEditor.ViewModels
                 m_position = m_segment.LeftCap.TopLeft;
                 m_height = (int) m_segment.LeftCap.Height;
                 m_capWidth = (int) m_segment.LeftCap.Width;
-                m_bodyWidth = (int) m_segment.Bodies[0].Width;
+                m_bodyWidth = m_segment.Bodies.Count > 0 ? (int)m_segment.Bodies[0].Width : 0;
                 m_bodySlices = m_segment.Bodies.Count;
             }
         }

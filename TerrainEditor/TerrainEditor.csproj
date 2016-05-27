@@ -118,12 +118,13 @@
       <DependentUpon>UvMappingPropertyEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\VertexManipulator.cs" />
-    <Compile Include="Core\ChangeListener\ChangeListener.cs" />
-    <Compile Include="Core\ChangeListener\ChildChangeListener.cs" />
-    <Compile Include="Core\ChangeListener\CollectionChangeListener.cs" />
+    <Compile Include="Utilities\ChangeListener\ChangeListener.cs" />
+    <Compile Include="Utilities\ChangeListener\ChildChangeListener.cs" />
+    <Compile Include="Utilities\ChangeListener\CollectionChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Core\UVAssetInfo.cs" />
+    <Compile Include="Utilities\WeakEventHandler.cs" />
     <Compile Include="Viewmodels\DynamicMesh.cs" />
     <Compile Include="Core\DynamicMeshBuilder.cs" />
     <Compile Include="Viewmodels\FillMode.cs" />

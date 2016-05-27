@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.ViewModels;

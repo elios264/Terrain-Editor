@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -8,9 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
-using MahApps.Metro.Controls;
 using MoreLinq;
-using TerrainEditor.Core;
 using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 
@@ -56,8 +53,6 @@ namespace TerrainEditor.UserControls
         private List<BillboardVisual3D> m_vertices;
         private List<BillboardVisual3D> m_addVertexCallouts;
         private List<BillboardVisual3D> m_changeDirectionCallouts;
-
-        private ChangeListener m_sourceChangeListener;
 
         public DynamicMesh Source
         {
@@ -113,7 +108,7 @@ namespace TerrainEditor.UserControls
 
 
             if (oldMesh != null)
-                instance.UnregisterSource();
+                instance.UnregisterSource(oldMesh);
 
             if (newMesh != null)
                 instance.RegisterSource();
@@ -134,15 +129,13 @@ namespace TerrainEditor.UserControls
 
         private void RegisterSource()
         {
-            m_sourceChangeListener = ChangeListener.Create(Source);
-            m_sourceChangeListener.PropertyChanged += (sender, args) => Tesellate();
-
-            Tesellate();
+            Source.RecursivePropertyChanged += SourceOnRecursivePropertyChanged;
+            SourceOnRecursivePropertyChanged(null,null);
         }
-        private void UnregisterSource()
+
+        private void UnregisterSource(DynamicMesh oldMesh)
         {
-            m_sourceChangeListener.Dispose();
-            m_sourceChangeListener = null;
+            oldMesh.RecursivePropertyChanged -= SourceOnRecursivePropertyChanged;
         }
 
         private void RegisterInputSource()
@@ -360,6 +353,10 @@ namespace TerrainEditor.UserControls
                 callBack(index, HitType.Direction);
                 return;
             }
+        }
+        private void SourceOnRecursivePropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            Tesellate();
         }
 
         public void Tesellate()

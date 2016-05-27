@@ -2,7 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace TerrainEditor.Core
+namespace TerrainEditor.Utilities
 {
     public abstract class ChangeListener : INotifyPropertyChanged, IDisposable
     {

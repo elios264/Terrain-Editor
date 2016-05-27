@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 
-namespace TerrainEditor.Core
+namespace TerrainEditor.Utilities
 {
     public class CollectionChangeListener : ChangeListener
     {

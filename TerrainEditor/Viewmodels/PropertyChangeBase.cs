@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TerrainEditor.Annotations;
-using TerrainEditor.Core;
+using TerrainEditor.Utilities;
 
 namespace TerrainEditor.ViewModels
 {
@@ -11,7 +11,7 @@ namespace TerrainEditor.ViewModels
         private readonly Lazy<ChangeListener> m_recursivePropertyChangeListener;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected event PropertyChangedEventHandler RecursivePropertyChanged
+        public event PropertyChangedEventHandler RecursivePropertyChanged
         {
             add
             {

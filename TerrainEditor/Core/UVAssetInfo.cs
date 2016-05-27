@@ -6,6 +6,7 @@ using MahApps.Metro.SimpleChildWindow;
 using PersistDotNet.Persist;
 using TerrainEditor.Annotations;
 using TerrainEditor.UserControls;
+using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.Core
