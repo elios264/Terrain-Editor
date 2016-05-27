@@ -21,17 +21,12 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        public ObservableCollection<DynamicMesh> Terrains { get; }
-        public Model3DCollection TerrainsMeshes
-        {
-            get { return new Model3DCollection(Terrains.Select(mesh => mesh.Mesh)); }
-        }
+        public ObservableCollection<DynamicMesh> Terrains { get; } = new ObservableCollection<DynamicMesh>();
+        public Model3DCollection TerrainsMeshes => new Model3DCollection(Terrains.Select(mesh => mesh.Mesh));
 
         public TerrainEditorDataContext()
         {
-            Terrains = new ObservableCollection<DynamicMesh>();
-            ChangeListener.Create(Terrains, nameof(Terrains))
-                          .PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
+            new PropertyChangeListener(Terrains).PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
 
             Terrains.Add(new DynamicMesh(new[]
             {

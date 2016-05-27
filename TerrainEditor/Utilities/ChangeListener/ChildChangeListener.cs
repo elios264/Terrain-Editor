@@ -7,125 +7,118 @@ using System.Reflection;
 
 namespace TerrainEditor.Utilities
 {
-    public class ChildChangeListener : ChangeListener
+    public partial class PropertyChangeListener : IDisposable
     {
-        protected static readonly Type InotifyType = typeof(INotifyPropertyChanged);
-
-        private readonly INotifyPropertyChanged m_value;
-        private readonly Type m_type;
-        private readonly Dictionary<string, ChangeListener> m_childListeners = new Dictionary<string, ChangeListener>();
-        public ChildChangeListener(INotifyPropertyChanged instance)
+        private class ChildChangeListener : ChangeListener
         {
-            if (instance == null)
-                throw new ArgumentNullException(nameof(instance));
+            private static readonly Type InotifyType = typeof(INotifyPropertyChanged);
 
-            m_value = instance;
-            m_type = m_value.GetType();
+            private readonly INotifyPropertyChanged m_value;
+            private readonly Type m_type;
+            private readonly Dictionary<string, ChangeListener> m_childListeners = new Dictionary<string, ChangeListener>();
 
-            Subscribe();
-        }
-
-        public ChildChangeListener(INotifyPropertyChanged instance, string propertyName)
-            : this(instance)
-        {
-            PropertyName = propertyName;
-        }
-        private void Subscribe()
-        {
-            m_value.PropertyChanged += value_PropertyChanged;
-
-            var query =
-                from property
-                in m_type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                where InotifyType.IsAssignableFrom(property.PropertyType)
-                select property;
-
-            foreach (var property in query)
+            public ChildChangeListener(INotifyPropertyChanged instance, string propertyName = null)
             {
-                // Declare property as known "Child", then register it
-                m_childListeners.Add(property.Name, null);
-                ResetChildListener(property.Name);
+                if (instance == null)
+                    throw new ArgumentNullException(nameof(instance));
+
+                m_value = instance;
+                m_type = m_value.GetType();
+
+                Subscribe();
+
+                PropertyName = propertyName;
             }
-        }
-
-
-        /// <summary>
-        /// Resets known (must exist in children collection) child event handlers
-        /// </summary>
-        /// <param name="propertyName">Name of known child property</param>
-        private void ResetChildListener(string propertyName)
-        {
-            if (m_childListeners.ContainsKey(propertyName))
+            private void Subscribe()
             {
-                // Unsubscribe if existing
-                if (m_childListeners[propertyName] != null)
-                {
-                    m_childListeners[propertyName].PropertyChanged -= child_PropertyChanged;
+                m_value.PropertyChanged += value_PropertyChanged;
 
-                    // Should unsubscribe all events
-                    m_childListeners[propertyName].Dispose();
-                    m_childListeners[propertyName] = null;
+                var query =
+                    from property
+                    in m_type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    where InotifyType.IsAssignableFrom(property.PropertyType)
+                    select property;
+
+                foreach (var property in query)
+                {
+                    // Declare property as known "Child", then register it
+                    m_childListeners.Add(property.Name, null);
+                    ResetChildListener(property.Name);
                 }
+            }
 
-                var property = m_type.GetProperty(propertyName);
-                if (property == null)
-                    throw new InvalidOperationException($"Was unable to get '{propertyName}' property information from Type '{m_type.Name}'");
 
-                object newValue = property.GetValue(m_value, null);
-
-                // Only recreate if there is a new value
-                if (newValue != null)
+            private void ResetChildListener(string propertyName)
+            {
+                if (m_childListeners.ContainsKey(propertyName))
                 {
-                    if (newValue is INotifyCollectionChanged)
-                    {
-                        m_childListeners[propertyName] =
-                            new CollectionChangeListener(newValue as INotifyCollectionChanged, propertyName);
-                    }
-                    else if (newValue is INotifyPropertyChanged)
-                    {
-                        m_childListeners[propertyName] =
-                            new ChildChangeListener(newValue as INotifyPropertyChanged, propertyName);
-                    }
-
+                    // Unsubscribe if existing
                     if (m_childListeners[propertyName] != null)
-                        m_childListeners[propertyName].PropertyChanged += child_PropertyChanged;
+                    {
+                        m_childListeners[propertyName].PropertyChanged -= child_PropertyChanged;
+
+                        // Should unsubscribe all events
+                        m_childListeners[propertyName].Unsubscribe();
+                        m_childListeners[propertyName] = null;
+                    }
+
+                    var property = m_type.GetProperty(propertyName);
+                    if (property == null)
+                        throw new InvalidOperationException($"Was unable to get '{propertyName}' property information from Type '{m_type.Name}'");
+
+                    object newValue = property.GetValue(m_value, null);
+
+                    // Only recreate if there is a new value
+                    if (newValue != null)
+                    {
+                        if (newValue is INotifyCollectionChanged)
+                        {
+                            m_childListeners[propertyName] =
+                                new CollectionChangeListener(newValue as INotifyCollectionChanged, propertyName);
+                        }
+                        else if (newValue is INotifyPropertyChanged)
+                        {
+                            m_childListeners[propertyName] =
+                                new ChildChangeListener(newValue as INotifyPropertyChanged, propertyName);
+                        }
+
+                        if (m_childListeners[propertyName] != null)
+                            m_childListeners[propertyName].PropertyChanged += child_PropertyChanged;
+                    }
                 }
             }
-        }
-        private void child_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            RaisePropertyChanged(e.PropertyName);
-        }
-        private void value_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            // First, reset child on change, if required...
-            ResetChildListener(e.PropertyName);
-
-            // ...then, notify about it
-            RaisePropertyChanged(e.PropertyName);
-        }
-
-        protected override void RaisePropertyChanged(string propertyName)
-        {
-            // Special Formatting
-            base.RaisePropertyChanged($"{PropertyName}{( PropertyName != null ? "." : null )}{propertyName}");
-        }
-        /// <summary>
-        /// Release all child handlers and self handler
-        /// </summary>
-        protected override void Unsubscribe()
-        {
-            m_value.PropertyChanged -= value_PropertyChanged;
-
-            foreach (var binderKey in m_childListeners.Keys)
+            private void child_PropertyChanged(object sender, PropertyChangedEventArgs e)
             {
-                if (m_childListeners[binderKey] != null)
-                    m_childListeners[binderKey].Dispose();
+                RaisePropertyChanged(e.PropertyName);
+            }
+            private void value_PropertyChanged(object sender, PropertyChangedEventArgs e)
+            {
+                // First, reset child on change, if required...
+                ResetChildListener(e.PropertyName);
+
+                // ...then, notify about it
+                RaisePropertyChanged(e.PropertyName);
             }
 
-            m_childListeners.Clear();
+            protected override void RaisePropertyChanged(string propertyName)
+            {
+                // Special Formatting
+                base.RaisePropertyChanged($"{PropertyName}{(PropertyName != null ? "." : null)}{propertyName}");
+            }
+            public override void Unsubscribe()
+            {
+                m_value.PropertyChanged -= value_PropertyChanged;
 
-            System.Diagnostics.Debug.WriteLine("ChildChangeListener '{0}' unsubscribed", PropertyName);
+                foreach (var binderKey in m_childListeners.Keys)
+                {
+                    if (m_childListeners[binderKey] != null)
+                        m_childListeners[binderKey].Unsubscribe();
+                }
+
+                m_childListeners.Clear();
+            }
         }
+
     }
+
 }

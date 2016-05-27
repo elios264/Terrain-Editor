@@ -32,7 +32,7 @@ namespace TerrainEditor.Utilities
 
             var parameters = @delegate.Method
                 .GetParameters()
-                .Select(parameter => Expression.Parameter(parameter.ParameterType, parameter.Name))
+                .Select(parameter => Expression.Parameter(parameter.ParameterType))
                 .ToArray();
 
 
@@ -58,6 +58,5 @@ namespace TerrainEditor.Utilities
         {
             return handler.m_weakDelegate;
         }
-
     }
 }

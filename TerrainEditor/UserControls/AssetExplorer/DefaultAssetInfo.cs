@@ -18,11 +18,5 @@ namespace TerrainEditor.UserControls
         {
             Process.Start(FileInfo.FullName);
         }
-        public void SaveToDisk()
-        {
-        }
-        public void ReloadFromDisk()
-        {
-        }
     }
 }

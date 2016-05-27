@@ -94,6 +94,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\DialogBoxService.cs" />
     <Compile Include="Core\IsServiceAttribute.cs" />
     <Compile Include="Core\ServiceLocator.cs" />
     <Compile Include="Properties\Annotations.cs" />
@@ -121,6 +122,7 @@
     <Compile Include="Utilities\ChangeListener\ChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\ChildChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\CollectionChangeListener.cs" />
+    <Compile Include="Utilities\ChangeListener\PropertyChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Core\UVAssetInfo.cs" />

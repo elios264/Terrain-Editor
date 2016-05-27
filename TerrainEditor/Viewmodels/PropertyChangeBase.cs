@@ -8,18 +8,18 @@ namespace TerrainEditor.ViewModels
 {
     public class PropertyChangeBase : INotifyPropertyChanged
     {
-        private readonly Lazy<ChangeListener> m_recursivePropertyChangeListener;
+        private readonly PropertyChangeListener m_recursivePropertyChangeListener;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler RecursivePropertyChanged
         {
             add
             {
-                m_recursivePropertyChangeListener.Value.PropertyChanged += value;
+                m_recursivePropertyChangeListener.PropertyChanged += value;
             }
             remove
             {
-                m_recursivePropertyChangeListener.Value.PropertyChanged -= value;
+                m_recursivePropertyChangeListener.PropertyChanged -= value;
             }
         }
 
@@ -31,7 +31,7 @@ namespace TerrainEditor.ViewModels
 
         public PropertyChangeBase()
         {
-            m_recursivePropertyChangeListener = new Lazy<ChangeListener>(() => ChangeListener.Create(this), true);
+            m_recursivePropertyChangeListener = new PropertyChangeListener(this);
         }
     }
 }

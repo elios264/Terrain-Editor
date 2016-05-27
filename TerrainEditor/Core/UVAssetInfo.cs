@@ -1,5 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using MahApps.Metro.SimpleChildWindow;
@@ -29,7 +32,7 @@ namespace TerrainEditor.Core
             m_mappingCache = new Lazy<UvMapping>(() =>
             {
                 var readStream = FileInfo.OpenRead();
-                var mapping = (UvMapping)Serializer.Read(readStream, "");
+                var mapping = (UvMapping)Serializer.Read(readStream);
                 readStream.Close();
                 return mapping;
             }, true);
@@ -37,18 +40,19 @@ namespace TerrainEditor.Core
 
         public void ShowEditor()
         {
-            var observer = ChangeListener.Create(m_mappingCache.Value);
-            var assetChanged = false;
-
-            observer.PropertyChanged += (sender, args) => assetChanged = true;
-
             var uvMappingEditor = new UvMappingEditor { Source = m_mappingCache.Value };
+
+            bool assetChanged = false;
+            var notifier = new PropertyChangedEventHandler((sender, args) => assetChanged = assetChanged || !args.PropertyName.Contains(nameof(Segment.Editor)));
+
+            uvMappingEditor.Source.RecursivePropertyChanged += notifier;
+
             uvMappingEditor.Closing += (sender, args) =>
             {
                 var result = MessageBoxResult.None;
 
                 if (assetChanged)
-                    result = MessageBox.Show(Application.Current.MainWindow, "Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
+                    result = ServiceLocator.Get<IDialogBoxService>().ShowSimpleDialog("Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
 
                 switch (result)
                 {
@@ -56,29 +60,30 @@ namespace TerrainEditor.Core
                     args.Cancel = true;
                     break;
                 case MessageBoxResult.Yes:
-                    SaveToDisk();
+                    Task.Run(new Action(SaveToDisk));
                     break;
                 case MessageBoxResult.No:
-                    ReloadFromDisk();
+                    Task.Run(new Action(ReloadFromDisk));
                     break;
                 }
 
                 if (!args.Cancel)
-                    observer.Dispose();
+                    uvMappingEditor.Source.RecursivePropertyChanged -= notifier;
             };
 
-            Application.Current.MainWindow.ShowChildWindowAsync(uvMappingEditor);
+            ServiceLocator.Get<IDialogBoxService>().ShowCustomDialog(uvMappingEditor);
         }
         public void SaveToDisk()
         {
             var writeStream = FileInfo.Open(FileMode.Create);
+
             Serializer.Write(writeStream, "UvMapping", Asset);
             writeStream.Close();
         }
         public void ReloadFromDisk()
         {
             var readStream = FileInfo.OpenRead();
-            var mapping = (UvMapping) Serializer.Read(readStream, "");
+            var mapping = (UvMapping) Serializer.Read(readStream);
             readStream.Close();
             m_mappingCache = new Lazy<UvMapping>(() => mapping);
         }

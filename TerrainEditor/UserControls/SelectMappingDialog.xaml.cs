@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
+using TerrainEditor.Core;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
@@ -34,7 +35,9 @@ namespace TerrainEditor.UserControls
         }
         private void OnEditSourceMapping(object sender, RoutedEventArgs e)
         {
-            Application.Current.MainWindow.ShowChildWindowAsync(new UvMappingEditor { Source = (UvMapping) Options.SelectedItem});
+            ServiceLocator
+                .Get<IDialogBoxService>()
+                .ShowCustomDialog(new UvMappingEditor { Source = (UvMapping)Options.SelectedItem });
         }
     }
 }

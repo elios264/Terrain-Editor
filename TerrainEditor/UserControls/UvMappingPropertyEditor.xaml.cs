@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using MahApps.Metro.SimpleChildWindow;
+using TerrainEditor.Core;
 
 namespace TerrainEditor.UserControls
 {
@@ -18,7 +18,9 @@ namespace TerrainEditor.UserControls
             m_mappingDialog = new SelectMappingDialog();
             m_mappingDialog.ClosingFinished += MappingDialogOnClosingFinished;
 
-            Application.Current.MainWindow.ShowChildWindowAsync(m_mappingDialog);
+            ServiceLocator
+                .Get<IDialogBoxService>()
+                .ShowCustomDialog(m_mappingDialog);
         }
         private void MappingDialogOnClosingFinished(object sender, RoutedEventArgs routedEventArgs)
         {

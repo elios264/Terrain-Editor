@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using MoreLinq;
 
 namespace TerrainEditor.Core
 {
@@ -16,8 +17,16 @@ namespace TerrainEditor.Core
 
             Services = appAssembly.GetTypes()
                                   .Where(type => Attribute.IsDefined(type, typeof(IsServiceAttribute)))
-                                  .ToDictionary(type => type.GetCustomAttribute<IsServiceAttribute>().ServiceInterfaceType, 
-                                                Activator.CreateInstance);
+                                  .Select(implementationType =>
+                                  {
+                                      var serviceInterfaceType = implementationType.GetCustomAttribute<IsServiceAttribute>().ServiceInterfaceType;
+
+                                      if (!serviceInterfaceType.IsAssignableFrom(implementationType))
+                                          throw new ArgumentException($"{implementationType.Name} does not implement {serviceInterfaceType.Name}");
+
+                                      return new { serviceInterfaceType, implementationType };
+                                  })
+                                  .ToDictionary(info => info.serviceInterfaceType, info => Activator.CreateInstance(info.implementationType));
         }
 
         public static void Register<TServiceInterface>(TServiceInterface instance)
