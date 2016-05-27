@@ -10,6 +10,9 @@ namespace TerrainEditor.UserControls
         ImageSource Preview { get; }
 
         void ShowEditor();
+
+        void SaveToDisk();
+        void ReloadFromDisk();
     }
 
 }

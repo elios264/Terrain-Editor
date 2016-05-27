@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using PersistDotNet.Persist;
 using TerrainEditor.Annotations;
-using Utils = TerrainEditor.Utilities.Utils;
+using TerrainEditor.Utilities;
 
 namespace TerrainEditor.ViewModels
 {
@@ -27,8 +27,8 @@ namespace TerrainEditor.ViewModels
         private Segment m_left;
         private Segment m_right;
         private Segment m_bottom;
-        private BitmapImage m_edgeTexture;
-        private BitmapImage m_fillTexture;
+        private Lazy<BitmapImage> m_edgeTexture;
+        private Lazy<BitmapImage> m_fillTexture;
 
         public string Name
         {
@@ -50,18 +50,25 @@ namespace TerrainEditor.ViewModels
         {
             get
             {
-                return EdgeTexture?.UriSource.OriginalString;
+                return EdgeTexture?.UriSource?.OriginalString;
             }
             set
             {
                 if (EdgeTexturePath == value) return;
 
-                BitmapImage img = new BitmapImage();
-                img.BeginInit();
-                img.UriSource = new Uri(value);
-                img.EndInit();
-                img.Freeze();
-                EdgeTexture = img;
+                m_edgeTexture = new Lazy<BitmapImage>(() =>
+                {
+                    var img = new BitmapImage();
+                    img.BeginInit();
+                    img.UriSource = new Uri(value);
+                    img.EndInit();
+                    img.Freeze();
+                    return img;
+                });
+
+                OnPropertyChanged(nameof(EdgeTexturePath));
+                OnPropertyChanged(nameof(EdgeTexture));
+
             }
         }
         [UsedImplicitly, Persist(nameof(FillTexture))]
@@ -69,18 +76,24 @@ namespace TerrainEditor.ViewModels
         {
             get
             {
-                return FillTexture?.UriSource.OriginalString;
+                return FillTexture?.UriSource?.OriginalString;
             }
             set
             {
                 if (FillTexturePath == value) return;
 
-                BitmapImage img = new BitmapImage();
-                img.BeginInit();
-                img.UriSource = new Uri(value);
-                img.EndInit();
-                img.Freeze();
-                FillTexture = img;
+                m_fillTexture = new Lazy<BitmapImage>(() =>
+                {
+                    var img = new BitmapImage();
+                    img.BeginInit();
+                    img.UriSource = new Uri(value);
+                    img.EndInit();
+                    img.Freeze();
+                    return img;
+                });
+
+                OnPropertyChanged(nameof(FillTexturePath));
+                OnPropertyChanged(nameof(FillTexture));
             }
         }
 
@@ -89,22 +102,22 @@ namespace TerrainEditor.ViewModels
         {
             set
             {
-                if (Equals(value, m_edgeTexture)) return;
-                m_edgeTexture = value;
+                if (Equals(value, m_edgeTexture?.Value)) return;
+                m_edgeTexture = new Lazy<BitmapImage>(() => value);
                 OnPropertyChanged();
             }
-            get { return m_edgeTexture; }
+            get { return m_edgeTexture?.Value; }
         }
         [Persist(Ignore = true)]
         public BitmapImage FillTexture
         {
             set
             {
-                if (Equals(value, m_fillTexture)) return;
-                m_fillTexture = value;
+                if (Equals(value, m_fillTexture?.Value)) return;
+                m_fillTexture = new Lazy<BitmapImage>(() => value);
                 OnPropertyChanged();
             }
-            get { return m_fillTexture; }
+            get { return m_fillTexture?.Value; }
         }
 
         public Segment Top

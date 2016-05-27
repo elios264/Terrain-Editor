@@ -19,6 +19,7 @@ namespace TerrainEditor.UserControls
                 return control;
             }
 
+            property.AutoUpdateText = true;
             return base.CreateDefaultControl(property);
         }
     }

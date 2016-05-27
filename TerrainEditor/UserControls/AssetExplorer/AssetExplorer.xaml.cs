@@ -165,7 +165,7 @@ namespace TerrainEditor.UserControls
         }
         private void FileList_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            SelectedAsset?.ShowEditor();
+            SelectedAsset.ShowEditor();
         }
 
         private void OnNewFolder(object sender, RoutedEventArgs e)

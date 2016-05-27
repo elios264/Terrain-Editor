@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using TerrainEditor.Core;
 
 /*
  * TODO
@@ -45,7 +46,9 @@ namespace TerrainEditor.ViewModels
         public TerrainEditorDataContext()
         {
             Terrains = new ObservableCollection<DynamicMesh>();
-            Terrains.CollectionChanged += OnTerrainsChanged;
+            ChangeListener.Create(Terrains, nameof(Terrains))
+                          .PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
+
 
             Terrains.Add(new DynamicMesh(new[]
             {
@@ -63,32 +66,6 @@ namespace TerrainEditor.ViewModels
             });
 
             SelectedTerrain = Terrains[0];
-        }
-
-        private void OnTerrainsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                {
-                    var newMesh = e.NewItems.Cast<DynamicMesh>().Single();
-                    newMesh.PropertyChanged += MeshOnPropertyChanged;
-                }
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                {
-                    var newMesh = e.OldItems.Cast<DynamicMesh>().Single();
-                    newMesh.PropertyChanged -= MeshOnPropertyChanged;
-                }
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            OnPropertyChanged(nameof(TerrainsMeshes));
-        }
-        private void MeshOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
-        {
-            OnPropertyChanged(nameof(TerrainsMeshes));
         }
     }
 }

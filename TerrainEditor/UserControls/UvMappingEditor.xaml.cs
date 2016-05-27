@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using System;
+using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.ViewModels;
 
@@ -24,8 +27,13 @@ namespace TerrainEditor.UserControls
         public UvMappingEditor()
         {
             InitializeComponent();
+            Closing += OnClosing;
         }
 
+        private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
+        {
+            Keyboard.Focus(this);
+        }
         private void OnAddBody(object sender, RoutedEventArgs e)
         {
             ((Segment)((Button)sender).CommandParameter).Bodies.Add(new Rect());

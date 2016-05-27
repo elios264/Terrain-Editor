@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
-using MoreLinq;
 using PropertyTools.DataAnnotations;
+using TerrainEditor.Core;
 using TerrainEditor.UserControls;
-using TerrainEditor.Utilities;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 
@@ -149,8 +145,7 @@ namespace TerrainEditor.ViewModels
             }
         }
 
-        [Category("Terrain Data")]
-        [CustomEditor(typeof(UvMappingPropertyEditor))]
+        [Category("Terrain Data"), SortIndex(5), CustomEditor(typeof(UvMappingPropertyEditor))]
         public UvMapping UvMapping
         {
             get { return m_uvMapping; }
@@ -161,7 +156,7 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        [List(false,true)]
+        [Category("Terrain Data"), List(false,true),SortIndex(6)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
         public DynamicMesh(IEnumerable<VertexInfo> vertices = null)
@@ -169,30 +164,7 @@ namespace TerrainEditor.ViewModels
             vertices = vertices ?? Enumerable.Empty<VertexInfo>();
             Vertices = new ObservableCollection<VertexInfo>(vertices);
 
-            PropertyChanged += (sender, args) => m_isDirty = true;
-            Vertices.CollectionChanged += VerticesOnCollectionChanged;
-
-            VerticesOnCollectionChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,Vertices));
-        }
-
-        private void VerticesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
-        {
-            switch (args.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    args.NewItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged += VertexChanged);
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    args.OldItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged -= VertexChanged);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            OnPropertyChanged(nameof(Vertices));
-        }
-        private void VertexChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
-        {
-            OnPropertyChanged(nameof(Vertices));
+            RecursivePropertyChanged += (sender, args) => m_isDirty = true;
         }
 
         [Browsable(false)]

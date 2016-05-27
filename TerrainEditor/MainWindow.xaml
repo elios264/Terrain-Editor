@@ -8,6 +8,7 @@
         xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
         xmlns:lcl="clr-namespace:TerrainEditor.UserControls"
         xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
+        xmlns:core="clr-namespace:TerrainEditor.Core"
         mc:Ignorable="d"
         GlowBrush="Black"
         Title="Terrain Editor" Width="1024" Height="768" TitleCaps="False" WindowState="Maximized">
@@ -115,11 +116,11 @@
 
             <lcl:PropertiesEditor Background="#252525" Grid.Column="2" Grid.RowSpan="3" Grid.Row="0" Source="{Binding SelectedTerrain}"/>
 
-            <lcl:AssetExplorer Grid.Row="2" >
+            <lcl:AssetExplorer Grid.Row="2" RootPath="C:\Users\elios\elios' files" >
                 
                 <lcl:AssetExplorer.AssetTypes>
                     <lcl:AssetTypeCollection>
-                        <lcl:AssetType Extension=".uvmapping" Handler="{x:Type utilities:UvAssetInfo}"/>
+                        <lcl:AssetType Extension=".uvmapping" Handler="{x:Type core:UvAssetInfo}"/>
                     </lcl:AssetTypeCollection>
                 </lcl:AssetExplorer.AssetTypes>
             </lcl:AssetExplorer>

@@ -10,6 +10,7 @@ using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MahApps.Metro.Controls;
 using MoreLinq;
+using TerrainEditor.Core;
 using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 
@@ -55,6 +56,8 @@ namespace TerrainEditor.UserControls
         private List<BillboardVisual3D> m_vertices;
         private List<BillboardVisual3D> m_addVertexCallouts;
         private List<BillboardVisual3D> m_changeDirectionCallouts;
+
+        private ChangeListener m_sourceChangeListener;
 
         public DynamicMesh Source
         {
@@ -110,7 +113,7 @@ namespace TerrainEditor.UserControls
 
 
             if (oldMesh != null)
-                instance.UnregisterSource(oldMesh);
+                instance.UnregisterSource();
 
             if (newMesh != null)
                 instance.RegisterSource();
@@ -131,13 +134,15 @@ namespace TerrainEditor.UserControls
 
         private void RegisterSource()
         {
-            Source.Vertices.CollectionChanged += VerticesOnCollectionChanged;
-            VerticesOnCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, Source.Vertices));
+            m_sourceChangeListener = ChangeListener.Create(Source);
+            m_sourceChangeListener.PropertyChanged += (sender, args) => Tesellate();
+
+            Tesellate();
         }
-        private void UnregisterSource(DynamicMesh oldMesh)
+        private void UnregisterSource()
         {
-            oldMesh.Vertices.CollectionChanged -= VerticesOnCollectionChanged;
-            VerticesOnCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldMesh.Vertices));
+            m_sourceChangeListener.Dispose();
+            m_sourceChangeListener = null;
         }
 
         private void RegisterInputSource()
@@ -319,26 +324,6 @@ namespace TerrainEditor.UserControls
 
             return Transform.Inverse.Transform(swp);
         }
-        private void VerticesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
-        {
-            switch (args.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    args.NewItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged += VertexChanged);
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    args.OldItems.Cast<VertexInfo>().ForEach(info => info.PropertyChanged -= VertexChanged);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-
-            Tesellate();
-        }
-        private void VertexChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
-        {
-            Tesellate();
-        }
         private void FeedHitTest(Point position, HitTest2DDelegate callBack)
         {
             var callout = this.GetViewport3D().FindNearestVisual(position) as BillboardVisual3D;
@@ -451,6 +436,5 @@ namespace TerrainEditor.UserControls
             };
             Source.Mesh.Transform = transform;
         }
-
     }
 }

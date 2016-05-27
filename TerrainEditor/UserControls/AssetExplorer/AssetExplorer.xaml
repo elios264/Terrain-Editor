@@ -59,7 +59,7 @@
         
         <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeDirection="Columns" Focusable="False" />
         
-        <ListBox MouseDoubleClick="FileList_OnMouseDoubleClick" SelectedItem="{Binding SelectedAsset}" Grid.Column="2" Name="FileList" SelectionMode="Extended" TextSearch.TextPath="FileInfo.Name" IsTextSearchEnabled="True" IsTextSearchCaseSensitive="False" Padding="0,5" ItemsSource="{Binding CurrentAssets}" >
+        <ListBox SelectedItem="{Binding SelectedAsset}" Grid.Column="2" Name="FileList" SelectionMode="Extended" TextSearch.TextPath="FileInfo.Name" IsTextSearchEnabled="True" IsTextSearchCaseSensitive="False" Padding="0,5" ItemsSource="{Binding CurrentAssets}" >
             <ListBox.Resources>
                 <BitmapImage po:Freeze="true" x:Key="DefaultFileIcon" UriSource="../../icons/file.png"/>
             </ListBox.Resources>
@@ -88,6 +88,7 @@
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                     <Setter Property="VerticalContentAlignment" Value="Top"/>
+                    <EventSetter Event="MouseDoubleClick" Handler="FileList_OnMouseDoubleClick"/>
                 </Style>
             </ListBox.ItemContainerStyle>
         </ListBox>

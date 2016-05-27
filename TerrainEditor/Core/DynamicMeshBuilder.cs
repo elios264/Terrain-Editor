@@ -6,10 +6,11 @@ using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MoreLinq;
 using Poly2Tri;
+using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 using Polygon = Poly2Tri.Polygon;
 
-namespace TerrainEditor.Utilities
+namespace TerrainEditor.Core
 {
     public class DynamicMeshBuilder
     {
