@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Input;
 using System.Windows.Threading;
 using MahApps.Metro.Controls;
+using PersistDotNet.Persist;
+using TerrainEditor.ViewModels;
 
 namespace TerrainEditor
 {
@@ -13,6 +16,7 @@ namespace TerrainEditor
         public MainWindow()
         {
             InitializeComponent();
+
 
             Dispatcher.BeginInvoke(DispatcherPriority.Input,
                 new Action(() =>

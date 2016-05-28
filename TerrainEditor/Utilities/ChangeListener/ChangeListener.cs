@@ -3,6 +3,7 @@ using System.ComponentModel;
 
 namespace TerrainEditor.Utilities
 {
+    //credits to https://gist.github.com/thojaw/705450
     public partial class PropertyChangeListener : IDisposable
     {
         private abstract class ChangeListener : INotifyPropertyChanged
@@ -27,7 +28,6 @@ namespace TerrainEditor.Utilities
                 ChangedEventHandler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
             public abstract void Unsubscribe();
-
 
         }
     }
