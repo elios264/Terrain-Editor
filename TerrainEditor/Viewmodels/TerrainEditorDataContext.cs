@@ -3,8 +3,6 @@ using System.Linq;
 using System.Windows.Media.Media3D;
 using TerrainEditor.Utilities;
 
-
-
 namespace TerrainEditor.ViewModels
 {
     public class TerrainEditorDataContext : PropertyChangeBase

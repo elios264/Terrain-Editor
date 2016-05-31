@@ -1,15 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using MahApps.Metro.SimpleChildWindow;
-using PersistDotNet.Persist;
+using elios.Persist;
 using TerrainEditor.Annotations;
 using TerrainEditor.UserControls;
-using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.Core
@@ -17,7 +14,7 @@ namespace TerrainEditor.Core
     [UsedImplicitly]
     public class UvAssetInfo : IAssetInfo
     {
-        private static readonly XmlSerializer Serializer = new XmlSerializer(typeof(UvMapping));
+        private static readonly XmlArchive Archive = new XmlArchive(typeof(UvMapping));
 
         private Lazy<UvMapping> m_mappingCache;
 
@@ -32,7 +29,7 @@ namespace TerrainEditor.Core
             m_mappingCache = new Lazy<UvMapping>(() =>
             {
                 var readStream = FileInfo.OpenRead();
-                var mapping = (UvMapping)Serializer.Read(readStream);
+                var mapping = (UvMapping)Archive.Read(readStream);
                 readStream.Close();
                 return mapping;
             }, true);
@@ -77,13 +74,13 @@ namespace TerrainEditor.Core
         {
             var writeStream = FileInfo.Open(FileMode.Create);
 
-            Serializer.Write(writeStream, "UvMapping", Asset);
+            Archive.Write(writeStream, Asset);
             writeStream.Close();
         }
         public void ReloadFromDisk()
         {
             var readStream = FileInfo.OpenRead();
-            var mapping = (UvMapping) Serializer.Read(readStream);
+            var mapping = (UvMapping) Archive.Read(readStream);
             readStream.Close();
             m_mappingCache = new Lazy<UvMapping>(() => mapping);
         }

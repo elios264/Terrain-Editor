@@ -62,6 +62,14 @@
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Persist, Version=1.0.0.26097, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Persist.1.0.0.26097\lib\net45\Persist.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="PropertyTools, Version=2015.2.0.0, Culture=neutral, PublicKeyToken=ea0c9f2b460934d0, processorArchitecture=MSIL">
       <HintPath>..\packages\PropertyTools.Wpf.2015.2.0\lib\net45\PropertyTools.dll</HintPath>
       <Private>True</Private>
@@ -88,6 +96,10 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="YamlDotNet, Version=3.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.3.8.0\lib\net35\YamlDotNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -207,10 +219,6 @@
     <Resource Include="icons\save.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Persist\PersistDotNet.csproj">
-      <Project>{52a5caa6-902e-4073-a956-ae35881269e2}</Project>
-      <Name>PersistDotNet</Name>
-    </ProjectReference>
     <ProjectReference Include="..\polytri\Poly2Tri.csproj">
       <Project>{c5e5802d-6a45-4fe9-bae7-5f0ae91d72c1}</Project>
       <Name>Poly2Tri</Name>
