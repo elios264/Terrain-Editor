@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace TerrainEditor.UserControls
@@ -14,9 +15,12 @@ namespace TerrainEditor.UserControls
         {
             FileInfo = info;
         }
-        public void ShowEditor()
+        public Task ShowEditor()
         {
             Process.Start(FileInfo.FullName);
+            return Task.CompletedTask;
         }
+        public void SaveToDisk() {}
+        public void ReloadFromDisk() {}
     }
 }

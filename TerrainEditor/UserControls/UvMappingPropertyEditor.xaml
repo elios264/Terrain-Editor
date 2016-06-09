@@ -16,7 +16,9 @@
         </Grid.ColumnDefinitions>
 
         <Button Margin="0,0,5,0" Click="SelectNewMapping">
-            <Image Source="{Binding EdgeTexture}" Stretch="Fill"  />
+            <StackPanel>
+                <Image Source="{Binding EdgeTexture}" Stretch="Fill" />
+            </StackPanel>
         </Button>
         <StackPanel Grid.Column="1" >
             <TextBlock Text="Material Name" TextAlignment="Center" />

@@ -9,14 +9,8 @@ namespace TerrainEditor.UserControls
 
         public object Source
         {
-            get
-            {
-                return (object) GetValue(SourceProperty);
-            }
-            set
-            {
-                SetValue(SourceProperty, value);
-            }
+            get { return GetValue(SourceProperty); }
+            set { SetValue(SourceProperty, value); }
         }
 
 

@@ -3,7 +3,8 @@ using System.Windows;
 
 namespace TerrainEditor.UserControls
 {
-    public class CustomEditorAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class CustomEditorAttribute : Attribute
     {
         public Type ControlType { get; }
 

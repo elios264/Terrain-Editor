@@ -39,6 +39,10 @@
   <PropertyGroup>
     <StartupObject>TerrainEditor.App</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>
+    </ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="HelixToolkit, Version=2015.1.712.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
       <HintPath>..\packages\HelixToolkit.2015.1.712\lib\portable-net4+sl4+wp71+win8\HelixToolkit.dll</HintPath>
@@ -57,17 +61,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="MoreLinq, Version=1.4.18916.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Persist, Version=1.0.0.26097, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Persist.1.0.0.26097\lib\net45\Persist.dll</HintPath>
+    <Reference Include="Persist, Version=1.0.0.26407, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Persist.1.0.0.26407\lib\net45\Persist.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PropertyTools, Version=2015.2.0.0, Culture=neutral, PublicKeyToken=ea0c9f2b460934d0, processorArchitecture=MSIL">
@@ -115,6 +114,7 @@
     </Compile>
     <Compile Include="UserControls\AssetExplorer\DefaultAssetInfo.cs" />
     <Compile Include="UserControls\AssetExplorer\Directory.cs" />
+    <Compile Include="UserControls\AssetExplorer\File.cs" />
     <Compile Include="UserControls\AssetExplorer\IAssetInfo.cs" />
     <Compile Include="UserControls\PropertiesEditor\PropertyControlFactory.cs" />
     <Compile Include="UserControls\PropertiesEditor\PropertiesEditor.xaml.cs">
@@ -136,8 +136,9 @@
     <Compile Include="Utilities\ChangeListener\CollectionChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\PropertyChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
+    <Compile Include="Utilities\FileOperationAPIWrapper.cs" />
     <Compile Include="Utilities\Utils.cs" />
-    <Compile Include="Core\UVAssetInfo.cs" />
+    <Compile Include="UserControls\AssetExplorer\UVAssetInfo.cs" />
     <Compile Include="Utilities\WeakEventHandler.cs" />
     <Compile Include="Viewmodels\DynamicMesh.cs" />
     <Compile Include="Core\DynamicMeshBuilder.cs" />

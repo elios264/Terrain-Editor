@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
@@ -26,7 +27,7 @@ namespace TerrainEditor.Utilities
 
             return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
         }
-        public static T[] ToNewArray<T>(this T head)
+        public static T[] IntoANewArray<T>(this T head)
         {
             return new[] {head};
         }
@@ -96,14 +97,11 @@ namespace TerrainEditor.Utilities
         public static BitmapImage LoadBitmapFromResource(string pathInApplication, Assembly assembly = null)
         {
             if (assembly == null)
-            {
                 assembly = Assembly.GetCallingAssembly();
-            }
 
             if (pathInApplication[0] == '/')
-            {
                 pathInApplication = pathInApplication.Substring(1);
-            }
+
             return new BitmapImage(new Uri(@"pack://application:,,,/" + assembly.GetName().Name + ";component/" + pathInApplication, UriKind.Absolute));
         }
 
@@ -115,5 +113,7 @@ namespace TerrainEditor.Utilities
         {
             return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
         }
+
     }
+
 }

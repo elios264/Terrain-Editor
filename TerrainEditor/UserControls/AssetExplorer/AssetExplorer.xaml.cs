@@ -1,105 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.VisualBasic.FileIO;
+using MoreLinq;
+using TerrainEditor.Annotations;
+using TerrainEditor.Utilities;
 
 namespace TerrainEditor.UserControls
 {
-    public struct AssetType
+    public struct AssetHandlerInfo
     {
-        public Type Handler { get; set; }
+        public string Name { get; set; }
         public string Extension { get; set; }
+        public Type Handler { get; set; }
     }
-    public class AssetTypeCollection : List<AssetType> { }
+    public class AssetHandlerCollection : List<AssetHandlerInfo> { }
 
 
-    public partial class AssetExplorer : UserControl
+    public partial class AssetExplorer : UserControl , INotifyPropertyChanged
     {
-        private delegate IAssetInfo AssetFactory(FileInfo info);
-
         private static readonly DependencyPropertyKey RootDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(RootDirectory), typeof (Directory), typeof (AssetExplorer), new PropertyMetadata(default(Directory)));
-        private static readonly DependencyPropertyKey SelectedDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(SelectedDirectory), typeof (Directory), typeof (AssetExplorer), new PropertyMetadata(default(Directory),OnSelectedDirectoryChanged));
-        private static readonly DependencyPropertyKey CurrentAssetsPropertyKey = DependencyProperty.RegisterReadOnly(nameof(CurrentAssets), typeof (IEnumerable<IAssetInfo>), typeof (AssetExplorer), new PropertyMetadata(Enumerable.Empty<IAssetInfo>()));
+        private static readonly DependencyPropertyKey SelectedDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(SelectedDirectory), typeof (Directory), typeof (AssetExplorer), new PropertyMetadata(default(Directory),OnRefreshFiles));
+        private static readonly DependencyPropertyKey CurrentFilesPropertyKey = DependencyProperty.RegisterReadOnly(nameof(CurrentFiles), typeof (IEnumerable<File>), typeof (AssetExplorer), new PropertyMetadata(Enumerable.Empty<File>()));
 
-        public static readonly DependencyProperty SelectedAssetProperty = DependencyProperty.Register(nameof(SelectedAsset), typeof (IAssetInfo), typeof (AssetExplorer), new PropertyMetadata(default(IAssetInfo)));
+        private static readonly DependencyProperty ShowAllAssetsProperty = DependencyProperty.Register(nameof(ShowAllAssets), typeof(bool), typeof(AssetExplorer), new PropertyMetadata(true, OnRefreshFiles));
+        public static readonly DependencyProperty SelectedFileProperty = DependencyProperty.Register(nameof(SelectedFile), typeof (File), typeof (AssetExplorer), new PropertyMetadata(default(File)));
         public static readonly DependencyProperty RootPathProperty = DependencyProperty.Register(nameof(RootPath), typeof (string), typeof (AssetExplorer), new PropertyMetadata(System.IO.Directory.GetCurrentDirectory(), OnRootDirectoryChanged));
-        public static readonly DependencyProperty AssetTypesProperty = DependencyProperty.Register(nameof(AssetTypes), typeof (IEnumerable<AssetType>), typeof (AssetExplorer), new PropertyMetadata(Enumerable.Empty<AssetType>(),OnAssetTypesPopulated));
+        public static readonly DependencyProperty HandlersProperty = DependencyProperty.Register(nameof(Handlers), typeof (IEnumerable<AssetHandlerInfo>), typeof (AssetExplorer), new PropertyMetadata(Enumerable.Empty<AssetHandlerInfo>(),OnAssetTypesPopulated));
         public static readonly DependencyProperty RootDirectoryProperty = RootDirectoryPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SelectedDirectoryProperty = SelectedDirectoryPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty CurrentAssetsProperty = CurrentAssetsPropertyKey.DependencyProperty;
-
-        private Dictionary<string, AssetFactory> m_assetsFactories;
-        private readonly Dictionary<string, WeakReference<IAssetInfo>> m_assetsInUse;
+        public static readonly DependencyProperty CurrentFilesProperty = CurrentFilesPropertyKey.DependencyProperty;
+        
+        private Dictionary<string, Type> m_assetInfoMapping;
+        private bool m_isCutting;
 
         public string RootPath
         {
-            get
-            {
-                return (string) GetValue(RootPathProperty);
-            }
-            set
-            {
-                SetValue(RootPathProperty, value);
-            }
+            get { return (string)GetValue(RootPathProperty); }
+            set { SetValue(RootPathProperty, value); }
         }
         public Directory RootDirectory
         {
-            get
-            {
-                return (Directory) GetValue(RootDirectoryProperty);
-            }
-            private set
-            {
-                SetValue(RootDirectoryPropertyKey, value);
-            }
+            get { return (Directory)GetValue(RootDirectoryProperty); }
+            private set { SetValue(RootDirectoryPropertyKey, value); }
         }
         public Directory SelectedDirectory
         {
-            get
-            {
-                return (Directory) GetValue(SelectedDirectoryProperty);
-            }
-            private set
-            {
-                SetValue(SelectedDirectoryPropertyKey, value);
-            }
+            get { return (Directory)GetValue(SelectedDirectoryProperty); }
+            private set { SetValue(SelectedDirectoryPropertyKey, value); }
         }
-        public IAssetInfo SelectedAsset
+        public File SelectedFile
         {
-            get
-            {
-                return (IAssetInfo)GetValue(SelectedAssetProperty);
-            }
-            set
-            {
-                SetValue(SelectedAssetProperty, value);
-            }
+            get { return (File)GetValue(SelectedFileProperty); }
+            set { SetValue(SelectedFileProperty, value); }
         }
-        public IEnumerable<AssetType> AssetTypes
+        public IEnumerable<AssetHandlerInfo> Handlers
         {
-            get
-            {
-                return (IEnumerable<AssetType>)GetValue(AssetTypesProperty);
-            }
-            set
-            {
-                SetValue(AssetTypesProperty, value);
-            }
+            get { return (IEnumerable<AssetHandlerInfo>)GetValue(HandlersProperty); }
+            set { SetValue(HandlersProperty, value); }
         }
-        public IEnumerable<IAssetInfo> CurrentAssets
+        public IEnumerable<AssetHandlerInfo> VisibleHandlers
         {
-            get
-            {
-                return (IEnumerable<IAssetInfo>)GetValue(CurrentAssetsProperty);
-            }
-            private set
-            {
-                SetValue(CurrentAssetsPropertyKey, value);
-            }
+            get { return Handlers.Where(i => i.Name != null); }
+        }
+        public IEnumerable<File> CurrentFiles
+        {
+            get { return (IEnumerable<File>)GetValue(CurrentFilesProperty); }
+            private set { SetValue(CurrentFilesPropertyKey, value); }
+        }
+        private bool ShowAllAssets
+        {
+            get { return (bool)GetValue(ShowAllAssetsProperty); }
+            set { SetValue(ShowAllAssetsProperty, value); }
         }
 
         public AssetExplorer()
@@ -107,53 +85,42 @@ namespace TerrainEditor.UserControls
             InitializeComponent();
             OnAssetTypesPopulated(this,default(DependencyPropertyChangedEventArgs));
             OnRootDirectoryChanged(this,default(DependencyPropertyChangedEventArgs));
-
-            m_assetsInUse = new Dictionary<string, WeakReference<IAssetInfo>>();
         }
 
         private static void OnAssetTypesPopulated(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             var instance = (AssetExplorer) obj;
-            
-            instance.m_assetsFactories = instance.AssetTypes.ToDictionary(
-                    at => at.Extension, 
-                    at => new AssetFactory(info => (IAssetInfo)Activator.CreateInstance(at.Handler,info)) );
+
+            instance.m_assetInfoMapping = instance.Handlers.ToDictionary(i => i.Extension, i => i.Handler);
+            instance.OnPropertyChanged(nameof(VisibleHandlers));
         }
         private static void OnRootDirectoryChanged(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             var instance = (AssetExplorer)obj;
 
-            instance.RootDirectory = new Directory(new DirectoryInfo(instance.RootPath)) { IsExpanded = true, IsSelected = true};
+            instance.RootDirectory = new Directory(new DirectoryInfo(instance.RootPath))
+            {
+                IsExpanded = true,
+                IsSelected = true
+            };
         }
-        private static void OnSelectedDirectoryChanged(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
+        private static void OnRefreshFiles(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             var instance = (AssetExplorer) obj;
+            var assets = new List<File>();
 
-            var assets = new List<IAssetInfo>(instance.SelectedDirectory.Files.Count());
-            foreach (var file in instance.SelectedDirectory.Files)
+            instance.SelectedDirectory.DirectoryInfo.Refresh();
+
+            foreach (FileInfo info in instance.SelectedDirectory.Files)
             {
-                WeakReference<IAssetInfo> usedAsset;
-                if (instance.m_assetsInUse.TryGetValue(file.FullName, out usedAsset))
-                {
-                    IAssetInfo usedAssetInfo;
-                    if (usedAsset.TryGetTarget(out usedAssetInfo))
-                    {
-                        assets.Add(usedAssetInfo);
-                        continue;
-                    }
-
-                    instance.m_assetsInUse.Remove(file.FullName);
-                }
-
-                AssetFactory factory;
-                assets.Add(instance.m_assetsFactories.TryGetValue(file.Extension, out factory) 
-                    ? factory(file) 
-                    : new DefaultAssetInfo(file));
+                Type assetType;
+                if (instance.m_assetInfoMapping.TryGetValue(info.Extension, out assetType))
+                    assets.Add(new File((IAssetInfo)Activator.CreateInstance(assetType, info), instance.SelectedDirectory));
+                else if (instance.ShowAllAssets)
+                    assets.Add(new File(new DefaultAssetInfo(info), instance.SelectedDirectory));
             }
-
-            instance.CurrentAssets = assets;
+            instance.CurrentFiles = assets;
         }
-
 
         private void TreeViewMouseButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -163,16 +130,16 @@ namespace TerrainEditor.UserControls
         {
             SelectedDirectory = (Directory) e.NewValue;
         }
-        private void FileList_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void FileList_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            SelectedAsset.ShowEditor();
+            Keyboard.Focus(FileList);
         }
 
         private void OnNewFolder(object sender, RoutedEventArgs e)
         {
             const string newFolderName = "New Folder";
 
-            SelectedDirectory.GetDirectoryInfo().CreateSubdirectory(newFolderName);
+            SelectedDirectory.DirectoryInfo.CreateSubdirectory(newFolderName);
             SelectedDirectory.IsExpanded = true;
             SelectedDirectory.Refresh();
 
@@ -186,15 +153,106 @@ namespace TerrainEditor.UserControls
         }
         private void OnDeleteFolder(object sender, RoutedEventArgs e)
         {
-            FileSystem.DeleteDirectory(SelectedDirectory.GetDirectoryInfo().FullName, 
-                                        UIOption.AllDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
-
-            SelectedDirectory.ParentDirectory.Refresh();
+            if (FileOperationAPIWrapper.Send(SelectedDirectory.DirectoryInfo.FullName))
+                SelectedDirectory.ParentDirectory.Refresh();
         }
         private void OnRefreshFolder(object sender, RoutedEventArgs e)
         {
             SelectedDirectory.Refresh();
+            OnRefreshFiles(this,default(DependencyPropertyChangedEventArgs));
         }
 
+        private async void OnEditAsset(object sender, ExecutedRoutedEventArgs e)
+        {
+            await SelectedFile.AssetInfo.ShowEditor();
+            Keyboard.Focus((IInputElement)FileList.ItemContainerGenerator.ContainerFromItem(SelectedFile));
+        }
+        private void OnCutAssets(object sender, ExecutedRoutedEventArgs e)
+        {
+            OnCopyAssets(sender, e);
+            m_isCutting = true;
+        }
+        private void OnCopyAssets(object sender, ExecutedRoutedEventArgs e)
+        {
+            var collection = new StringCollection();
+
+            foreach (var item in FileList.SelectedItems)
+                collection.Add(((File)item).AssetInfo.FileInfo.FullName);
+
+            Clipboard.SetFileDropList(collection);
+            m_isCutting = false;
+        }
+        private void OnPasteAssets(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (!Clipboard.ContainsFileDropList())
+                return;
+
+            var items = Clipboard.GetFileDropList();
+
+            var destination = SelectedDirectory.DirectoryInfo.FullName;
+
+            if (m_isCutting)
+            {
+                foreach (var sourceItem in items)
+                    System.IO.File.Move(sourceItem, Path.Combine(destination, Path.GetFileName(sourceItem)));
+                Clipboard.Clear();
+            }
+            else
+            {
+                foreach (var sourceItem in items)
+                {
+                    var newFileName = Path.GetFileName(sourceItem);
+                    var newTarget = Path.Combine(destination, newFileName);
+
+                    int count = 2;
+                    while (System.IO.File.Exists(newTarget))
+                    {
+                        newFileName = $"{Path.GetFileNameWithoutExtension(sourceItem)} Copy {count++}{Path.GetExtension(newFileName)}";
+                        newTarget = Path.Combine(destination, newFileName);
+                    }
+
+                    System.IO.File.Copy(sourceItem, newTarget);
+                }
+            }
+
+            OnRefreshFiles(this,default(DependencyPropertyChangedEventArgs));
+        }
+        private void OnRenameAsset(object sender, ExecutedRoutedEventArgs e)
+        {
+            SelectedFile.IsEditing = true;
+        }
+        private void OnDeleteAssets(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (FileOperationAPIWrapper.Send(string.Join("\0", FileList.SelectedItems.Cast<File>().Select(a => a.AssetInfo.FileInfo.FullName))))
+                OnRefreshFiles(this,default(DependencyPropertyChangedEventArgs));
+        }
+        private void OnNewAsset(object sender, ExecutedRoutedEventArgs e)
+        {
+            var info = (AssetHandlerInfo)e.Parameter;
+            var newFileName = Path.Combine(SelectedDirectory.DirectoryInfo.FullName, info.Name + info.Extension);
+
+            int count = 1;
+            while (System.IO.File.Exists(newFileName))
+                newFileName = Path.Combine(SelectedDirectory.DirectoryInfo.FullName, info.Name + count++ + info.Extension);
+
+
+            var handler = (IAssetInfo)Activator.CreateInstance(info.Handler, new FileInfo(newFileName));
+            handler.SaveToDisk();
+
+            OnRefreshFiles(this, default(DependencyPropertyChangedEventArgs));
+
+            CurrentFiles.ForEach(f => f.IsSelected = false);
+            var newFile = CurrentFiles.First(f => f.AssetInfo.FileInfo.FullName == newFileName);
+            newFile.IsSelected = true;
+            newFile.IsEditing = true;
+        }
+
+
+        [NotifyPropertyChangedInvocator]
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

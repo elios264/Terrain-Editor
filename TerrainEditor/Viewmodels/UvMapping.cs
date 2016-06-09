@@ -23,7 +23,7 @@ namespace TerrainEditor.ViewModels
     public class UvMapping : PropertyChangeBase
     {
         private string m_name;
-        private Segment m_top;
+        private Segment m_top = new Segment();
         private Segment m_left;
         private Segment m_right;
         private Segment m_bottom;
@@ -310,10 +310,7 @@ namespace TerrainEditor.ViewModels
         [Persist(Ignore = true)]
         public SegmentEditor Editor
         {
-            get
-            {
-                return m_editor ?? (m_editor = new SegmentEditor(this));
-            }
+            get { return m_editor ?? (m_editor = new SegmentEditor(this)); }
         }
 
         public Segment()

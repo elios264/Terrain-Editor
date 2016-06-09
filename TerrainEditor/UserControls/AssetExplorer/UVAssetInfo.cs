@@ -1,55 +1,70 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using elios.Persist;
 using TerrainEditor.Annotations;
-using TerrainEditor.UserControls;
+using TerrainEditor.Core;
 using TerrainEditor.ViewModels;
 
-namespace TerrainEditor.Core
+namespace TerrainEditor.UserControls
 {
     [UsedImplicitly]
     public class UvAssetInfo : IAssetInfo
     {
         private static readonly XmlArchive Archive = new XmlArchive(typeof(UvMapping));
 
-        private Lazy<UvMapping> m_mappingCache;
+        private Lazy<UvMapping> m_asset;
 
-        public object Asset => m_mappingCache.Value;
-        public ImageSource Preview => m_mappingCache.Value.EdgeTexture;
+        public object Asset => m_asset.Value;
+        public ImageSource Preview { get;  }
         public FileInfo FileInfo { get; }
 
         public UvAssetInfo(FileInfo info)
         {
             FileInfo = info;
 
-            m_mappingCache = new Lazy<UvMapping>(() =>
+            if (info.Exists)
             {
-                var readStream = FileInfo.OpenRead();
-                var mapping = (UvMapping)Archive.Read(readStream);
-                readStream.Close();
-                return mapping;
-            }, true);
+                try
+                {
+                    var reader = info.OpenRead();
+                    var node = XmlArchive.LoadNode(reader);
+                    var previewPath = node.Attributes.FirstOrDefault(a => a.Name == "EdgeTexture")?.Value;
+
+                    m_asset = new Lazy<UvMapping>(() => (UvMapping)Archive.Read(node));
+                    Preview = previewPath != null
+                        ? new BitmapImage(new Uri(previewPath))
+                        : new BitmapImage();
+                    return;
+                }
+                catch (Exception) {}
+            }
+
+            m_asset = new Lazy<UvMapping>();
+            Preview = new BitmapImage();
         }
 
-        public void ShowEditor()
+        public Task ShowEditor()
         {
-            var uvMappingEditor = new UvMappingEditor { Source = m_mappingCache.Value };
+            var dialogBoxService = ServiceLocator.Get<IDialogBoxService>();
+            var uvMappingEditor = new UvMappingEditor { Source = m_asset.Value };
 
             bool assetChanged = false;
             var notifier = new PropertyChangedEventHandler((sender, args) => assetChanged = assetChanged || !args.PropertyName.Contains(nameof(Segment.Editor)));
+            var completionSource = new TaskCompletionSource<object>();
 
             uvMappingEditor.Source.RecursivePropertyChanged += notifier;
-
             uvMappingEditor.Closing += (sender, args) =>
             {
                 var result = MessageBoxResult.None;
 
                 if (assetChanged)
-                    result = ServiceLocator.Get<IDialogBoxService>().ShowSimpleDialog("Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
+                    result = dialogBoxService.ShowSimpleDialog("Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
 
                 switch (result)
                 {
@@ -65,10 +80,15 @@ namespace TerrainEditor.Core
                 }
 
                 if (!args.Cancel)
+                {
                     uvMappingEditor.Source.RecursivePropertyChanged -= notifier;
+                    completionSource.SetResult(null);
+                }
             };
 
-            ServiceLocator.Get<IDialogBoxService>().ShowCustomDialog(uvMappingEditor);
+            dialogBoxService.ShowCustomDialog(uvMappingEditor);
+
+            return completionSource.Task;
         }
         public void SaveToDisk()
         {
@@ -80,9 +100,9 @@ namespace TerrainEditor.Core
         public void ReloadFromDisk()
         {
             var readStream = FileInfo.OpenRead();
-            var mapping = (UvMapping) Archive.Read(readStream);
+            var mapping = (UvMapping)Archive.Read(readStream);
             readStream.Close();
-            m_mappingCache = new Lazy<UvMapping>(() => mapping);
+            m_asset = new Lazy<UvMapping>(() => mapping);
         }
     }
 }

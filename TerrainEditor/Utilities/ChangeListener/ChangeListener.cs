@@ -13,14 +13,8 @@ namespace TerrainEditor.Utilities
 
             public event PropertyChangedEventHandler PropertyChanged
             {
-                add
-                {
-                    ChangedEventHandler += value;
-                }
-                remove
-                {
-                    ChangedEventHandler -= value;
-                }
+                add { ChangedEventHandler += value; }
+                remove { ChangedEventHandler -= value; }
             }
 
             protected virtual void RaisePropertyChanged(string propertyName)

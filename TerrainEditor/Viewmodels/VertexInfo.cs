@@ -17,7 +17,6 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-
         public VertexDirection Direction
         {
             get { return m_direction; }
@@ -34,7 +33,6 @@ namespace TerrainEditor.ViewModels
             Position = new Vector(x, y);
             Direction = dir;
         }
-
         public VertexInfo(Vector v, VertexDirection dir = VertexDirection.Auto)
         {
             Position = v;

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace TerrainEditor.UserControls
@@ -9,7 +10,9 @@ namespace TerrainEditor.UserControls
         FileInfo FileInfo { get; }
         ImageSource Preview { get; }
 
-        void ShowEditor();
+        Task ShowEditor();
+        void SaveToDisk();
+        void ReloadFromDisk();
     }
 
 }

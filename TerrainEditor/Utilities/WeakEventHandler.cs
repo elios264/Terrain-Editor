@@ -51,7 +51,7 @@ namespace TerrainEditor.Utilities
             //        ((T)target).Invoke(params)
             //    }
             //}}
-            m_weakDelegate = Expression.Lambda<T>(Expression.Block(targetDeclaration.ToNewArray(), targetAssignement, ifthenInvoke),parameters).Compile();
+            m_weakDelegate = Expression.Lambda<T>(Expression.Block(targetDeclaration.IntoANewArray(), targetAssignement, ifthenInvoke),parameters).Compile();
         }
 
         public static implicit operator T(WeakEventHandler<T> handler)

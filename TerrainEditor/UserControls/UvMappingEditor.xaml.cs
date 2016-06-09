@@ -13,14 +13,8 @@ namespace TerrainEditor.UserControls
 
         public UvMapping Source
         {
-            get
-            {
-                return (UvMapping) GetValue(SourceProperty);
-            }
-            set
-            {
-                SetValue(SourceProperty, value);
-            }
+            get { return (UvMapping)GetValue(SourceProperty); }
+            set { SetValue(SourceProperty, value); }
         }
 
         public UvMappingEditor()

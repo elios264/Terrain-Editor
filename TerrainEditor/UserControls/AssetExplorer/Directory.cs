@@ -8,23 +8,22 @@ namespace TerrainEditor.UserControls
 {
     public class Directory : PropertyChangeBase
     {
-        private readonly DirectoryInfo m_info;
         private bool m_isExpanded;
         private bool m_isEditing;
         private bool m_isSelected;
         private List<Directory> m_directoriesCache; 
-        private List<FileInfo> m_filesCache;
 
         public string Header
         {
             get
             {
-                return m_info.Name;
+                return DirectoryInfo.Name;
             }
             set
             {
-                if (value == m_info.Name) return;
-                m_info.MoveTo(Path.Combine(Path.GetDirectoryName(m_info.FullName), value)); 
+                if (value == DirectoryInfo.Name) return;
+                DirectoryInfo.MoveTo(Path.Combine(DirectoryInfo.FullName.Substring(0, DirectoryInfo.FullName.LastIndexOf(DirectoryInfo.Name)),value));
+                OnPropertyChanged();
             }
         }
         public IEnumerable<Directory> Directories
@@ -33,7 +32,7 @@ namespace TerrainEditor.UserControls
             {
                 try
                 {
-                    return m_directoriesCache ?? (m_directoriesCache = m_info.EnumerateDirectories().Select(di => new Directory(di) { ParentDirectory = this}).ToList());
+                    return m_directoriesCache ?? (m_directoriesCache = DirectoryInfo.EnumerateDirectories().Select(di => new Directory(di) { ParentDirectory = this}).ToList());
                 }
                 catch (Exception )
                 {
@@ -47,7 +46,7 @@ namespace TerrainEditor.UserControls
             {
                 try
                 {
-                    return m_filesCache ?? (m_filesCache = m_info.EnumerateFiles().ToList());
+                    return  DirectoryInfo.EnumerateFiles();
                 }
                 catch (Exception)
                 {
@@ -97,33 +96,24 @@ namespace TerrainEditor.UserControls
                 OnPropertyChanged();
             }
         }
-        public bool Exists
-        {
-            get
-            {
-                return m_info.Exists;
-            }
-        } 
+ 
         public Directory ParentDirectory { get; private set; }
+        public DirectoryInfo DirectoryInfo { get; }
 
         public Directory(DirectoryInfo directoryInfo)
         {
-            m_info = directoryInfo;
+            DirectoryInfo = directoryInfo;
         }
-        public DirectoryInfo GetDirectoryInfo()
-        {
-            return m_info;
-        }
+
         public void Refresh()
         {
-            m_info.Refresh();
+            DirectoryInfo.Refresh();
 
             m_directoriesCache = null;
-            m_filesCache = null;
 
-            OnPropertyChanged(nameof(Exists));
             OnPropertyChanged(nameof(Directories));
             OnPropertyChanged(nameof(Files));
         }
     }
+
 }
