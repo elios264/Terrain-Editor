@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
-using TerrainEditor.Core;
+using TerrainEditor.Core.Services;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls

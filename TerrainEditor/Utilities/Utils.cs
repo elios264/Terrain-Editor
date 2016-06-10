@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
@@ -112,6 +113,14 @@ namespace TerrainEditor.Utilities
         public static Vector ToVector(this Point3D point,int decimalRounds = 2)
         {
             return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
+        }
+
+        public static string GetRelativePath(string filespec)
+        {
+            Uri pathUri = new Uri(filespec);
+            Uri folderUri = new Uri(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar);
+
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
         }
 
     }

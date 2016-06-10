@@ -14,7 +14,7 @@
                                AllowMove="True"  ChildWindowWidth="800"
                                OverlayBrush="{StaticResource AccentColorBrush4}" 
                                IsModal="True" ShowCloseButton="True" 
-                               EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"
+                               EnableDropShadow="True" CloseOnOverlay="False" CloseByEscape="False"
                                x:Name="ParentControl"
                                d:DesignHeight="600" d:DesignWidth="800" >
     <Grid d:DataContext="{x:Static viewModels:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
@@ -113,15 +113,66 @@
             <utilities:NullToBooleanConveter x:Key="NullToBooleanConveter" />
             <utilities:SelectManyConverter x:Key="SelectManyConverter" />
         </Grid.Resources>
-
+        
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
+                
+                <Grid Grid.ColumnSpan="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    
+                    
+                    <Grid Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Name" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" />
+                        <TextBox Grid.Row="1" VerticalAlignment="Center"  Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
+                    </Grid>
+                    <Grid Grid.Column="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" HorizontalAlignment="Stretch">
+                        <Button Margin="0,0,5,0" Click="OnSelectEdgeTexture" >
+                            <Image Source="{Binding EdgeTexture}" Stretch="Fill" />
+                        </Button>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" >
+                            <TextBlock Text="Edge Texture:" TextAlignment="Center" />
+                            <TextBlock Margin="0,5" Text="{Binding EdgeTexturePath, TargetNullValue=None Selected}" TextWrapping="Wrap" TextAlignment="Center"  />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Column="2" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Margin="0,0,5,0" Click="OnSelectFillTexture" >
+                            <Image Source="{Binding FillTexture}" Stretch="Fill" />
+                        </Button>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" >
+                            <TextBlock Text="Fill Texture:" TextAlignment="Center" />
+                            <TextBlock Margin="0,5" Text="{Binding FillTexturePath, TargetNullValue=None Selected}" TextWrapping="Wrap" TextAlignment="Center"  />
+                        </StackPanel>
+                    </Grid>
+
+                </Grid>
+
+                <StackPanel Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch">
                     <Expander IsExpanded="True">
                         <Expander.Header>
                             <CheckBox Margin="5,0" Content="Use Top" IsChecked="True" IsEnabled="False" />
@@ -147,8 +198,7 @@
                         <ContentControl Content="{Binding Bottom}" ContentTemplate="{StaticResource SegmentTemplate}" />
                     </Expander>
                 </StackPanel>
-
-                <Viewbox Grid.Column="1" Margin="0" Stretch="Uniform">
+                <Viewbox Grid.Row="1" Grid.Column="1" Margin="0" Stretch="Uniform">
                     <Grid Width="{Binding EdgeTexture.PixelWidth}" Height="{Binding EdgeTexture.PixelHeight}">
                         <Image Source="{Binding EdgeTexture}" Stretch="Uniform" />
                         <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Top.Bodies}"/>
@@ -174,6 +224,5 @@
 
             </Grid>
         </ScrollViewer>
-
     </Grid>
 </simpleChildWindow:ChildWindow>

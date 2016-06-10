@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 
-namespace TerrainEditor.Core
+namespace TerrainEditor.Core.Services
 {
     public static class ServiceLocator
     {
@@ -31,6 +31,11 @@ namespace TerrainEditor.Core
         public static void Register<TServiceInterface>(TServiceInterface instance)
         {
             Services.Add(typeof(TServiceInterface), instance);
+        }
+
+        public static bool IsRegistered<TService>()
+        {
+            return Services.ContainsKey(typeof(TService));
         }
 
         public static T Get<T>()

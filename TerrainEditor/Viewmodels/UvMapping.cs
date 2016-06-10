@@ -45,7 +45,7 @@ namespace TerrainEditor.ViewModels
             }
         }
 
-        [UsedImplicitly, Persist(nameof(EdgeTexture))]
+        [Persist(nameof(EdgeTexture))]
         public string EdgeTexturePath
         {
             get
@@ -60,7 +60,7 @@ namespace TerrainEditor.ViewModels
                 {
                     var img = new BitmapImage();
                     img.BeginInit();
-                    img.UriSource = new Uri(value);
+                    img.UriSource = new Uri(value,UriKind.RelativeOrAbsolute);
                     img.EndInit();
                     img.Freeze();
                     return img;
@@ -71,7 +71,7 @@ namespace TerrainEditor.ViewModels
 
             }
         }
-        [UsedImplicitly, Persist(nameof(FillTexture))]
+        [Persist(nameof(FillTexture))]
         public string FillTexturePath
         {
             get
@@ -86,7 +86,7 @@ namespace TerrainEditor.ViewModels
                 {
                     var img = new BitmapImage();
                     img.BeginInit();
-                    img.UriSource = new Uri(value);
+                    img.UriSource = new Uri(value,UriKind.RelativeOrAbsolute);
                     img.EndInit();
                     img.Freeze();
                     return img;

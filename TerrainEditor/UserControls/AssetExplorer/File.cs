@@ -40,14 +40,14 @@ namespace TerrainEditor.UserControls
                 OnPropertyChanged();
             }
         }
+        public IAssetInfo AssetInfo
+        {
+            get;
+        }
 
-        public IAssetInfo AssetInfo { get; }
-        public Directory Parent { get; }
-
-        public File(IAssetInfo info, Directory parent)
+        public File(IAssetInfo info)
         {
             AssetInfo = info;
-            Parent = parent;
         }
     }
 }

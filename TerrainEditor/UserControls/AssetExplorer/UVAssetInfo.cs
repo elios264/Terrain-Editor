@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using elios.Persist;
 using TerrainEditor.Annotations;
 using TerrainEditor.Core;
+using TerrainEditor.Core.Services;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
@@ -21,32 +22,17 @@ namespace TerrainEditor.UserControls
         private Lazy<UvMapping> m_asset;
 
         public object Asset => m_asset.Value;
-        public ImageSource Preview { get;  }
+        public ImageSource Preview => m_asset.Value.EdgeTexture;
         public FileInfo FileInfo { get; }
 
         public UvAssetInfo(FileInfo info)
         {
             FileInfo = info;
 
-            if (info.Exists)
-            {
-                try
-                {
-                    var reader = info.OpenRead();
-                    var node = XmlArchive.LoadNode(reader);
-                    var previewPath = node.Attributes.FirstOrDefault(a => a.Name == "EdgeTexture")?.Value;
-
-                    m_asset = new Lazy<UvMapping>(() => (UvMapping)Archive.Read(node));
-                    Preview = previewPath != null
-                        ? new BitmapImage(new Uri(previewPath))
-                        : new BitmapImage();
-                    return;
-                }
-                catch (Exception) {}
-            }
-
-            m_asset = new Lazy<UvMapping>();
-            Preview = new BitmapImage();
+            if (!info.Exists)
+                m_asset = new Lazy<UvMapping>();
+            else
+                ReloadFromDisk();
         }
 
         public Task ShowEditor()
@@ -64,7 +50,7 @@ namespace TerrainEditor.UserControls
                 var result = MessageBoxResult.None;
 
                 if (assetChanged)
-                    result = dialogBoxService.ShowSimpleDialog("Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
+                    result = dialogBoxService.ShowNativeDialog("Do you want to save the changes", "Warning", MessageBoxButton.YesNoCancel,MessageBoxImage.Question);
 
                 switch (result)
                 {
@@ -72,18 +58,15 @@ namespace TerrainEditor.UserControls
                     args.Cancel = true;
                     break;
                 case MessageBoxResult.Yes:
-                    Task.Run(new Action(SaveToDisk));
+                    Task.Run(new Action(SaveToDisk)).ContinueWith(_ => completionSource.SetResult(null));
                     break;
                 case MessageBoxResult.No:
-                    Task.Run(new Action(ReloadFromDisk));
+                    Task.Run(new Action(ReloadFromDisk)).ContinueWith(_ => completionSource.SetResult(null)); ;
                     break;
                 }
 
                 if (!args.Cancel)
-                {
                     uvMappingEditor.Source.RecursivePropertyChanged -= notifier;
-                    completionSource.SetResult(null);
-                }
             };
 
             dialogBoxService.ShowCustomDialog(uvMappingEditor);
@@ -92,17 +75,16 @@ namespace TerrainEditor.UserControls
         }
         public void SaveToDisk()
         {
-            var writeStream = FileInfo.Open(FileMode.Create);
-
-            Archive.Write(writeStream, Asset);
-            writeStream.Close();
+            using (var writeStream = FileInfo.Open(FileMode.Create))
+                Archive.Write(writeStream, Asset);
         }
         public void ReloadFromDisk()
         {
-            var readStream = FileInfo.OpenRead();
-            var mapping = (UvMapping)Archive.Read(readStream);
-            readStream.Close();
-            m_asset = new Lazy<UvMapping>(() => mapping);
+            m_asset = new Lazy<UvMapping>(() =>
+            {
+                using (var readStream = FileInfo.OpenRead())
+                    return (UvMapping)Archive.Read(readStream);
+            });
         }
     }
 }

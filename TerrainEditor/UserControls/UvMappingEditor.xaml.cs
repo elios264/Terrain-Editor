@@ -3,7 +3,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
+using TerrainEditor.Core.Services;
+using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
 
 namespace TerrainEditor.UserControls
 {
@@ -20,17 +25,49 @@ namespace TerrainEditor.UserControls
         public UvMappingEditor()
         {
             InitializeComponent();
-            Closing += OnClosing;
         }
 
-        private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
-        {
-            Keyboard.Focus(this);
-        }
         private void OnAddBody(object sender, RoutedEventArgs e)
         {
             ((Segment)((Button)sender).CommandParameter).Bodies.Add(new Rect());
         }
 
+        private void OnSelectEdgeTexture(object sender, RoutedEventArgs e)
+        {
+            var relativePath = OpenSelectImageDialog(Path.GetDirectoryName(Source.EdgeTexturePath));
+
+            if (relativePath != null)
+                Source.EdgeTexturePath = relativePath;
+        }
+        private void OnSelectFillTexture(object sender, RoutedEventArgs e)
+        {
+            var relativePath = OpenSelectImageDialog(Path.GetDirectoryName(Source.FillTexturePath));
+
+            if (relativePath != null)
+                Source.FillTexturePath = relativePath;
+        }
+
+        private static string OpenSelectImageDialog(string previousPath = null)
+        {
+            var startPath = ServiceLocator.Get<IAssetProviderService>().RootPath;
+            var dialogService = ServiceLocator.Get<IFileDialogService>();
+            var messageService = ServiceLocator.Get<IDialogBoxService>();
+            var filter = string.Format("All image files ({0})|{0}", string.Join(";", ImageCodecInfo.GetImageEncoders().Select(codec => codec.FilenameExtension).ToArray()));
+
+            string filename = string.Empty;
+            while (true)
+            {
+                if (!dialogService.ShowOpenFileDialog(ref filename, filter, previousPath ?? startPath))
+                    return null;
+
+                if (filename.Contains(startPath))
+                    break;
+
+                messageService.ShowNativeDialog("Please select a file inside " + startPath, "Invalid selection");
+            }
+
+            var openSelectImageDialog = Utils.GetRelativePath(filename);
+            return openSelectImageDialog;
+        }
     }
 }

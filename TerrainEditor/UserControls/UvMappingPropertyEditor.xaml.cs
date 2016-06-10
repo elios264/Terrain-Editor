@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using TerrainEditor.Core;
+using TerrainEditor.Core.Services;
 
 namespace TerrainEditor.UserControls
 {

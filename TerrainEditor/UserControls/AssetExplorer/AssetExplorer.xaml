@@ -6,7 +6,6 @@
              xmlns:local="clr-namespace:TerrainEditor.UserControls"
             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
             xmlns:pt="http://propertytools.org/wpf"
-            xmlns:system="clr-namespace:System;assembly=mscorlib"
             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
             xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
@@ -26,18 +25,22 @@
                 <BitmapImage x:Key="FolderImage" UriSource="../../icons/folder.ico" po:Freeze ="true" />
                 <utilities:SelectManyConverter x:Key="SelectManyConverter"/>
                 <RoutedCommand x:Key="Rename"  />
+                <RoutedCommand x:Key="OpenExplorer"  />
             </TreeView.Resources>
             <TreeView.CommandBindings>
                 <CommandBinding Command="New" Executed="OnNewFolder" />
                 <CommandBinding Command="Refresh" Executed="OnRefreshFolder" />
                 <CommandBinding Command="Delete" Executed="OnDeleteFolder" />
                 <CommandBinding Command="{StaticResource Rename}" Executed="OnRenameFolder" />
+                <CommandBinding Command="{StaticResource OpenExplorer}" Executed="OnOpenFolderInExplorer" />
             </TreeView.CommandBindings>
             <TreeView.InputBindings>
                 <KeyBinding Key="F2" Command="{StaticResource Rename}"/>
             </TreeView.InputBindings>
             <TreeView.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="Open in Explorer" Command="{StaticResource OpenExplorer}"/>
+                    <Separator/>
                     <MenuItem Header="New" Command="New" />
                     <MenuItem Header="Rename" Command="{StaticResource Rename}" InputGestureText="F2" />
                     <MenuItem Header="Refresh" Command="Refresh" />
@@ -69,7 +72,7 @@
         
         <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeDirection="Columns" Focusable="False" />
 
-        <ListBox Name="FileList" Grid.Column="2" SelectedItem="{Binding SelectedFile}"
+        <ListBox Name="FileList" Grid.Column="2" SelectedItem="{Binding SelectedFile}" KeyboardNavigation.DirectionalNavigation="Cycle"
                  ItemsSource="{Binding CurrentFiles}" Tag="{Binding ElementName=UserControl}" SelectionMode="Extended"
                  TextSearch.TextPath="FileInfo.Name" IsTextSearchEnabled="True" IsTextSearchCaseSensitive="False"
                  Padding="0,5" MouseUp="FileList_MouseUp">
@@ -147,8 +150,8 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Image Grid.Row="0" Stretch="UniformToFill" MinHeight="55"
-                               Source="{Binding AssetInfo.Preview, IsAsync=True, FallbackValue={StaticResource DefaultFileIcon}, TargetNullValue={StaticResource DefaultFileIcon}}" />
-                        <Grid  Grid.Row="1">
+                               Source="{Binding AssetInfo.Preview, IsAsync=true, FallbackValue={StaticResource DefaultFileIcon}, TargetNullValue={StaticResource DefaultFileIcon}}" />
+                        <Grid Grid.Row="1">
                             <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom"
                                                   Text="{Binding Name}"
                                                   TextWrapping="NoWrap" TextAlignment="Center"

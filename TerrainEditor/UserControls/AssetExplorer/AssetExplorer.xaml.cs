@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,20 +11,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using MoreLinq;
 using TerrainEditor.Annotations;
+using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
 
 namespace TerrainEditor.UserControls
 {
-    public struct AssetHandlerInfo
-    {
-        public string Name { get; set; }
-        public string Extension { get; set; }
-        public Type Handler { get; set; }
-    }
-    public class AssetHandlerCollection : List<AssetHandlerInfo> { }
-
-
-    public partial class AssetExplorer : UserControl , INotifyPropertyChanged
+    public partial class AssetExplorer : UserControl , INotifyPropertyChanged, IAssetProviderService
     {
         private static readonly DependencyPropertyKey RootDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(RootDirectory), typeof (Directory), typeof (AssetExplorer), new PropertyMetadata(default(Directory)));
         private static readonly DependencyPropertyKey SelectedDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(SelectedDirectory), typeof (Directory), typeof (AssetExplorer), new PropertyMetadata(default(Directory),OnRefreshFiles));
@@ -31,13 +24,15 @@ namespace TerrainEditor.UserControls
 
         private static readonly DependencyProperty ShowAllAssetsProperty = DependencyProperty.Register(nameof(ShowAllAssets), typeof(bool), typeof(AssetExplorer), new PropertyMetadata(true, OnRefreshFiles));
         public static readonly DependencyProperty SelectedFileProperty = DependencyProperty.Register(nameof(SelectedFile), typeof (File), typeof (AssetExplorer), new PropertyMetadata(default(File)));
-        public static readonly DependencyProperty RootPathProperty = DependencyProperty.Register(nameof(RootPath), typeof (string), typeof (AssetExplorer), new PropertyMetadata(System.IO.Directory.GetCurrentDirectory(), OnRootDirectoryChanged));
+        public static readonly DependencyProperty RootPathProperty = DependencyProperty.Register(nameof(RootPath), typeof (string), typeof (AssetExplorer), new PropertyMetadata(System.IO.Directory.GetCurrentDirectory(), OnRootPathChanged));
         public static readonly DependencyProperty HandlersProperty = DependencyProperty.Register(nameof(Handlers), typeof (IEnumerable<AssetHandlerInfo>), typeof (AssetExplorer), new PropertyMetadata(Enumerable.Empty<AssetHandlerInfo>(),OnAssetTypesPopulated));
         public static readonly DependencyProperty RootDirectoryProperty = RootDirectoryPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SelectedDirectoryProperty = SelectedDirectoryPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CurrentFilesProperty = CurrentFilesPropertyKey.DependencyProperty;
         
         private Dictionary<string, Type> m_assetInfoMapping;
+        private Dictionary<string,WeakReference<IAssetInfo>> m_assetCache;
+        private DateTime m_lastCleanTime;
         private bool m_isCutting;
 
         public string RootPath
@@ -45,6 +40,7 @@ namespace TerrainEditor.UserControls
             get { return (string)GetValue(RootPathProperty); }
             set { SetValue(RootPathProperty, value); }
         }
+
         public Directory RootDirectory
         {
             get { return (Directory)GetValue(RootDirectoryProperty); }
@@ -83,8 +79,66 @@ namespace TerrainEditor.UserControls
         public AssetExplorer()
         {
             InitializeComponent();
+
             OnAssetTypesPopulated(this,default(DependencyPropertyChangedEventArgs));
-            OnRootDirectoryChanged(this,default(DependencyPropertyChangedEventArgs));
+            OnRootPathChanged(this,default(DependencyPropertyChangedEventArgs));
+
+            m_assetCache = new Dictionary<string, WeakReference<IAssetInfo>>();
+
+            if (!ServiceLocator.IsRegistered<IAssetProviderService>())
+                ServiceLocator.Register<IAssetProviderService>(this);
+        }
+
+        public IAssetInfo Open(FileInfo info)
+        {
+            if (!info.FullName.Contains(RootPath))
+                throw new ArgumentException($"the path: {{{info.FullName}}},\n is outside the scope of: {{{RootPath}}} ");
+
+            if (!info.Exists)
+                throw new ArgumentException($"the file: {info.FullName} does not exist");
+
+
+            WeakReference<IAssetInfo> assetRef;
+            IAssetInfo asset;
+            if (m_assetCache.TryGetValue(info.FullName, out assetRef) && assetRef.TryGetTarget(out asset))
+                return asset;
+
+
+            lock (m_assetCache)
+            {
+                //clean the cache
+                var now = DateTime.Now;
+                if (now - m_lastCleanTime > TimeSpan.FromMinutes(1))
+                {
+                    m_assetCache = m_assetCache.Where(p =>
+                    {
+                        IAssetInfo i;
+                        return p.Value.TryGetTarget(out i);
+                    }).ToDictionary(p => p.Key, p => p.Value);
+
+                    m_lastCleanTime = now;
+                }
+
+                Type assetType;
+                if (m_assetInfoMapping.TryGetValue(info.Extension, out assetType))
+                    m_assetCache[info.FullName] = new WeakReference<IAssetInfo>(asset = (IAssetInfo)Activator.CreateInstance(assetType, info));
+                else
+                    asset = new DefaultAssetInfo(info);
+
+                return asset;
+            }
+        }
+        public IEnumerable<IAssetInfo> CachedAssets
+        {
+            get
+            {
+                return m_assetCache.Values.Select(r =>
+                {
+                    IAssetInfo info;
+                    r.TryGetTarget(out info);
+                    return info;
+                }).Where(i => i != null);
+            }
         }
 
         private static void OnAssetTypesPopulated(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
@@ -94,7 +148,7 @@ namespace TerrainEditor.UserControls
             instance.m_assetInfoMapping = instance.Handlers.ToDictionary(i => i.Extension, i => i.Handler);
             instance.OnPropertyChanged(nameof(VisibleHandlers));
         }
-        private static void OnRootDirectoryChanged(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
+        private static void OnRootPathChanged(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             var instance = (AssetExplorer)obj;
 
@@ -103,23 +157,21 @@ namespace TerrainEditor.UserControls
                 IsExpanded = true,
                 IsSelected = true
             };
+
+            System.IO.Directory.SetCurrentDirectory(Path.GetFullPath(instance.RootPath));
         }
         private static void OnRefreshFiles(DependencyObject obj, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             var instance = (AssetExplorer) obj;
-            var assets = new List<File>();
 
             instance.SelectedDirectory.DirectoryInfo.Refresh();
 
-            foreach (FileInfo info in instance.SelectedDirectory.Files)
-            {
-                Type assetType;
-                if (instance.m_assetInfoMapping.TryGetValue(info.Extension, out assetType))
-                    assets.Add(new File((IAssetInfo)Activator.CreateInstance(assetType, info), instance.SelectedDirectory));
-                else if (instance.ShowAllAssets)
-                    assets.Add(new File(new DefaultAssetInfo(info), instance.SelectedDirectory));
-            }
-            instance.CurrentFiles = assets;
+            instance.CurrentFiles = 
+                instance.SelectedDirectory.Files
+                .Select(info => new File(instance.Open(info)))
+                .Where(f => instance.ShowAllAssets || !(f.AssetInfo is DefaultAssetInfo))
+                .Pipe(f => f.AssetInfo.ReloadFromDisk() )
+                .ToList();
         }
 
         private void TreeViewMouseButtonDown(object sender, MouseButtonEventArgs e)
@@ -161,10 +213,15 @@ namespace TerrainEditor.UserControls
             SelectedDirectory.Refresh();
             OnRefreshFiles(this,default(DependencyPropertyChangedEventArgs));
         }
+        private void OnOpenFolderInExplorer(object sender, RoutedEventArgs e)
+        {
+            Process.Start(SelectedDirectory.DirectoryInfo.FullName);
+        }
 
         private async void OnEditAsset(object sender, ExecutedRoutedEventArgs e)
         {
             await SelectedFile.AssetInfo.ShowEditor();
+            OnRefreshFiles(this, default(DependencyPropertyChangedEventArgs));
             Keyboard.Focus((IInputElement)FileList.ItemContainerGenerator.ContainerFromItem(SelectedFile));
         }
         private void OnCutAssets(object sender, ExecutedRoutedEventArgs e)
@@ -247,7 +304,6 @@ namespace TerrainEditor.UserControls
             newFile.IsEditing = true;
         }
 
-
         [NotifyPropertyChangedInvocator]
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -255,4 +311,19 @@ namespace TerrainEditor.UserControls
         }
         public event PropertyChangedEventHandler PropertyChanged;
     }
+
+    public struct AssetHandlerInfo
+    {
+        public string Name { get; set; }
+        public string Extension { get; set; }
+        public Type Handler { get; set; }
+    }
+    public class AssetHandlerCollection : List<AssetHandlerInfo> { }
+    public interface IAssetProviderService
+    {
+        string RootPath { get; set; }
+        IAssetInfo Open(FileInfo info);
+        IEnumerable<IAssetInfo> CachedAssets { get; }
+    }
+
 }

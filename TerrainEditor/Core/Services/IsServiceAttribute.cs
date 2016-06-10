@@ -1,6 +1,6 @@
 using System;
 
-namespace TerrainEditor.Core
+namespace TerrainEditor.Core.Services
 {
     public class IsServiceAttribute : Attribute
     {
