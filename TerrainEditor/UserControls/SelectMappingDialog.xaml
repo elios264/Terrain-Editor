@@ -13,25 +13,16 @@
             ChildWindowWidth="200"
             OverlayBrush="{StaticResource AccentColorBrush4}" 
             IsModal="True" 
-            ShowCloseButton="True" 
+            ShowCloseButton="True" Name="MainControl"
             EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"                               
              d:DesignHeight="300" d:DesignWidth="300">
-    
-    <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" >
+
+    <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" ItemsSource="{Binding ElementName=MainControl, Path=CachedMappings}" >
         <ListBox.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="Edit Source Mapping" Click="OnEditSourceMapping" />
             </ContextMenu>
         </ListBox.ContextMenu>
-        <ListBox.Resources>
-            <utilities:SelectManyConverter x:Key="SelectManyConverter"/>
-        </ListBox.Resources>
-        <ListBox.ItemsSource>
-            <MultiBinding Converter="{StaticResource SelectManyConverter}">
-                <Binding Source="{x:Static viewModels:UvMapping.Mossy }" />
-                <Binding Source="{x:Static viewModels:UvMapping.Pipe }" />
-            </MultiBinding>
-        </ListBox.ItemsSource>
         <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type viewModels:UvMapping}">
                 <Grid>

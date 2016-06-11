@@ -105,6 +105,7 @@ namespace TerrainEditor.ViewModels
                 if (Equals(value, m_edgeTexture?.Value)) return;
                 m_edgeTexture = new Lazy<BitmapImage>(() => value);
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(EdgeTexturePath));
             }
             get { return m_edgeTexture?.Value; }
         }
@@ -116,6 +117,7 @@ namespace TerrainEditor.ViewModels
                 if (Equals(value, m_fillTexture?.Value)) return;
                 m_fillTexture = new Lazy<BitmapImage>(() => value);
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(FillTexturePath));
             }
             get { return m_fillTexture?.Value; }
         }

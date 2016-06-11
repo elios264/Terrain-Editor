@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TerrainEditor.UserControls.AssetExplorer" x:Name="UserControl"
+﻿<UserControl x:Class="TerrainEditor.UserControls.ResourceExplorer" x:Name="UserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -79,7 +79,7 @@
             <ListBox.Resources>
                 <BitmapImage po:Freeze="true" x:Key="DefaultFileIcon" UriSource="../../icons/file.png"/>
                 <RoutedCommand x:Key="Rename"  />
-                <RoutedCommand x:Key="NewAsset"  />
+                <RoutedCommand x:Key="NewResource"  />
                 <ContextMenu x:Key="ItemContextMenu" >
                     <MenuItem Header="Edit" Command="Open" />
                     <Separator/>
@@ -89,15 +89,21 @@
                     <MenuItem Header="Rename" Command="{StaticResource Rename}" InputGestureText="F2" />
                     <MenuItem Header="Delete" Command="Delete" />
                 </ContextMenu>
+
+                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                    <EventSetter Event="Loaded" Handler="OnRenameTextBoxCreated"/>
+                </Style>
+                
             </ListBox.Resources>
             <ListBox.CommandBindings>
-                <CommandBinding Command="Open" Executed="OnEditAsset" />
-                <CommandBinding Command="Cut" Executed="OnCutAssets" />
-                <CommandBinding Command="Copy" Executed="OnCopyAssets" />
-                <CommandBinding Command="Paste" Executed="OnPasteAssets" />
-                <CommandBinding Command="{StaticResource Rename}" Executed="OnRenameAsset" />
-                <CommandBinding Command="Delete" Executed="OnDeleteAssets" />
-                <CommandBinding Command="Refresh" Executed="OnRefreshFolder" />
+                <CommandBinding Command="Open" Executed="OnEditResource" />
+                <CommandBinding Command="Cut" Executed="OnCutResource" />
+                <CommandBinding Command="Copy" Executed="OnCopyResource" />
+                <CommandBinding Command="Paste" Executed="OnPasteResource" />
+                <CommandBinding Command="{StaticResource Rename}" Executed="OnRenameResource" />
+                <CommandBinding Command="Delete" Executed="OnDeleteResource" />
+                <CommandBinding Command="Refresh" Executed="RefreshResources" />
             </ListBox.CommandBindings>
             <ListBox.InputBindings>
                 <KeyBinding Key="Enter" Command="Open"/>
@@ -105,17 +111,17 @@
             </ListBox.InputBindings>
             <ListBox.ContextMenu>
                 <ContextMenu DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.Tag}" >
-                    <MenuItem Header="New" ItemsSource="{Binding Path=VisibleHandlers}">
+                    <MenuItem Header="New" ItemsSource="{Binding Path=VisibleResourceInfoProviders}">
                         <MenuItem.CommandBindings>
-                            <CommandBinding Command="{StaticResource NewAsset}" Executed="OnNewAsset"/>
+                            <CommandBinding Command="{StaticResource NewResource}" Executed="OnNewResource"/>
                         </MenuItem.CommandBindings>
                         <MenuItem.ItemTemplate>
-                            <DataTemplate DataType="{x:Type local:AssetHandlerInfo}">
+                            <DataTemplate DataType="{x:Type local:IResourceInfoProvider}">
                                 <TextBlock >
                                     <TextBlock.Text>
                                         <MultiBinding StringFormat="{}{0} [ {1} ]">
-                                            <Binding Path="Name"/>
-                                            <Binding Path="Extension"/>
+                                            <Binding Path="ResourceType.Name"/>
+                                            <Binding Path="Extensions[0]"/>
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>
@@ -123,14 +129,14 @@
                         </MenuItem.ItemTemplate>
                         <MenuItem.ItemContainerStyle>
                             <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
-                                <Setter Property="Command" Value="{StaticResource NewAsset}"/>
+                                <Setter Property="Command" Value="{StaticResource NewResource}"/>
                                 <Setter Property="CommandParameter" Value="{Binding}"/>
                             </Style>
                         </MenuItem.ItemContainerStyle>
                     </MenuItem>
                     <Separator/>
                     <MenuItem Header="Refresh" Command="Refresh" CommandTarget="{x:Reference FileList}" />
-                    <MenuItem Header="Show all files" IsCheckable="True" IsChecked="{Binding Path=ShowAllAssets}" />
+                    <MenuItem Header="Show all files" IsCheckable="True" IsChecked="{Binding Path=ShowAllResources}" />
                     <MenuItem Header="Paste" IsEnabled="True" Command="Paste" CommandTarget="{x:Reference FileList}" />
                 </ContextMenu>
             </ListBox.ContextMenu>
@@ -150,13 +156,13 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Image Grid.Row="0" Stretch="UniformToFill" MinHeight="55"
-                               Source="{Binding AssetInfo.Preview, IsAsync=true, FallbackValue={StaticResource DefaultFileIcon}, TargetNullValue={StaticResource DefaultFileIcon}}" />
+                               Source="{Binding Preview, TargetNullValue={StaticResource DefaultFileIcon}}" />
                         <Grid Grid.Row="1">
-                            <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom"
+                            <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom" 
                                                   Text="{Binding Name}"
                                                   TextWrapping="NoWrap" TextAlignment="Center"
                                                   TextTrimming="CharacterEllipsis" IsEditing="{Binding IsEditing}" />
-                            </Grid>
+                        </Grid>
                     </Grid>
                     <DataTemplate.Triggers>
                         <DataTrigger Binding="{Binding RelativeSource={ RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}, Path=IsSelected}" Value="True">
@@ -170,6 +176,8 @@
                     <Setter Property="VerticalContentAlignment" Value="Top"/>
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
                     <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="OnPreviewDragResource" />
+                    <EventSetter Event="MouseMove" Handler="OnTryDragResource" />
                 </Style>
             </ListBox.ItemContainerStyle>
         </ListBox>

@@ -116,14 +116,14 @@
 
             <lcl:PropertiesEditor Background="#252525" Grid.Column="2" Grid.RowSpan="3" Grid.Row="0" Source="{Binding SelectedTerrain}"/>
 
-            <lcl:AssetExplorer Grid.Row="2" RootPath="C:\Users\elios\elios' files" >
+            <lcl:ResourceExplorer Grid.Row="2" WorkPath="C:\Users\elios\elios' files" >
 
-                <lcl:AssetExplorer.Handlers>
-                    <lcl:AssetHandlerCollection>
-                        <lcl:AssetHandlerInfo Name="Terrain texture mapping"  Extension=".uvmapping" Handler="{x:Type lcl:UvAssetInfo}"/>
-                    </lcl:AssetHandlerCollection>
-                </lcl:AssetExplorer.Handlers>
-            </lcl:AssetExplorer>
+                <lcl:ResourceExplorer.ResourceInfoProviders>
+                    <lcl:ResourceInfoProviderCollection>
+                        <lcl:UvMappingResourceProvider />
+                    </lcl:ResourceInfoProviderCollection>
+                </lcl:ResourceExplorer.ResourceInfoProviders>
+            </lcl:ResourceExplorer>
 
         </Grid>
 

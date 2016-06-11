@@ -139,7 +139,7 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <TextBlock Text="Name" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" />
-                        <TextBox Grid.Row="1" VerticalAlignment="Center"  Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
+                        <TextBox Grid.Row="1" VerticalAlignment="Center"  Text="{Binding Name}" TextAlignment="Center"/>
                     </Grid>
                     <Grid Grid.Column="1" Margin="5">
                         <Grid.ColumnDefinitions>
@@ -147,7 +147,7 @@
                             <ColumnDefinition Width="2*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Margin="0,0,5,0" Click="OnSelectEdgeTexture" >
+                        <Button Margin="0,0,5,0" Click="OnSelectEdgeTexture" MouseRightButtonUp="OnRemoveEdgeTexture" >
                             <Image Source="{Binding EdgeTexture}" Stretch="Fill" />
                         </Button>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" >
@@ -161,7 +161,7 @@
                             <ColumnDefinition Width="2*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Margin="0,0,5,0" Click="OnSelectFillTexture" >
+                        <Button Margin="0,0,5,0" Click="OnSelectFillTexture" MouseRightButtonUp="OnRemoveFillTexture" >
                             <Image Source="{Binding FillTexture}" Stretch="Fill" />
                         </Button>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" >

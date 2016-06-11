@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using TerrainEditor.Core.Services;
+using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
@@ -28,6 +29,11 @@ namespace TerrainEditor.UserControls
 
             m_mappingDialog.ClosingFinished -= MappingDialogOnClosingFinished;
             m_mappingDialog = null;
+        }
+        private void OnDropMapping(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(UvMapping)))
+                SetValue(DataContextProperty, e.Data.GetData(typeof(UvMapping)));
         }
     }
 }

@@ -111,13 +111,13 @@
     <Compile Include="Core\Services\IsServiceAttribute.cs" />
     <Compile Include="Core\Services\ServiceLocator.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="UserControls\AssetExplorer\AssetExplorer.xaml.cs">
-      <DependentUpon>AssetExplorer.xaml</DependentUpon>
+    <Compile Include="UserControls\ResourceExplorer\DefaultResourceProvider.cs" />
+    <Compile Include="UserControls\ResourceExplorer\ResourceExplorer.xaml.cs">
+      <DependentUpon>ResourceExplorer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\AssetExplorer\DefaultAssetInfo.cs" />
-    <Compile Include="UserControls\AssetExplorer\Directory.cs" />
-    <Compile Include="UserControls\AssetExplorer\File.cs" />
-    <Compile Include="UserControls\AssetExplorer\IAssetInfo.cs" />
+    <Compile Include="UserControls\ResourceExplorer\Directory.cs" />
+    <Compile Include="UserControls\ResourceExplorer\File.cs" />
+    <Compile Include="UserControls\ResourceExplorer\IResourceInfoProvider.cs" />
     <Compile Include="UserControls\PropertiesEditor\PropertyControlFactory.cs" />
     <Compile Include="UserControls\PropertiesEditor\PropertiesEditor.xaml.cs">
       <DependentUpon>PropertiesEditor.xaml</DependentUpon>
@@ -140,7 +140,7 @@
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\FileOperationAPIWrapper.cs" />
     <Compile Include="Utilities\Utils.cs" />
-    <Compile Include="UserControls\AssetExplorer\UVAssetInfo.cs" />
+    <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
     <Compile Include="Utilities\WeakEventHandler.cs" />
     <Compile Include="Viewmodels\DynamicMesh.cs" />
     <Compile Include="Core\DynamicMeshBuilder.cs" />
@@ -162,7 +162,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="UserControls\AssetExplorer\AssetExplorer.xaml">
+    <Page Include="UserControls\ResourceExplorer\ResourceExplorer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

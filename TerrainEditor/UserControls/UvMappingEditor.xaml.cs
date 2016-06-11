@@ -31,7 +31,6 @@ namespace TerrainEditor.UserControls
         {
             ((Segment)((Button)sender).CommandParameter).Bodies.Add(new Rect());
         }
-
         private void OnSelectEdgeTexture(object sender, RoutedEventArgs e)
         {
             var relativePath = OpenSelectImageDialog(Path.GetDirectoryName(Source.EdgeTexturePath));
@@ -49,10 +48,10 @@ namespace TerrainEditor.UserControls
 
         private static string OpenSelectImageDialog(string previousPath = null)
         {
-            var startPath = ServiceLocator.Get<IAssetProviderService>().RootPath;
+            var startPath = ServiceLocator.Get<IResourceProviderService>().WorkPath;
             var dialogService = ServiceLocator.Get<IFileDialogService>();
             var messageService = ServiceLocator.Get<IDialogBoxService>();
-            var filter = string.Format("All image files ({0})|{0}", string.Join(";", ImageCodecInfo.GetImageEncoders().Select(codec => codec.FilenameExtension).ToArray()));
+            var filter = $"All image files ({string.Join(";", ImageCodecInfo.GetImageEncoders().Select(codec => codec.FilenameExtension).ToArray())})|{string.Join(";", ImageCodecInfo.GetImageEncoders().Select(codec => codec.FilenameExtension).ToArray())}";
 
             string filename = string.Empty;
             while (true)
@@ -68,6 +67,14 @@ namespace TerrainEditor.UserControls
 
             var openSelectImageDialog = Utils.GetRelativePath(filename);
             return openSelectImageDialog;
+        }
+        private void OnRemoveEdgeTexture(object sender, MouseButtonEventArgs e)
+        {
+            Source.EdgeTexture = null;
+        }
+        private void OnRemoveFillTexture(object sender, MouseButtonEventArgs e)
+        {
+            Source.FillTexture = null;
         }
     }
 }

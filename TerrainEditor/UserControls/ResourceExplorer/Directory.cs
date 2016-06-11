@@ -42,17 +42,7 @@ namespace TerrainEditor.UserControls
         }
         public IEnumerable<FileInfo> Files
         {
-            get
-            {
-                try
-                {
-                    return  DirectoryInfo.EnumerateFiles();
-                }
-                catch (Exception)
-                {
-                    return Enumerable.Empty<FileInfo>();
-                }
-            }
+            get { return DirectoryInfo.EnumerateFiles(); }
         }
         public bool IsExpanded
         {

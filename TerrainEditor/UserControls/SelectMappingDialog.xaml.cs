@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.Core.Services;
@@ -22,6 +24,10 @@ namespace TerrainEditor.UserControls
             {
                 SetValue(SelectedMappingProperty, value);
             }
+        }
+        public IEnumerable<UvMapping> CachedMappings
+        {
+            get { return ServiceLocator.Get<IResourceProviderService>().LoadedResources.OfType<UvMapping>(); }
         }
 
         public SelectMappingDialog()
