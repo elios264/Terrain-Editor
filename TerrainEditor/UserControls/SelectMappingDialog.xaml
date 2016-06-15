@@ -18,11 +18,6 @@
              d:DesignHeight="300" d:DesignWidth="300">
 
     <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" ItemsSource="{Binding ElementName=MainControl, Path=CachedMappings}" >
-        <ListBox.ContextMenu>
-            <ContextMenu>
-                <MenuItem Header="Edit Source Mapping" Click="OnEditSourceMapping" />
-            </ContextMenu>
-        </ListBox.ContextMenu>
         <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type viewModels:UvMapping}">
                 <Grid>
@@ -35,6 +30,21 @@
                 </Grid>
             </DataTemplate>
         </ListBox.ItemTemplate>
+        <ListBox.Style>
+            <Style TargetType="{x:Type ListBox}" BasedOn="{StaticResource {x:Type ListBox}}">
+                <Style.Triggers>
+                    <Trigger Property="HasItems" Value="False">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <TextBlock TextWrapping="Wrap" Text="Could not find any opened mapping. Please find one in the Resource Explorer and drag it to the property window" TextAlignment="Center"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ListBox.Style>
     </ListBox>
 
 

@@ -89,6 +89,20 @@ namespace TerrainEditor.UserControls
  
         public Directory ParentDirectory { get; private set; }
         public DirectoryInfo DirectoryInfo { get; }
+        public Directory FindDir(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return this;
+
+            var idx = relativePath.IndexOf(Path.DirectorySeparatorChar);
+
+            if (idx != -1)
+                return Directories
+                    .First(d => d.Header == relativePath.Substring(0, idx))
+                    .FindDir(relativePath.Substring(idx + 1));
+
+            return Directories.First(d => d.Header == relativePath);
+        }
 
         public Directory(DirectoryInfo directoryInfo)
         {

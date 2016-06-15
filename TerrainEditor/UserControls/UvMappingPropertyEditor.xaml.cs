@@ -1,11 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using TerrainEditor.Core.Services;
+using TerrainEditor.Utilities;
 using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-
     public partial class UvMappingPropertyEditor : UserControl
     {
         private SelectMappingDialog m_mappingDialog;
@@ -25,7 +25,7 @@ namespace TerrainEditor.UserControls
         }
         private void MappingDialogOnClosingFinished(object sender, RoutedEventArgs routedEventArgs)
         {
-            SetValue(DataContextProperty, m_mappingDialog.SelectedMapping ?? DataContext);
+            DataContext = m_mappingDialog.SelectedMapping ?? DataContext;
 
             m_mappingDialog.ClosingFinished -= MappingDialogOnClosingFinished;
             m_mappingDialog = null;
@@ -33,7 +33,20 @@ namespace TerrainEditor.UserControls
         private void OnDropMapping(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(typeof(UvMapping)))
-                SetValue(DataContextProperty, e.Data.GetData(typeof(UvMapping)));
+                DataContext = e.Data.GetData(typeof(UvMapping));
+        }
+        private void OnEditMapping(object sender, RoutedEventArgs e)
+        {
+            var info = ServiceLocator.Get<IResourceProviderService>().InfoForResource(DataContext);
+
+            new UvMappingResourceProvider().ShowEditor(info, DataContext);
+        }
+        private void OnShowInExplorer(object sender, RoutedEventArgs e)
+        {
+            var resourceProvider = ServiceLocator.Get<IResourceProviderService>() as ResourceExplorer;
+            var info = resourceProvider?.InfoForResource(DataContext);
+
+            resourceProvider?.ShowInExplorer(Utils.GetRelativePath(info.FullName));
         }
     }
 }

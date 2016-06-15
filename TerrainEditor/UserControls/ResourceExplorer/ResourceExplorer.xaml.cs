@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,14 +21,11 @@ namespace TerrainEditor.UserControls
         private static readonly DependencyPropertyKey RootDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(RootDirectory), typeof (Directory), typeof (ResourceExplorer), new PropertyMetadata(default(Directory)));
         private static readonly DependencyPropertyKey SelectedDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(SelectedDirectory), typeof (Directory), typeof (ResourceExplorer), new PropertyMetadata(default(Directory),OnRefreshResources));
         private static readonly DependencyPropertyKey CurrentFilesPropertyKey = DependencyProperty.RegisterReadOnly(nameof(CurrentFiles), typeof (IEnumerable<File>), typeof (ResourceExplorer), new PropertyMetadata(Enumerable.Empty<File>()));
+        private static readonly DependencyProperty SelectedFileProperty = DependencyProperty.Register(nameof(SelectedFile), typeof (File), typeof (ResourceExplorer), new PropertyMetadata(default(File)));
 
         public static readonly DependencyProperty ShowAllResourcesProperty = DependencyProperty.Register(nameof(ShowAllResources), typeof(bool), typeof(ResourceExplorer), new PropertyMetadata(true, OnRefreshResources));
-        public static readonly DependencyProperty SelectedFileProperty = DependencyProperty.Register(nameof(SelectedFile), typeof (File), typeof (ResourceExplorer), new PropertyMetadata(default(File)));
-        public static readonly DependencyProperty WorkPathProperty = DependencyProperty.Register(nameof(WorkPath), typeof (string), typeof (ResourceExplorer), new PropertyMetadata(System.IO.Directory.GetCurrentDirectory(), OnRootPathChanged));
+        public static readonly DependencyProperty WorkPathProperty = DependencyProperty.Register(nameof(WorkPath), typeof(string), typeof(ResourceExplorer), new FrameworkPropertyMetadata(System.IO.Directory.GetCurrentDirectory(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnRootPathChanged));
         public static readonly DependencyProperty ResourceInfoProvidersProperty = DependencyProperty.Register(nameof(ResourceInfoProviders), typeof (IEnumerable<IResourceInfoProvider>), typeof (ResourceExplorer), new PropertyMetadata(Enumerable.Empty<IResourceInfoProvider>(),OnResourceInfoProvidersChanged));
-        public static readonly DependencyProperty RootDirectoryProperty = RootDirectoryPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty SelectedDirectoryProperty = SelectedDirectoryPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty CurrentFilesProperty = CurrentFilesPropertyKey.DependencyProperty;
 
         private bool m_isCutting;
         private DateTime m_lastCleanTime;
@@ -38,10 +34,25 @@ namespace TerrainEditor.UserControls
         private Dictionary<string, IResourceInfoProvider> m_resourceInfoProviders;
         private Dictionary<string, WeakReference> m_resourcesCache;
 
+        private File SelectedFile
+        {
+            get { return (File)GetValue(SelectedFileProperty); }
+            set { SetValue(SelectedFileProperty, value); }
+        }
         private IEnumerable<File> CurrentFiles
         {
-            get { return (IEnumerable<File>)GetValue(CurrentFilesProperty); }
+            get { return (IEnumerable<File>)GetValue(CurrentFilesPropertyKey.DependencyProperty); }
             set { SetValue(CurrentFilesPropertyKey, value); }
+        }
+        private Directory RootDirectory
+        {
+            get { return (Directory)GetValue(RootDirectoryPropertyKey.DependencyProperty); }
+            set { SetValue(RootDirectoryPropertyKey, value); }
+        }
+        private Directory SelectedDirectory
+        {
+            get { return (Directory)GetValue(SelectedDirectoryPropertyKey.DependencyProperty); }
+            set { SetValue(SelectedDirectoryPropertyKey, value); }
         }
 
         public string WorkPath
@@ -49,25 +60,10 @@ namespace TerrainEditor.UserControls
             get { return (string)GetValue(WorkPathProperty); }
             set { SetValue(WorkPathProperty, value); }
         }
-        public File SelectedFile
-        {
-            get { return (File)GetValue(SelectedFileProperty); }
-            set { SetValue(SelectedFileProperty, value); }
-        }
         public bool ShowAllResources
         {
             get { return (bool)GetValue(ShowAllResourcesProperty); }
             set { SetValue(ShowAllResourcesProperty, value); }
-        }
-        public Directory RootDirectory
-        {
-            get { return (Directory)GetValue(RootDirectoryProperty); }
-            private set { SetValue(RootDirectoryPropertyKey, value); }
-        }
-        public Directory SelectedDirectory
-        {
-            get { return (Directory)GetValue(SelectedDirectoryProperty); }
-            private set { SetValue(SelectedDirectoryPropertyKey, value); }
         }
         public IEnumerable<IResourceInfoProvider> ResourceInfoProviders
         {
@@ -129,10 +125,33 @@ namespace TerrainEditor.UserControls
                 return null;
             }
         }
+        public FileInfo InfoForResource(object resource)
+        {
+            var path = m_resourcesCache.FirstOrDefault(p => p.Value.Target == resource).Key;
+            return path == null ? null : new FileInfo(path);
+        }
         public IEnumerable<object> LoadedResources
         {
             get { return m_resourcesCache.Values.Select(r => r.Target).Where(o => o != null); }
         }
+        public void ShowInExplorer(string relativePath)
+        {
+            var dirOfResource = RootDirectory.FindDir(Path.GetDirectoryName(relativePath));
+
+            var current = dirOfResource;
+            while (current.ParentDirectory != null)
+            {
+                current = current.ParentDirectory;
+                current.IsExpanded = true;
+            }
+
+            dirOfResource.IsSelected = true;
+
+            var fileOfResource = CurrentFiles.FirstOrDefault(f => f.Name == Path.GetFileName(relativePath));
+            if (fileOfResource != null)
+                fileOfResource.IsSelected = true;
+        }
+
         private File FileFor(FileInfo info)
         {
             if (!info.FullName.Contains(WorkPath))
@@ -379,6 +398,7 @@ namespace TerrainEditor.UserControls
     {
         string WorkPath { get; set; }
         object LoadResource(FileInfo info);
+        FileInfo InfoForResource(object resource);
         IEnumerable<object> LoadedResources { get; }
     }
 
