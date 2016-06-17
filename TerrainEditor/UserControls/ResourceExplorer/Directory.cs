@@ -6,7 +6,7 @@ using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-    public class Directory : PropertyChangeBase
+    internal class Directory : PropertyChangeBase
     {
         private bool m_isExpanded;
         private bool m_isEditing;

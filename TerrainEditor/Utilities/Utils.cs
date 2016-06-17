@@ -13,46 +13,38 @@ namespace TerrainEditor.Utilities
 {
     public static class Utils
     {
-        public static void Swap<T>(ref T lhs, ref T rhs)
+        internal static void Swap<T>(ref T lhs, ref T rhs)
         {
             T temp = lhs;
             lhs = rhs;
             rhs = temp;
         }
-        public static T CircularIndex<T>(this IReadOnlyList<T> source, int i, bool looped = false)
+        internal static T ElementAt<T>(this IList<T> source, int i, bool looped = false)
         {
             if (default(T) != null)
-                throw new InvalidOperationException("CircularIndex<T> requires T to be a nullable type.");
+                throw new InvalidOperationException("ElementAt<T> requires T to be a nullable type.");
 
             int n = source.Count;
-
             return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
         }
-        public static T[] IntoANewArray<T>(this T head)
-        {
-            return new[] {head};
-        }
-
-
-        public static Vector Normal(this Vector v)
+        internal static Vector Normal(this Vector v)
         {
             var normal = new Vector(-v.Y,v.X);
             normal.Normalize();
 
             return normal;
         }
-
-        public static Vector LinearLerp(Vector a, Vector b, double t)
+        internal static Vector LinearLerp(Vector a, Vector b, double t)
         {
             return new Vector(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
         }
-        public static Vector HermiteLerp(Vector a, Vector b, Vector c, Vector d, double percentage, double tension = 0, double bias = 0)
+        internal static Vector HermiteLerp(Vector a, Vector b, Vector c, Vector d, double percentage, double tension = 0, double bias = 0)
         {
             return new Vector(
                 Hermite(a.X, b.X, c.X, d.X, percentage, tension, bias),
                 Hermite(a.Y, b.Y, c.Y, d.Y, percentage, tension, bias));
         }
-        private static double Hermite(double v1, double v2, double v3, double v4, double aPercentage, double aTension, double aBias)
+        internal static double Hermite(double v1, double v2, double v3, double v4, double aPercentage, double aTension, double aBias)
         {
             double mu2 = aPercentage * aPercentage;
             double mu3 = mu2 * aPercentage;
@@ -67,8 +59,7 @@ namespace TerrainEditor.Utilities
 
             return (a0 * v2 + a1 * m0 + a2 * m1 + a3 * v3);
         }
-
-        public static void Clear(this MeshBuilder builder)
+        internal static void Clear(this MeshBuilder builder)
         {
             builder.Positions.Clear();
             builder.TriangleIndices.Clear();
@@ -79,7 +70,17 @@ namespace TerrainEditor.Utilities
             if (builder.CreateNormals)
                 builder.Normals.Clear();
         }
+        internal static void RenameKey<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey fromKey, TKey toKey)
+        {
+            TValue value = dic[fromKey];
+            dic.Remove(fromKey);
+            dic[toKey] = value;
+        }
 
+        public static T[] IntoANewArray<T>(this T head)
+        {
+            return new[] {head};
+        }
         public static DiffuseMaterial CreateImageMaterial(BitmapImage image, bool tile = false, bool freezeBrush = true)
         {
             ImageBrush imageBrush = new ImageBrush(image)
@@ -88,7 +89,6 @@ namespace TerrainEditor.Utilities
                 Opacity = 1,
                 TileMode = tile ? TileMode.Tile : TileMode.None
             };
-
             if (freezeBrush)
                 imageBrush.Freeze();
 
@@ -97,15 +97,13 @@ namespace TerrainEditor.Utilities
         }
         public static BitmapImage LoadBitmapFromResource(string pathInApplication, Assembly assembly = null)
         {
-            if (assembly == null)
-                assembly = Assembly.GetCallingAssembly();
+            assembly = assembly ?? Assembly.GetCallingAssembly();
 
-            if (pathInApplication[0] == '/')
+            if (pathInApplication[0] == Path.DirectorySeparatorChar)
                 pathInApplication = pathInApplication.Substring(1);
 
             return new BitmapImage(new Uri(@"pack://application:,,,/" + assembly.GetName().Name + ";component/" + pathInApplication, UriKind.Absolute));
         }
-
         public static Point3D ToPoint3D(this Vector vector, double z = 0)
         {
             return new Point3D(vector.X,vector.Y,z);
@@ -114,7 +112,6 @@ namespace TerrainEditor.Utilities
         {
             return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
         }
-
         public static string GetRelativePath(string filespec)
         {
             Uri pathUri = new Uri(filespec);
@@ -122,11 +119,13 @@ namespace TerrainEditor.Utilities
 
             return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
         }
-        public static void RenameKey<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey fromKey, TKey toKey)
+        public static string RelativePath(this FileInfo info)
         {
-            TValue value = dic[fromKey];
-            dic.Remove(fromKey);
-            dic[toKey] = value;
+            return GetRelativePath(info.FullName);
+        }
+        public static string RelativePath(this DirectoryInfo info)
+        {
+            return GetRelativePath(info.FullName);
         }
 
     }

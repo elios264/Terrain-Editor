@@ -47,6 +47,10 @@ namespace TerrainEditor.UserControls
 
         private static string OpenSelectImageDialog(string previousPath = null)
         {
+            previousPath = previousPath != null
+                ? Path.GetFullPath(previousPath)
+                : null;
+
             var startPath = ServiceLocator.Get<IResourceProviderService>().WorkPath;
             var dialogService = ServiceLocator.Get<IFileDialogService>();
             var messageService = ServiceLocator.Get<IDialogBoxService>();

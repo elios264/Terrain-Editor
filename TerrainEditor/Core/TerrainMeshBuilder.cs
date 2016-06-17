@@ -12,61 +12,36 @@ using Polygon = Poly2Tri.Polygon;
 
 namespace TerrainEditor.Core
 {
-    public class DynamicMeshBuilder
+    public class TerrainMeshBuilder
     {
-        private readonly DynamicMesh m_mesh;
-
-        private bool IsInverted
-        {
-            get { return m_mesh.FillMode == FillMode.Inverted && m_mesh.Vertices.Count > 2; }
-        }
         private bool IsClosed
         {
-            get { return m_mesh.IsClosed && m_mesh.Vertices.Count > 2; }
+            get { return Mesh.IsClosed && Mesh.Vertices.Count > 2; }
+        }
+        private bool IsInverted
+        {
+            get { return Mesh.FillMode == FillMode.Inverted && Mesh.Vertices.Count > 2; }
         }
 
+        public Terrain Mesh { get; set; }
         public MeshBuilder MeshEdgeData { get; }
         public MeshBuilder MeshFillData { get; }
 
-        public DynamicMeshBuilder(DynamicMesh mesh)
+        public TerrainMeshBuilder()
         {
-            m_mesh = mesh;
             MeshFillData = new MeshBuilder(false,true);
             MeshEdgeData = new MeshBuilder(false,true);
         }
-
-        public static Model3DGroup GenerateMesh(DynamicMesh mesh)
-        {
-            DynamicMeshBuilder builder = new DynamicMeshBuilder(mesh);
-            builder.Tesellate();
-
-            var edgeAndFill = new List<Model3D>();
-
-            if (builder.m_mesh.FillMode != FillMode.None)
-            {
-                DiffuseMaterial fillMaterial = Utils.CreateImageMaterial(mesh.UvMapping.FillTexture, true);
-
-                fillMaterial.AmbientColor = mesh.AmbientColor;
-                edgeAndFill.Add(new GeometryModel3D(builder.MeshFillData.ToMesh(true), fillMaterial) { BackMaterial = fillMaterial });
-            }
-
-            DiffuseMaterial edgeMaterial = Utils.CreateImageMaterial(mesh.UvMapping.EdgeTexture);
-
-            edgeMaterial.AmbientColor = mesh.AmbientColor;
-            edgeAndFill.Add(new GeometryModel3D(builder.MeshEdgeData.ToMesh(true), edgeMaterial) {BackMaterial = edgeMaterial});
-
-
-            return new Model3DGroup { Children = new Model3DCollection(edgeAndFill) };
-        }
-
         public void Tesellate()
         {
             MeshEdgeData.Clear();
             MeshFillData.Clear();
 
-            var fillVertices = new List<Vector>();
+            if (Mesh.UvMapping.EdgeTexture == null)
+                return;
 
-            foreach (var fillPoints in GenerateSegments().Select(DrawSegment))
+            var fillVertices = new List<Vector>();
+            foreach (var fillPoints in GenerateSegments().Select(TesellateSegment))
             {
                 if (IsInverted)
                     fillPoints.Reverse();
@@ -74,8 +49,7 @@ namespace TerrainEditor.Core
                 fillVertices.AddRange(fillPoints);
             }
 
-            DrawFill(fillVertices);
-
+            TesellateFill(fillVertices);
 
             var newIndices =
                 MeshEdgeData.TriangleIndices.Batch(3)
@@ -94,24 +68,24 @@ namespace TerrainEditor.Core
 
         private IEnumerable<Segment> GenerateSegments()
         {
-            int size = IsClosed ? m_mesh.Vertices.Count + 1 : m_mesh.Vertices.Count;
+            int size = IsClosed ? Mesh.Vertices.Count + 1 : Mesh.Vertices.Count;
            
             for (int i = 1; i < size; i++)
             {
-                var prev2 = m_mesh.Vertices.CircularIndex(i - 2, IsClosed);
-                var next = m_mesh.Vertices.CircularIndex(i + 1 , IsClosed);
+                var prev2 = Mesh.Vertices.ElementAt(i - 2, IsClosed);
+                var next = Mesh.Vertices.ElementAt(i + 1 , IsClosed);
 
-                var prev = m_mesh.Vertices.CircularIndex(i - 1, IsClosed);
-                var cur = m_mesh.Vertices.CircularIndex(i, IsClosed);
+                var prev = Mesh.Vertices.ElementAt(i - 1, IsClosed);
+                var cur = Mesh.Vertices.ElementAt(i, IsClosed);
 
                 Segment segment = new Segment
                 {
-                    PrevPrev = m_mesh.Vertices.CircularIndex(i - 3, IsClosed)?.Position,
-                    Prev = m_mesh.Vertices.CircularIndex(i - 2, IsClosed)?.Position,
+                    PrevPrev = Mesh.Vertices.ElementAt(i - 3, IsClosed)?.Position,
+                    Prev = Mesh.Vertices.ElementAt(i - 2, IsClosed)?.Position,
                     Begin = prev.Position,
                     End = cur.Position,
-                    Next = m_mesh.Vertices.CircularIndex(i + 1, IsClosed)?.Position,
-                    NextNext = m_mesh.Vertices.CircularIndex(i + 2, IsClosed)?.Position,
+                    Next = Mesh.Vertices.ElementAt(i + 1, IsClosed)?.Position,
+                    NextNext = Mesh.Vertices.ElementAt(i + 2, IsClosed)?.Position,
                     Direction = CalculateDirection(prev, cur),
                     PrevDirection = prev2 == null ? VertexDirection.None : CalculateDirection(prev2,prev),
                     NextDirection = next == null ? VertexDirection.None : CalculateDirection(cur,next)
@@ -141,27 +115,17 @@ namespace TerrainEditor.Core
                 ? (IsInverted ? VertexDirection.Down : VertexDirection.Top)
                 : (IsInverted ? VertexDirection.Top : VertexDirection.Down);
         }
-        private List<Vector> DrawSegment(Segment segment)
+        private List<Vector> TesellateSegment(Segment segment)
         {
-            var segmentUvMapping = GetUvMappingOf(segment.Direction);
+            var curSegmentMapping = GetUvMappingOf(segment.Direction);
 
-            if (segmentUvMapping == null || segmentUvMapping.Bodies.Count == 0)
-            {
-                return new List<Vector>
-                {
-                    segment.Begin,
-                    segment.End
-                };
-            }
+            if (curSegmentMapping.Bodies.Count == 0)
+                return new List<Vector> { segment.Begin, segment.End };
 
-            var bodyUvSize = m_mesh.UvMapping.ToUv(segmentUvMapping.Bodies[0]).Size;
-            var unitsPerEdgeUv = CalculateUnitsPerEdgeUv();
-            var bodyWidthInUnits = bodyUvSize.Width*unitsPerEdgeUv.X;
-            var halfBodyHeightInUnits = bodyUvSize.Height*unitsPerEdgeUv.Y/2;
-
-            var bodyUv = Rect.Empty;
-            var start = segment.Begin;
-            var smoothFactor = Math.Max(1, m_mesh.SmoothFactor);
+            var bodySizeInUV = Mesh.UvMapping.ToUV(curSegmentMapping.Bodies[0]).Size;
+            var edgeUVSizeInUnits = GetEdgeUVSizeInUnits();
+            var bodySizeInUnits = new Size(bodySizeInUV.Width * edgeUVSizeInUnits.X, bodySizeInUV.Height * edgeUVSizeInUnits.Y);
+        
 
             var doLeftCap = ShouldCloseSegment(segment, SegmentSide.Left);
             var doRightCap = ShouldCloseSegment(segment, SegmentSide.Right);
@@ -175,17 +139,21 @@ namespace TerrainEditor.Core
             if (segment.PrevPrev.HasValue && segment.Prev.HasValue && ShouldCloseSegment(new Segment { Prev = segment.PrevPrev, Begin = segment.Prev.Value, End = segment.Begin, }, SegmentSide.Left))
                 segment.PrevPrev = null;
 
-            var prevNumOfCuts = (double)Math.Max((int)Math.Floor((segment.Begin - (segment.Prev ?? segment.Begin)).Length / (bodyWidthInUnits + m_mesh.StrechThreshold)), 1) * smoothFactor;
-            var endPrevious = Utils.HermiteLerp(segment.PrevPrev ?? segment.Prev ?? segment.Begin, segment.Prev ??  segment.Begin, segment.Begin, segment.End, prevNumOfCuts == 1 ? 0.001 : ((prevNumOfCuts - 1) / prevNumOfCuts));
-            var startOffset = (start - endPrevious).Normal() * halfBodyHeightInUnits;
+            var currentCutUV = Rect.Empty;
+            var start = segment.Begin;
+            var smoothFactor = Math.Max(1, Mesh.SmoothFactor);
 
-            if (doLeftCap)
-                DrawCap(segmentUvMapping.LeftCap, SegmentSide.Left, segment.Begin + startOffset, segment.Begin - startOffset, segmentUvMapping.ZOffset);
+            var prevNumOfCuts = (double)Math.Max((int)Math.Floor((segment.Begin - (segment.Prev ?? segment.Begin)).Length / (bodySizeInUnits.Width + Mesh.StrechThreshold)), 1) * smoothFactor;
+            var endPrevious = Utils.HermiteLerp(segment.PrevPrev ?? segment.Prev ?? segment.Begin, segment.Prev ??  segment.Begin, segment.Begin, segment.End, prevNumOfCuts == 1 ? 0.001 : ((prevNumOfCuts - 1) / prevNumOfCuts));
+            var startOffset = (start - endPrevious).Normal() * (bodySizeInUnits.Height / 2);
+
+          //  if (doLeftCap)
+                TesellateCap(curSegmentMapping.LeftCap, SegmentSide.Left, segment.Begin + startOffset, segment.Begin - startOffset, curSegmentMapping.ZOffset);
 
             if (doLeftCap && doRightCap)
                 smoothFactor = 1;
 
-            var numberOfCuts = Math.Max((int) Math.Floor((segment.End - segment.Begin).Length/(bodyWidthInUnits + m_mesh.StrechThreshold)),1)*smoothFactor;
+            var numberOfCuts = Math.Max((int) Math.Floor((segment.End - segment.Begin).Length/(bodySizeInUnits.Width + Mesh.StrechThreshold)),1)*smoothFactor;
             var fillPoints = new List<Vector>(numberOfCuts);
 
             for (int i = 0; i < numberOfCuts; i++)
@@ -193,7 +161,7 @@ namespace TerrainEditor.Core
                 var percentEnd = (i + 1) / (double)numberOfCuts;
 
                 var end = Utils.HermiteLerp(segment.Prev ?? segment.Begin, segment.Begin, segment.End, segment.Next ?? segment.End, percentEnd);
-                var endOffset = (end - start).Normal()*halfBodyHeightInUnits;
+                var endOffset = (end - start).Normal()* (bodySizeInUnits.Height/2);
 
                 var localTopLeft = start + startOffset;
                 var localTopRight = end + endOffset;
@@ -207,38 +175,38 @@ namespace TerrainEditor.Core
 
                 if (i%smoothFactor == 0)
                 {
-                    bodyUv = m_mesh.UvMapping.ToUv( segmentUvMapping.Bodies[Math.Abs(percentEnd.GetHashCode()%segmentUvMapping.Bodies.Count)]);
-                    bodyUv.Width /= smoothFactor;
+                    currentCutUV = Mesh.UvMapping.ToUV( curSegmentMapping.Bodies[Math.Abs(percentEnd.GetHashCode()%curSegmentMapping.Bodies.Count)]);
+                    currentCutUV.Width /= smoothFactor;
                 }
                 else
-                    bodyUv.X += bodyUv.Width;
+                    currentCutUV.X += currentCutUV.Width;
 
                 MeshEdgeData.AddQuad(
-                    new Point3D(localBottomLeft.X, localBottomLeft.Y, segmentUvMapping.ZOffset),
-                    new Point3D(localTopLeft.X, localTopLeft.Y, segmentUvMapping.ZOffset),
-                    new Point3D(localTopRight.X, localTopRight.Y, segmentUvMapping.ZOffset),
-                    new Point3D(localBottomRight.X, localBottomRight.Y, segmentUvMapping.ZOffset),
-                    bodyUv.BottomLeft,bodyUv.TopLeft,bodyUv.TopRight,bodyUv.BottomRight);
+                    new Point3D(localBottomLeft.X, localBottomLeft.Y, curSegmentMapping.ZOffset),
+                    new Point3D(localTopLeft.X, localTopLeft.Y, curSegmentMapping.ZOffset),
+                    new Point3D(localTopRight.X, localTopRight.Y, curSegmentMapping.ZOffset),
+                    new Point3D(localBottomRight.X, localBottomRight.Y, curSegmentMapping.ZOffset),
+                    currentCutUV.BottomLeft,currentCutUV.TopLeft,currentCutUV.TopRight,currentCutUV.BottomRight);
             }
 
-            if(doRightCap)
-                DrawCap(segmentUvMapping.RightCap, SegmentSide.Right, segment.End + startOffset, segment.End - startOffset, segmentUvMapping.ZOffset);
+          //  if(doRightCap)
+                TesellateCap(curSegmentMapping.RightCap, SegmentSide.Right, segment.End + startOffset, segment.End - startOffset, curSegmentMapping.ZOffset);
 
             return fillPoints;
         }
 
-        private void DrawCap(Rect rect, SegmentSide side, Vector top, Vector bottom, double zOffset)
+        private void TesellateCap(Rect rect, SegmentSide side, Vector top, Vector bottom, double zOffset)
         {
-            var capUv = m_mesh.UvMapping.ToUv(rect);
-            var capOffset = (bottom - top).Normal()*capUv.Size.Width*CalculateUnitsPerEdgeUv().X;
+            var capUv = Mesh.UvMapping.ToUV(rect);
+            var capOffset = (bottom - top).Normal()*capUv.Size.Width*GetEdgeUVSizeInUnits().X;
 
             var otherTop = side == SegmentSide.Left ? top - capOffset : top + capOffset;
             var otherBottom = side == SegmentSide.Left ? bottom - capOffset : bottom + capOffset;
 
             if (side == SegmentSide.Left)
             {
-                Utils.Swap(ref top,ref otherTop);
-                Utils.Swap(ref bottom,ref otherBottom);
+                Utils.Swap(ref top, ref otherTop);
+                Utils.Swap(ref bottom, ref otherBottom);
             }
 
             MeshEdgeData.AddQuad(
@@ -248,13 +216,13 @@ namespace TerrainEditor.Core
                 new Point3D(otherBottom.X,otherBottom.Y,zOffset),
                 capUv.BottomLeft,capUv.TopLeft,capUv.TopRight,capUv.BottomRight);
         }
-        private void DrawFill(List<Vector> fillVertices)
+        private void TesellateFill(List<Vector> fillVertices)
         {
-            if (m_mesh.Vertices.Count <= 2 || m_mesh.FillMode == FillMode.None || m_mesh.UvMapping.FillTexture == null)
+            if (Mesh.Vertices.Count <= 2 || Mesh.FillMode == FillMode.None || Mesh.UvMapping.FillTexture == null)
                 return;
 
-            if (!m_mesh.IsClosed)
-                fillVertices.Add(m_mesh.FillMode != FillMode.Inverted ? m_mesh.Vertices.Last().Position : m_mesh.Vertices.First().Position);
+            if (!Mesh.IsClosed)
+                fillVertices.Add(Mesh.FillMode != FillMode.Inverted ? Mesh.Vertices.Last().Position : Mesh.Vertices.First().Position);
 
 
             var polygon = new Polygon(fillVertices.Select(v => new PolygonPoint(v.X,v.Y)));
@@ -289,16 +257,16 @@ namespace TerrainEditor.Core
                 return;
             }
 
-            var unitsPerFill = CalculateUnitsPerFillUv();
+            var unitsPerFill = GetFillUVSizeInUnits();
             foreach (var triangle in polygon.Triangles)
             {
                 MeshFillData.AddTriangle(
                     new Point3D(triangle.Points._0.X, triangle.Points._0.Y,0.0),
                     new Point3D(triangle.Points._1.X, triangle.Points._1.Y,0.0),
                     new Point3D(triangle.Points._2.X, triangle.Points._2.Y,0.0),
-                    new Point(triangle.Points._0.X / unitsPerFill.X, triangle.Points._0.Y / unitsPerFill.Y),
-                    new Point(triangle.Points._1.X / unitsPerFill.X, triangle.Points._1.Y / unitsPerFill.Y),
-                    new Point(triangle.Points._2.X / unitsPerFill.X, triangle.Points._2.Y / unitsPerFill.Y));
+                    new Point(triangle.Points._0.X / unitsPerFill.X, 1 - triangle.Points._0.Y / unitsPerFill.Y),
+                    new Point(triangle.Points._1.X / unitsPerFill.X, 1 - triangle.Points._1.Y / unitsPerFill.Y),
+                    new Point(triangle.Points._2.X / unitsPerFill.X, 1 - triangle.Points._2.Y / unitsPerFill.Y));
             }
         }
 
@@ -307,12 +275,12 @@ namespace TerrainEditor.Core
             if (IsInverted)
                 side = side == SegmentSide.Left ? SegmentSide.Right : SegmentSide.Left;
 
-            if (m_mesh.SplitWhenDifferent && (side == SegmentSide.Left && segment.Direction != segment.PrevDirection || (side == SegmentSide.Right && segment.Direction != segment.NextDirection)))
+            if (Mesh.SplitWhenDifferent && (side == SegmentSide.Left && segment.Direction != segment.PrevDirection || (side == SegmentSide.Right && segment.Direction != segment.NextDirection)))
                 return true;
 
             var angle = side == SegmentSide.Left ? segment.AngleWithPrev : segment.AngleWithNext;
 
-            if (angle < m_mesh.SplitCornersThreshold || angle > (360 - m_mesh.SplitCornersThreshold))
+            if (angle < Mesh.SplitCornersThreshold || angle > (360 - Mesh.SplitCornersThreshold))
                 return true;
 
             return angle == 180 && !(side == SegmentSide.Left ? segment.Prev.HasValue : segment.Next.HasValue);
@@ -322,24 +290,59 @@ namespace TerrainEditor.Core
             switch (direction)
             {
                 case VertexDirection.Top:
-                    return m_mesh.UvMapping.Top;
+                    return Mesh.UvMapping.Top;
                 case VertexDirection.Down:
-                    return m_mesh.UvMapping.Bottom ?? m_mesh.UvMapping.Top;
+                    return Mesh.UvMapping.Bottom ?? Mesh.UvMapping.Top;
                 case VertexDirection.Left:
-                    return m_mesh.UvMapping.Left ?? m_mesh.UvMapping.Right ?? m_mesh.UvMapping.Top;
+                    return Mesh.UvMapping.Left ?? Mesh.UvMapping.Right ?? Mesh.UvMapping.Top;
                 case VertexDirection.Right:
-                    return m_mesh.UvMapping.Right ?? m_mesh.UvMapping.Left ?? m_mesh.UvMapping.Top;
+                    return Mesh.UvMapping.Right ?? Mesh.UvMapping.Left ?? Mesh.UvMapping.Top;
                 default:
-                    return null;
+                    throw new ArgumentOutOfRangeException();
             }
         }
-        private Vector CalculateUnitsPerEdgeUv()
+        private Vector GetEdgeUVSizeInUnits()
         {
-            return new Vector(m_mesh.UvMapping.EdgeTexture.PixelWidth / (double)m_mesh.PixelsPerUnit, m_mesh.UvMapping.EdgeTexture.PixelHeight / (double)m_mesh.PixelsPerUnit);
+            return new Vector(
+                Mesh.UvMapping.EdgeTexture.PixelWidth / (double)Mesh.PixelsPerUnit, 
+                Mesh.UvMapping.EdgeTexture.PixelHeight / (double)Mesh.PixelsPerUnit);
         }
-        private Vector CalculateUnitsPerFillUv()
+        private Vector GetFillUVSizeInUnits()
         {
-            return new Vector(m_mesh.UvMapping.FillTexture.PixelWidth / (double)m_mesh.PixelsPerUnit, m_mesh.UvMapping.FillTexture.PixelHeight / (double)m_mesh.PixelsPerUnit);
+            return new Vector(
+                Mesh.UvMapping.FillTexture.PixelWidth / (double)Mesh.PixelsPerUnit, 
+                Mesh.UvMapping.FillTexture.PixelHeight / (double)Mesh.PixelsPerUnit);
+        }
+
+        public static Model3DGroup GenerateMesh(Terrain mesh)
+        {
+            if (mesh.UvMapping == null)
+            {
+                return new Model3DGroup();
+            }
+
+            var builder = new TerrainMeshBuilder { Mesh = mesh };
+            builder.Tesellate();
+
+            var edgeAndFill = new List<Model3D>();
+
+            if (builder.Mesh.FillMode != FillMode.None)
+            {
+                DiffuseMaterial fillMaterial = Utils.CreateImageMaterial(mesh.UvMapping.FillTexture, true);
+
+                fillMaterial.AmbientColor = mesh.AmbientColor;
+                edgeAndFill.Add(new GeometryModel3D(builder.MeshFillData.ToMesh(true), fillMaterial) { BackMaterial = fillMaterial });
+            }
+
+            if (mesh.UvMapping.EdgeTexture != null)
+            {
+                DiffuseMaterial edgeMaterial = Utils.CreateImageMaterial(mesh.UvMapping.EdgeTexture);
+
+                edgeMaterial.AmbientColor = mesh.AmbientColor;
+                edgeAndFill.Add(new GeometryModel3D(builder.MeshEdgeData.ToMesh(true), edgeMaterial) { BackMaterial = edgeMaterial });
+            }
+
+            return new Model3DGroup { Children = new Model3DCollection(edgeAndFill) };
         }
 
         private enum SegmentSide

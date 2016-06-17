@@ -3,10 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using Microsoft.WindowsAPICodePack.Shell;
 
 namespace TerrainEditor.UserControls
 {
-    public class DefaultResourceProvider : IResourceInfoProvider
+    internal class DefaultResourceProvider : IResourceInfoProvider
     {
         public Type ResourceType => typeof(object);
         public bool CanCreateNew => false;
@@ -24,7 +25,12 @@ namespace TerrainEditor.UserControls
         }
         public ImageSource GetPreview(FileInfo info)
         {
-            return null;
+            using (ShellFile shellFile = ShellFile.FromFilePath(info.FullName))
+            {
+                var mediumBitmapSource = shellFile.Thumbnail.MediumBitmapSource;
+                mediumBitmapSource.Freeze();
+                return mediumBitmapSource;
+            }
         }
     }
 }

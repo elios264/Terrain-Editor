@@ -11,9 +11,8 @@ namespace TerrainEditor.Core.Services
     }
 
     [IsService(typeof(IFileDialogService)),UsedImplicitly]
-    public class FileDialogService : IFileDialogService
+    internal class FileDialogService : IFileDialogService
     {
-
         public bool ShowOpenFileDialog(ref string filename, string filter, string initialDir = null)
         {
             var dialog = new OpenFileDialog

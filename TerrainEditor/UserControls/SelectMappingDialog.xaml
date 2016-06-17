@@ -8,7 +8,7 @@
              xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
              mc:Ignorable="d"
             IsOpen="True"
-            Title="Select Mapping" 
+            Title="Choose Mapping" 
             AllowMove="True"
             ChildWindowWidth="200"
             OverlayBrush="{StaticResource AccentColorBrush4}" 

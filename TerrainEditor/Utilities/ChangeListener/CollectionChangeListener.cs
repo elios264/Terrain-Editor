@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace TerrainEditor.Utilities
 {
-    public partial class PropertyChangeListener : IDisposable
+    public partial class RecursivePropertyChangeListener : IDisposable
     {
         private class CollectionChangeListener : ChangeListener
         {

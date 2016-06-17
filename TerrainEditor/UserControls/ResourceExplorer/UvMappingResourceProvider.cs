@@ -13,7 +13,7 @@ using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-    public class UvMappingResourceProvider : IResourceInfoProvider
+    internal class UvMappingResourceProvider : IResourceInfoProvider
     {
         private readonly XmlArchive m_xmlArchive = new XmlArchive(typeof(UvMapping));
         public Type ResourceType => typeof(UvMapping);
@@ -48,6 +48,9 @@ namespace TerrainEditor.UserControls
                     break;
                 case MessageBoxResult.No:
                     ReloadFromDisk(info, resource);
+                    completionSource.SetResult(null);
+                    break;
+                case MessageBoxResult.None:
                     completionSource.SetResult(null);
                     break;
                 }
@@ -100,7 +103,9 @@ namespace TerrainEditor.UserControls
             }
             catch (Exception)
             {
-                return new BitmapImage();
+                var image = new BitmapImage();
+                image.Freeze();
+                return image;
             }
         }
     }

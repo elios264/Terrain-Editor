@@ -7,7 +7,7 @@ namespace TerrainEditor.ViewModels
 {
     public class PropertyChangeBase : INotifyPropertyChanged
     {
-        private readonly PropertyChangeListener m_recursivePropertyChangeListener;
+        private readonly RecursivePropertyChangeListener m_recursivePropertyChangeListener;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler RecursivePropertyChanged
@@ -30,7 +30,7 @@ namespace TerrainEditor.ViewModels
 
         public PropertyChangeBase()
         {
-            m_recursivePropertyChangeListener = new PropertyChangeListener(this);
+            m_recursivePropertyChangeListener = new RecursivePropertyChangeListener(this);
         }
     }
 }

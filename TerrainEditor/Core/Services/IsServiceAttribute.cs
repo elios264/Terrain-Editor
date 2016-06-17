@@ -2,6 +2,7 @@ using System;
 
 namespace TerrainEditor.Core.Services
 {
+    [AttributeUsage(AttributeTargets.Class)]
     public class IsServiceAttribute : Attribute
     {
         public Type ServiceInterfaceType { get; }

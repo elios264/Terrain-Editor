@@ -8,7 +8,7 @@
              xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
              mc:Ignorable="d" HorizontalAlignment="Stretch"
              AllowDrop="True" Drop="OnDropMapping"
-             d:DesignHeight="50" d:DesignWidth="200" d:DataContext="{x:Static viewModels:UvMapping.Mossy}" >
+             d:DesignHeight="50" d:DesignWidth="200" d:DataContext="{x:Static viewModels:UvMapping.Mossy}"  >
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,9 +18,28 @@
 
         <Button Margin="0,0,5,0" Click="SelectNewMapping">
             <Button.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Edit this Mapping" Click="OnEditMapping"/>
-                    <MenuItem Header="Show in Resource Explorer" Click="OnShowInExplorer"/>
+                <ContextMenu DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.DataContext }">
+                    <ContextMenu.Resources>
+                        <Style x:Key="Disable" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContextMenu.Resources>
+                    <MenuItem Header="Choose mapping..." Click="SelectNewMapping" FontWeight="Bold" />
+                    <Separator/>
+                    <MenuItem Header="Edit this mapping..." Click="OnEditMapping" Style="{StaticResource Disable}">
+                        <MenuItem.Icon>
+                            <Image Width="15" Source="../Resources/edit.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Show in Resource Explorer" Click="OnShowInExplorer" Style="{StaticResource Disable}">
+                        <MenuItem.Icon>
+                            <Image Width="15" Source="../Resources/map.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </ContextMenu>
             </Button.ContextMenu>
             <StackPanel>
@@ -29,7 +48,7 @@
         </Button>
         <StackPanel Grid.Column="1" >
             <TextBlock Text="Material Name" TextAlignment="Center" />
-            <TextBlock Margin="0,5" Text="{Binding Name}" TextAlignment="Center"  />
+            <TextBlock Margin="0,5" Text="{Binding Name, TargetNullValue=None Selected, FallbackValue=None Selected}" TextAlignment="Center"  />
         </StackPanel>
     </Grid>
 </UserControl>

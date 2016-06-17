@@ -162,7 +162,7 @@ namespace TerrainEditor.ViewModels
             }
             get { return m_bottom; }
         }
-        public Rect ToUv(Rect rect)
+        public Rect ToUV(Rect rect)
         {
             double width = EdgeTexture.PixelWidth;
             double height = EdgeTexture.PixelHeight;

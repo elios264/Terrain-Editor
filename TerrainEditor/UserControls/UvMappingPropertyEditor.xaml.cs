@@ -46,7 +46,7 @@ namespace TerrainEditor.UserControls
             var resourceProvider = ServiceLocator.Get<IResourceProviderService>() as ResourceExplorer;
             var info = resourceProvider?.InfoForResource(DataContext);
 
-            resourceProvider?.ShowInExplorer(Utils.GetRelativePath(info.FullName));
+            resourceProvider?.ShowInExplorer(info.RelativePath());
         }
     }
 }

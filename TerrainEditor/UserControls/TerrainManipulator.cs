@@ -14,13 +14,12 @@ using TerrainEditor.ViewModels;
 namespace TerrainEditor.UserControls
 {
 
-    public class VertexManipulator : ModelVisual3D
+    public class TerrainManipulator : ModelVisual3D
     {
-        public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof (DynamicMesh), typeof (VertexManipulator), new PropertyMetadata(default(DynamicMesh),OnSourceChanged));
-        public static readonly DependencyProperty InputSourceProperty = DependencyProperty.Register(nameof(InputSource), typeof (UIElement), typeof (VertexManipulator), new PropertyMetadata(default(UIElement), OnInputSourceChanged));
+        private static readonly VertexDirection?[] Directions;
 
-        private static readonly VertexDirection?[] Directions = Enum.GetValues(typeof(VertexDirection)).Cast<VertexDirection?>().Skip(1).ToArray();
-
+        public static readonly DependencyProperty SourceProperty;
+        public static readonly DependencyProperty InputSourceProperty;
         public static readonly Material DotVertexMaterial;
         public static readonly Material DotAddMaterial;
         public static readonly Material DotDeleteMaterial;
@@ -30,33 +29,18 @@ namespace TerrainEditor.UserControls
         public static readonly Material DotRightMaterial;
         public static readonly Material DotDownMaterial;
 
-        private enum HitType
-        {
-            None,
-            Vertex,
-            AddNew,
-            Direction
-        }
-        private delegate void HitTest2DDelegate(int index, HitType type);
-        private struct PreviewInfo
-        {
-            public Vector Position;
-            public int InsertionIndex;
-        }
-
         private int m_currentVertexIndex = -1;
         private Material m_vertexMaterial = DotVertexMaterial;
         private PreviewInfo m_previewInfo = new PreviewInfo { InsertionIndex = -1 };
-
         private readonly LinesVisual3D m_lines;
         private readonly LinesVisual3D m_previewLines;
         private List<BillboardVisual3D> m_vertices;
         private List<BillboardVisual3D> m_addVertexCallouts;
         private List<BillboardVisual3D> m_changeDirectionCallouts;
 
-        public DynamicMesh Source
+        public Terrain Source
         {
-            get { return (DynamicMesh) GetValue(SourceProperty); }
+            get { return (Terrain) GetValue(SourceProperty); }
             set { SetValue(SourceProperty, value); }
         }
         public UIElement InputSource
@@ -65,8 +49,13 @@ namespace TerrainEditor.UserControls
             set { SetValue(InputSourceProperty, value); }
         }
 
-        static VertexManipulator()
+        static TerrainManipulator()
         {
+            SourceProperty = DependencyProperty.Register(nameof(Source), typeof(Terrain), typeof(TerrainManipulator), new PropertyMetadata(default(Terrain), OnSourceChanged));
+            InputSourceProperty = DependencyProperty.Register(nameof(InputSource), typeof(UIElement), typeof(TerrainManipulator), new PropertyMetadata(default(UIElement), OnInputSourceChanged));
+
+            Directions = Enum.GetValues(typeof(VertexDirection)).Cast<VertexDirection?>().Skip(1).ToArray();
+
             DotVertexMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot.png"));
             DotAddMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-add.png"));
             DotDeleteMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-delete.png"));
@@ -93,7 +82,7 @@ namespace TerrainEditor.UserControls
             DotRightMaterial.Freeze();
             DotDownMaterial.Freeze();
         }
-        public VertexManipulator()
+        public TerrainManipulator()
         {
             m_lines = new LinesVisual3D {Color =  Colors.White, Thickness = 2};
             m_previewLines = new LinesVisual3D {Color =  Colors.PaleGreen, Thickness = 2};
@@ -101,10 +90,10 @@ namespace TerrainEditor.UserControls
 
         private static void OnSourceChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            VertexManipulator instance = (VertexManipulator) obj;
+            TerrainManipulator instance = (TerrainManipulator) obj;
 
-            DynamicMesh newMesh = (DynamicMesh) args.NewValue;
-            DynamicMesh oldMesh = (DynamicMesh) args.OldValue;
+            Terrain newMesh = (Terrain) args.NewValue;
+            Terrain oldMesh = (Terrain) args.OldValue;
 
 
             if (oldMesh != null)
@@ -115,7 +104,7 @@ namespace TerrainEditor.UserControls
         }
         private static void OnInputSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            VertexManipulator instance = (VertexManipulator)d;
+            TerrainManipulator instance = (TerrainManipulator)d;
 
             UIElement oldInputSource = e.OldValue as UIElement;
             UIElement newInputSource = e.NewValue as UIElement;
@@ -132,10 +121,9 @@ namespace TerrainEditor.UserControls
             Source.RecursivePropertyChanged += SourceOnRecursivePropertyChanged;
             SourceOnRecursivePropertyChanged(null,null);
         }
-
-        private void UnregisterSource(DynamicMesh oldMesh)
+        private void UnregisterSource(Terrain oldTerrain)
         {
-            oldMesh.RecursivePropertyChanged -= SourceOnRecursivePropertyChanged;
+            oldTerrain.RecursivePropertyChanged -= SourceOnRecursivePropertyChanged;
         }
 
         private void RegisterInputSource()
@@ -179,7 +167,7 @@ namespace TerrainEditor.UserControls
                                 break;
                             case HitType.Direction:
                                 VertexInfo vertex = Source.Vertices[index];
-                                vertex.Direction = Directions.CircularIndex(Array.IndexOf(Directions, vertex.Direction) + 1, true).Value;
+                                vertex.Direction = Directions.ElementAt(Array.IndexOf(Directions, vertex.Direction) + 1, true).Value;
                                 break;
                         }
                     });
@@ -313,7 +301,7 @@ namespace TerrainEditor.UserControls
         private Point3D ScreenPointToWorld(Point point)
         {
             var ray = this.GetViewport3D().Point2DtoRay3D(point);
-            var swp = ray.PlaneIntersection(Source.Mesh.Bounds.Location, new Vector3D(0, 0, -1)).Value;
+            var swp = ray.PlaneIntersection(Source.Position, new Vector3D(0, 0, -1)).Value;
 
             return Transform.Inverse.Transform(swp);
         }
@@ -423,15 +411,31 @@ namespace TerrainEditor.UserControls
             //Transform
             var transform = Source.Mesh.Transform;
             Source.Mesh.Transform = Transform3D.Identity;
+
+            var meshOffset = Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z;
             Transform = new Transform3DGroup
             {
                 Children = new Transform3DCollection
                 {
                     transform,
-                    new TranslateTransform3D(0, 0, Source.Mesh.Bounds.SizeZ + Source.Mesh.Bounds.Z + 0.01)
+                    new TranslateTransform3D(0, 0, double.IsNaN(meshOffset) ? 0 : meshOffset + 0.01)
                 }
             };
             Source.Mesh.Transform = transform;
+        }
+
+        private enum HitType
+        {
+            None,
+            Vertex,
+            AddNew,
+            Direction
+        }
+        private delegate void HitTest2DDelegate(int index, HitType type);
+        private struct PreviewInfo
+        {
+            public Vector Position;
+            public int InsertionIndex;
         }
     }
 }

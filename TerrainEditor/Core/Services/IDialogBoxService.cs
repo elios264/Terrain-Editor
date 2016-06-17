@@ -12,7 +12,7 @@ namespace TerrainEditor.Core.Services
     }
 
     [IsService(typeof(IDialogBoxService)), UsedImplicitly]
-    public class DialogBoxService : IDialogBoxService
+    internal class DialogBoxService : IDialogBoxService
     {
         private static Window ActiveWindow => Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.IsActive) ?? Application.Current.MainWindow;
 

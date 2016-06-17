@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -6,12 +7,12 @@ using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {
-    public class File : PropertyChangeBase
+    internal class File : PropertyChangeBase
     {
         private bool m_isEditing;
         private bool m_isSelected;
         private FileInfo m_info;
-        private ImageSource m_preview;
+        private Lazy<ImageSource> m_preview;
 
         public string Name
         {
@@ -62,7 +63,7 @@ namespace TerrainEditor.UserControls
                 OnPropertyChanged(nameof(Name));
             }
         }
-        public ImageSource Preview
+        public Lazy<ImageSource> Preview
         {
             get { return m_preview; }
             set

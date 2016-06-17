@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace TerrainEditor.Utilities
 {
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class FileOperationAPIWrapper
     {
         /// <summary>

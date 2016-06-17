@@ -4,7 +4,7 @@ using System.ComponentModel;
 namespace TerrainEditor.Utilities
 {
     //credits to https://gist.github.com/thojaw/705450
-    public partial class PropertyChangeListener : IDisposable
+    public partial class RecursivePropertyChangeListener : IDisposable
     {
         private abstract class ChangeListener : INotifyPropertyChanged
         {

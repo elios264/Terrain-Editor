@@ -8,8 +8,6 @@
             xmlns:pt="http://propertytools.org/wpf"
             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
             xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
-            xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-            xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
             mc:Ignorable="d" 
             d:DesignHeight="150" d:DesignWidth="600" >
     
@@ -22,7 +20,7 @@
 
         <TreeView SelectedItemChanged="TreeViewOnSelectedFolderChanged" >
             <TreeView.Resources>
-                <BitmapImage x:Key="FolderImage" UriSource="../../icons/folder.ico" po:Freeze ="true" />
+                <BitmapImage x:Key="FolderImage" UriSource="../../Resources/folder.ico" po:Freeze ="true" />
                 <utilities:SelectManyConverter x:Key="SelectManyConverter"/>
                 <RoutedCommand x:Key="Rename"  />
                 <RoutedCommand x:Key="OpenExplorer"  />
@@ -77,7 +75,7 @@
                  TextSearch.TextPath="FileInfo.Name" IsTextSearchEnabled="True" IsTextSearchCaseSensitive="False"
                  Padding="0,5" MouseUp="FileList_MouseUp">
             <ListBox.Resources>
-                <BitmapImage po:Freeze="true" x:Key="DefaultFileIcon" UriSource="../../icons/file.png"/>
+                <BitmapImage po:Freeze="true" x:Key="DefaultFileIcon" UriSource="../../Resources/file.png"/>
                 <RoutedCommand x:Key="Rename"  />
                 <RoutedCommand x:Key="NewResource"  />
                 <ContextMenu x:Key="ItemContextMenu" >
@@ -115,6 +113,9 @@
                         <MenuItem.CommandBindings>
                             <CommandBinding Command="{StaticResource NewResource}" Executed="OnNewResource"/>
                         </MenuItem.CommandBindings>
+                        <MenuItem.Icon>
+                            <Image Source="../../Resources/new.png" Width="20" Height="20"  />
+                        </MenuItem.Icon>
                         <MenuItem.ItemTemplate>
                             <DataTemplate DataType="{x:Type local:IResourceInfoProvider}">
                                 <TextBlock >
@@ -156,7 +157,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Image Grid.Row="0" Stretch="UniformToFill" MinHeight="55"
-                               Source="{Binding Preview, TargetNullValue={StaticResource DefaultFileIcon}}" />
+                               Source="{Binding Preview.Value, IsAsync=True, TargetNullValue={StaticResource DefaultFileIcon}}" />
                         <Grid Grid.Row="1">
                             <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom" 
                                                   Text="{Binding Name}"

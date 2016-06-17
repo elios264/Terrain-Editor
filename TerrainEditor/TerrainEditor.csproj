@@ -44,12 +44,12 @@
     </ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HelixToolkit, Version=2015.1.712.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <HintPath>..\packages\HelixToolkit.2015.1.712\lib\portable-net4+sl4+wp71+win8\HelixToolkit.dll</HintPath>
+    <Reference Include="HelixToolkit, Version=2015.1.715.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.2015.1.715\lib\portable-net4+sl4+wp71+win8\HelixToolkit.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="HelixToolkit.Wpf, Version=2015.1.712.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <HintPath>..\packages\HelixToolkit.Wpf.2015.1.712\lib\net45\HelixToolkit.Wpf.dll</HintPath>
+    <Reference Include="HelixToolkit.Wpf, Version=2015.1.715.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.Wpf.2015.1.715\lib\net45\HelixToolkit.Wpf.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MahApps.Metro, Version=1.2.4.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
@@ -60,13 +60,28 @@
       <HintPath>..\packages\MahApps.Metro.SimpleChildWindow.1.3.0\lib\net45\MahApps.Metro.SimpleChildWindow.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAPICodePack-Core.1.1.0.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.ShellExtensions, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.ShellExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MoreLinq, Version=1.4.18916.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Persist, Version=1.0.0.26407, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Persist.1.0.0.26407\lib\net45\Persist.dll</HintPath>
+    <Reference Include="Persist, Version=1.0.0.26411, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Persist.1.0.0.26411\lib\net45\Persist.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Poly2Tri, Version=1.0.0.0, Culture=neutral, PublicKeyToken=db87057254d2bb1c, processorArchitecture=MSIL">
+      <HintPath>..\packages\Poly2Tri.dll.1.0.4\lib\Net35\Poly2Tri.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PropertyTools, Version=2015.2.0.0, Culture=neutral, PublicKeyToken=ea0c9f2b460934d0, processorArchitecture=MSIL">
@@ -81,10 +96,6 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\MahApps.Metro.1.2.4.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -96,8 +107,8 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="YamlDotNet, Version=3.8.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\YamlDotNet.3.8.0\lib\net35\YamlDotNet.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.3.9.0\lib\net35\YamlDotNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -106,12 +117,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Core\Services\DialogBoxService.cs" />
-    <Compile Include="Core\Services\FileDialogService.cs" />
+    <Compile Include="Core\Services\IDialogBoxService.cs" />
+    <Compile Include="Core\Services\IFileDialogService.cs" />
     <Compile Include="Core\Services\IsServiceAttribute.cs" />
     <Compile Include="Core\Services\ServiceLocator.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="UserControls\ResourceExplorer\DefaultResourceProvider.cs" />
+    <Compile Include="Core\Services\IResourceProviderService.cs" />
     <Compile Include="UserControls\ResourceExplorer\ResourceExplorer.xaml.cs">
       <DependentUpon>ResourceExplorer.xaml</DependentUpon>
     </Compile>
@@ -132,18 +144,18 @@
     <Compile Include="UserControls\UvMappingPropertyEditor.xaml.cs">
       <DependentUpon>UvMappingPropertyEditor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\VertexManipulator.cs" />
+    <Compile Include="UserControls\TerrainManipulator.cs" />
     <Compile Include="Utilities\ChangeListener\ChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\ChildChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\CollectionChangeListener.cs" />
-    <Compile Include="Utilities\ChangeListener\PropertyChangeListener.cs" />
+    <Compile Include="Utilities\ChangeListener\RecursivePropertyChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\FileOperationAPIWrapper.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
-    <Compile Include="Utilities\WeakEventHandler.cs" />
-    <Compile Include="Viewmodels\DynamicMesh.cs" />
-    <Compile Include="Core\DynamicMeshBuilder.cs" />
+    <Compile Include="Utilities\WeakEvent.cs" />
+    <Compile Include="Viewmodels\Terrain.cs" />
+    <Compile Include="Core\TerrainMeshBuilder.cs" />
     <Compile Include="Viewmodels\FillMode.cs" />
     <Compile Include="Viewmodels\TerrainEditorDataContext.cs" />
     <Compile Include="Viewmodels\UvMapping.cs" />
@@ -210,22 +222,16 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\add.png" />
-    <Resource Include="icons\delete.png" />
-    <Resource Include="icons\edit.png" />
-    <Resource Include="icons\find.png" />
-    <Resource Include="icons\go.png" />
-    <Resource Include="icons\map.png" />
-    <Resource Include="icons\minus.png" />
-    <Resource Include="icons\new.png" />
-    <Resource Include="icons\open.png" />
-    <Resource Include="icons\save.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\polytri\Poly2Tri.csproj">
-      <Project>{c5e5802d-6a45-4fe9-bae7-5f0ae91d72c1}</Project>
-      <Name>Poly2Tri</Name>
-    </ProjectReference>
+    <Resource Include="Resources\add.png" />
+    <Resource Include="Resources\delete.png" />
+    <Resource Include="Resources\edit.png" />
+    <Resource Include="Resources\find.png" />
+    <Resource Include="Resources\go.png" />
+    <Resource Include="Resources\map.png" />
+    <Resource Include="Resources\minus.png" />
+    <Resource Include="Resources\new.png" />
+    <Resource Include="Resources\open.png" />
+    <Resource Include="Resources\save.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\dot-add.png" />
@@ -239,10 +245,10 @@
     <Resource Include="Resources\Rocky.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\folder.ico" />
+    <Resource Include="Resources\folder.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\file.png" />
+    <Resource Include="Resources\file.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using MoreLinq;
 using TerrainEditor.Annotations;
 using TerrainEditor.Core.Services;
@@ -101,7 +102,7 @@ namespace TerrainEditor.UserControls
             {
                 object resource;
                 WeakReference reference;
-                string localPath = Utils.GetRelativePath(info.FullName);
+                string localPath = info.RelativePath();
 
                 if (m_resourcesCache.TryGetValue(localPath, out reference) && (resource = reference.Target) != null)
                     return resource;
@@ -160,10 +161,18 @@ namespace TerrainEditor.UserControls
             if (!info.Exists)
                 throw new ArgumentException($"the file: {info.FullName} does not exist");
 
+            var provider = ProviderFor(info.Extension);
             return new File
             {
                 Info = info,
-                Preview = ProviderFor(info.Extension).GetPreview(info)
+                Preview = new Lazy<ImageSource>(() =>
+                {
+                    var preview = provider.GetPreview(info);
+                    if (!preview.IsFrozen)
+                        throw new InvalidOperationException($"{nameof(provider.GetPreview)} on provider {provider.GetType().Name} must return a frozen preview");
+
+                    return preview;
+                })
             };
         }
         private IResourceInfoProvider ProviderFor(string extension)
@@ -258,9 +267,11 @@ namespace TerrainEditor.UserControls
 
         private async void OnEditResource(object sender, ExecutedRoutedEventArgs e)
         {
-            await ProviderFor(SelectedFile.Info.Extension).ShowEditor(SelectedFile.Info, LoadResource(SelectedFile.Info));
+            var selectedFileInfo = SelectedFile.Info;
 
-            OnRefreshResources(this, default(DependencyPropertyChangedEventArgs));
+            await ProviderFor(selectedFileInfo.Extension).ShowEditor(selectedFileInfo, LoadResource(selectedFileInfo));
+
+            SelectedFile.Preview = FileFor(selectedFileInfo).Preview;
             Keyboard.Focus((IInputElement)FileList.ItemContainerGenerator.ContainerFromItem(SelectedFile));
         }
         private void OnCutResource(object sender, ExecutedRoutedEventArgs e)
@@ -323,15 +334,15 @@ namespace TerrainEditor.UserControls
         {
             SelectedFile.IsEditing = true;
 
-            string prevName = Utils.GetRelativePath(SelectedFile.Info.FullName);
+            string prevName = SelectedFile.Info.RelativePath();
             SelectedFile.PropertyChanged += (o, args) =>
             {
                 if (args.PropertyName == nameof(SelectedFile.Name))
                 {
                     if (m_resourcesCache.ContainsKey(prevName))
-                        m_resourcesCache.RenameKey(prevName,Utils.GetRelativePath(((File)o).Info.FullName));
+                        m_resourcesCache.RenameKey(prevName,((File)o).Info.RelativePath());
 
-                    OnRefreshResources(this,default(DependencyPropertyChangedEventArgs));
+                    SelectedFile.Preview = FileFor(SelectedFile.Info).Preview;
                 }
             };
 
@@ -377,11 +388,12 @@ namespace TerrainEditor.UserControls
         {
             var diff = m_startDraggingPoint - e.GetPosition(null);
 
-            if (e.LeftButton == MouseButtonState.Pressed &&
+            if (SelectedFile != null && e.LeftButton == MouseButtonState.Pressed &&
                 (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
                  Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
             {
-                DragDrop.DoDragDrop(this, LoadResource(SelectedFile.Info), DragDropEffects.Link);
+                var res = LoadResource(SelectedFile.Info) ?? SelectedFile.Info.RelativePath();
+                DragDrop.DoDragDrop(this, res , DragDropEffects.Link);
             }
         }
 
@@ -392,14 +404,4 @@ namespace TerrainEditor.UserControls
         }
         public event PropertyChangedEventHandler PropertyChanged;
     }
-
-    public class ResourceInfoProviderCollection : List<IResourceInfoProvider> { }
-    public interface IResourceProviderService
-    {
-        string WorkPath { get; set; }
-        object LoadResource(FileInfo info);
-        FileInfo InfoForResource(object resource);
-        IEnumerable<object> LoadedResources { get; }
-    }
-
 }

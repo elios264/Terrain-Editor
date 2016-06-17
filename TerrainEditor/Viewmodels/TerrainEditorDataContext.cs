@@ -1,15 +1,17 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using TerrainEditor.UserControls;
 using TerrainEditor.Utilities;
 
 namespace TerrainEditor.ViewModels
 {
     public class TerrainEditorDataContext : PropertyChangeBase
     {
-        private DynamicMesh m_selectedTerrain;
+        private Terrain m_selectedTerrain;
 
-        public DynamicMesh SelectedTerrain
+        public Terrain SelectedTerrain
         {
             get { return m_selectedTerrain; }
             set
@@ -19,19 +21,20 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        public ObservableCollection<DynamicMesh> Terrains { get; } = new ObservableCollection<DynamicMesh>();
+        public ObservableCollection<Terrain> Terrains { get; } = new ObservableCollection<Terrain>();
         public Model3DCollection TerrainsMeshes => new Model3DCollection(Terrains.Select(mesh => mesh.Mesh));
+        public IEnumerable<IResourceInfoProvider> ResourceInfoProviders => new IResourceInfoProvider[] {new UvMappingResourceProvider() };
 
         public TerrainEditorDataContext()
         {
-            new PropertyChangeListener(Terrains).PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
+            new RecursivePropertyChangeListener(Terrains).PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
 
-            Terrains.Add(new DynamicMesh(new[]
+            Terrains.Add(new Terrain(new[]
             {
-                new VertexInfo(-5, 5),
-                new VertexInfo(5, 5),
-                new VertexInfo(5, -4),
-                new VertexInfo(-5, -4)
+                new VertexInfo(0, 0),
+                new VertexInfo(0, 10),
+                new VertexInfo(10, 10),
+                new VertexInfo(10, 0)
             })
             {
                 UvMapping = UvMapping.Mossy,

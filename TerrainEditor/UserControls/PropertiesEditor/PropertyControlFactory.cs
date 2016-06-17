@@ -4,7 +4,7 @@ using PropertyTools.Wpf;
 
 namespace TerrainEditor.UserControls
 {
-    public class PropertyControlFactory : DefaultPropertyControlFactory
+    internal class PropertyControlFactory : DefaultPropertyControlFactory
     {
         protected override FrameworkElement CreateDefaultControl(PropertyItem property)
         {

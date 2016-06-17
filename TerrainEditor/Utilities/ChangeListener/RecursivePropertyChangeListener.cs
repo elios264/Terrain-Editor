@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace TerrainEditor.Utilities
 {
-    public partial class PropertyChangeListener : IDisposable
+    public partial class RecursivePropertyChangeListener : IDisposable
     {
         private readonly INotifyPropertyChanged m_value;
         private readonly string m_name;
@@ -35,7 +35,7 @@ namespace TerrainEditor.Utilities
             }
         }
 
-        public PropertyChangeListener(INotifyPropertyChanged value, string name = null)
+        public RecursivePropertyChangeListener(INotifyPropertyChanged value, string name = null)
         {
             m_value = value;
             m_name = name;

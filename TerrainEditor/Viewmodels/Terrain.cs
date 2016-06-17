@@ -12,7 +12,7 @@ using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 
 namespace TerrainEditor.ViewModels
 {
-    public class DynamicMesh  : PropertyChangeBase
+    public class Terrain  : PropertyChangeBase
     {
         private bool m_isClosed = true;
         private bool m_splitWhenDifferent;
@@ -159,7 +159,7 @@ namespace TerrainEditor.ViewModels
         [Category("Terrain Data"), List(false,true),SortIndex(6)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
-        public DynamicMesh(IEnumerable<VertexInfo> vertices = null)
+        public Terrain(IEnumerable<VertexInfo> vertices = null)
         {
             vertices = vertices ?? Enumerable.Empty<VertexInfo>();
             Vertices = new ObservableCollection<VertexInfo>(vertices);
@@ -174,7 +174,7 @@ namespace TerrainEditor.ViewModels
             {
                 if (m_isDirty)
                 {
-                    m_meshCache = DynamicMeshBuilder.GenerateMesh(this);
+                    m_meshCache = TerrainMeshBuilder.GenerateMesh(this);
                     m_meshCache.Transform = new TranslateTransform3D(Position.X,Position.Y,Position.Z);
                     m_meshCache.SetName(Name);
                     m_isDirty = false;
