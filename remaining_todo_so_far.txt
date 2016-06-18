@@ -1,0 +1,36 @@
+Terrain Editor
+
+	Redo algorithm
+		- inverted
+		- option for split segment just like direction  ( split left, right, both, don't)
+		- too many divisons per body, they should be per segment instead.
+		- height offset for segments
+		- all bodies are now restricted to be same size, modify editor of bodies so they are the same size (remove as an X in the top right)
+		- draggable rects
+		- each edge must increment slighly the z offset
+		
+		Conclution:
+			/*GroupByAdjacent and */
+			split space into equal body sizes, also calculate the number of cuts , 
+			then slice as progress according to number of cuts, make caps part of the algorithm as first and last 
+
+
+	Finish UVMapping Editor ✓
+	Make ResourceExplorer a service ✓
+	connect Resource Explorer to property editor ✓
+	default pink terrain when nothing uvmapping
+	fix algorithm (caps, inverted, gap sometimes, y offset for segments)
+	settings for default terrain values
+	improve resource explorer handle of a lot of files (like when deleting, and the binding for preview should be done in a single worker thread), right click on a heavy folder is awesomely slow
+	wireframe mode
+	multiple terrains
+	3d allow drop resources
+	buttons menus
+	status bar
+	split/join terrains, select vertices, move vertices
+	add decorations
+	add music, triggers, etc
+	improve grids: delete 
+	
+	
+	tracking
