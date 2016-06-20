@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using TerrainEditor.Core;
 using TerrainEditor.UserControls;
 using TerrainEditor.Utilities;
+using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.ViewModels
 {
@@ -31,16 +33,15 @@ namespace TerrainEditor.ViewModels
 
             Terrains.Add(new Terrain(new[]
             {
-                new VertexInfo(0, 0),
                 new VertexInfo(0, 10),
                 new VertexInfo(10, 10),
-                new VertexInfo(10, 0)
+                new VertexInfo(10, 0),
+                new VertexInfo(0, 0)
             })
             {
                 UvMapping = UvMapping.Mossy,
                 FillMode = FillMode.Fill,
                 IsClosed = true,
-                SplitCornersThreshold = 90,
                 SmoothFactor = 5
             });
 

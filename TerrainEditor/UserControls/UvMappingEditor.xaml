@@ -8,6 +8,7 @@
                                xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
                                xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
                                xmlns:pt="http://propertytools.org/wpf"
+                               xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
                                mc:Ignorable="d"
                                IsOpen="True"
                                Title="UV Mapping Editor" 
@@ -17,9 +18,9 @@
                                EnableDropShadow="True" CloseOnOverlay="False" CloseByEscape="False"
                                x:Name="ParentControl"
                                d:DesignHeight="600" d:DesignWidth="800" >
-    <Grid d:DataContext="{x:Static viewModels:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
+    <Grid d:DataContext="{x:Static terrains:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
         <Grid.Resources>
-            <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type viewModels:Segment}">
+            <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type terrains:Segment}">
                 <Grid>
                     <StackPanel controls:VisibilityHelper.IsCollapsed="{Binding Path=Editor.IsAdvanced, FallbackValue=true}">
                         <DockPanel Margin="0,1">

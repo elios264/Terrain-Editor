@@ -6,17 +6,22 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using elios.Persist;
 using TerrainEditor.Annotations;
+using TerrainEditor.Core;
 using TerrainEditor.Utilities;
 
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Viewmodels.Terrains
 {
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     [MetadataType(typeof(Rect))]
     public class RectMeta
     {
+        [Persist("x")]
         public double X { get; set; }
+        [Persist("y")]
         public double Y { get; set; }
+        [Persist("w")]
         public double Width { get; set; }
+        [Persist("h")]
         public double Height { get; set; }
     }
 

@@ -154,14 +154,15 @@
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
     <Compile Include="Utilities\WeakEvent.cs" />
-    <Compile Include="Viewmodels\Terrain.cs" />
+    <Compile Include="Viewmodels\Terrains\SplitMode.cs" />
+    <Compile Include="Viewmodels\Terrains\Terrain.cs" />
     <Compile Include="Core\TerrainMeshBuilder.cs" />
-    <Compile Include="Viewmodels\FillMode.cs" />
+    <Compile Include="Viewmodels\Terrains\FillMode.cs" />
     <Compile Include="Viewmodels\TerrainEditorDataContext.cs" />
-    <Compile Include="Viewmodels\UvMapping.cs" />
-    <Compile Include="Viewmodels\VertexDirection.cs" />
-    <Compile Include="Viewmodels\VertexInfo.cs" />
-    <Compile Include="Viewmodels\PropertyChangeBase.cs" />
+    <Compile Include="Viewmodels\Terrains\UvMapping.cs" />
+    <Compile Include="Viewmodels\Terrains\VertexDirection.cs" />
+    <Compile Include="Viewmodels\Terrains\VertexInfo.cs" />
+    <Compile Include="Core\PropertyChangeBase.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -249,6 +250,13 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\file.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\dot-join.png" />
+    <Resource Include="Resources\dot-split-both.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\dot-split-side.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

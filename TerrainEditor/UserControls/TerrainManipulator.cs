@@ -9,7 +9,7 @@ using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using MoreLinq;
 using TerrainEditor.Utilities;
-using TerrainEditor.ViewModels;
+using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls
 {
@@ -17,6 +17,7 @@ namespace TerrainEditor.UserControls
     public class TerrainManipulator : ModelVisual3D
     {
         private static readonly VertexDirection?[] Directions;
+        private static readonly SplitMode?[] SplitModes;
 
         public static readonly DependencyProperty SourceProperty;
         public static readonly DependencyProperty InputSourceProperty;
@@ -28,6 +29,10 @@ namespace TerrainEditor.UserControls
         public static readonly Material DotLeftMaterial;
         public static readonly Material DotRightMaterial;
         public static readonly Material DotDownMaterial;
+        public static readonly Material DotSplitBothMaterial;
+        public static readonly Material DotSplitLeftMaterial;
+        public static readonly Material DotSplitRightMaterial;
+        public static readonly Material DotJoinMaterial;
 
         private int m_currentVertexIndex = -1;
         private Material m_vertexMaterial = DotVertexMaterial;
@@ -37,6 +42,7 @@ namespace TerrainEditor.UserControls
         private List<BillboardVisual3D> m_vertices;
         private List<BillboardVisual3D> m_addVertexCallouts;
         private List<BillboardVisual3D> m_changeDirectionCallouts;
+        private List<BillboardVisual3D> m_splitJoinCallouts;
 
         public Terrain Source
         {
@@ -48,6 +54,10 @@ namespace TerrainEditor.UserControls
             get { return (UIElement)GetValue(InputSourceProperty); }
             set { SetValue(InputSourceProperty, value); }
         }
+        private bool IsInverted
+        {
+            get { return Source.FillMode == FillMode.Inverted && Source.Vertices.Count > 2; }
+        }
 
         static TerrainManipulator()
         {
@@ -55,13 +65,22 @@ namespace TerrainEditor.UserControls
             InputSourceProperty = DependencyProperty.Register(nameof(InputSource), typeof(UIElement), typeof(TerrainManipulator), new PropertyMetadata(default(UIElement), OnInputSourceChanged));
 
             Directions = Enum.GetValues(typeof(VertexDirection)).Cast<VertexDirection?>().Skip(1).ToArray();
+            SplitModes = Enum.GetValues(typeof(SplitMode)).Cast<SplitMode?>().ToArray();
 
             DotVertexMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot.png"));
             DotAddMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-add.png"));
             DotDeleteMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-delete.png"));
             DotAutoMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-auto.png"));
+            DotJoinMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-join.png"));
+            DotSplitBothMaterial = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-split-both.png"));
 
-            DiffuseMaterial dotDirMat = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-dir.png"), false, false);
+            var dotSplitMat = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-split-side.png"),false,false);
+            DotSplitLeftMaterial = new DiffuseMaterial((Brush)dotSplitMat.Brush.GetCurrentValueAsFrozen());
+
+            dotSplitMat.Brush.RelativeTransform = new RotateTransform(180,0.5,0.5);
+            DotSplitRightMaterial = new DiffuseMaterial((Brush)dotSplitMat.Brush.GetCurrentValueAsFrozen());
+
+            var dotDirMat = Utils.CreateImageMaterial(Utils.LoadBitmapFromResource("Resources/dot-dir.png"), false, false);
             DotTopMaterial = new DiffuseMaterial((Brush)dotDirMat.Brush.GetCurrentValueAsFrozen());
 
             dotDirMat.Brush.RelativeTransform = new RotateTransform(-90, 0.5, 0.5);
@@ -81,6 +100,10 @@ namespace TerrainEditor.UserControls
             DotLeftMaterial.Freeze();
             DotRightMaterial.Freeze();
             DotDownMaterial.Freeze();
+            DotJoinMaterial.Freeze();
+            DotSplitBothMaterial.Freeze();
+            DotSplitLeftMaterial.Freeze();
+            DotSplitRightMaterial.Freeze();
         }
         public TerrainManipulator()
         {
@@ -148,6 +171,7 @@ namespace TerrainEditor.UserControls
         {
             if (Source == null || e.ChangedButton != MouseButton.Left)
                 return;
+            Mouse.Capture((IInputElement)sender);
 
             var element = (UIElement)sender;
             var position = e.GetPosition(element);
@@ -160,15 +184,19 @@ namespace TerrainEditor.UserControls
                         switch (type)
                         {
                             case HitType.AddNew:
-                                Source.Vertices.Insert(index + 1, new VertexInfo(m_addVertexCallouts[index].Position.ToVector(), Source.Vertices[index].Direction));
+                                Source.Vertices.Insert(index + 1, new VertexInfo(m_addVertexCallouts[index].Position.ToVector(), Source.Vertices[index].Direction, Source.Vertices[index].Split));
                                 break;
                             case HitType.Vertex:
                                 m_currentVertexIndex = index;
                                 break;
                             case HitType.Direction:
                                 VertexInfo vertex = Source.Vertices[index];
-                                vertex.Direction = Directions.ElementAt(Array.IndexOf(Directions, vertex.Direction) + 1, true).Value;
+                                vertex.Direction = Directions.At(Array.IndexOf(Directions, vertex.Direction) + 1, true).Value;
                                 break;
+                            case HitType.SplitJoin:
+                                vertex = Source.Vertices[index];
+                                vertex.Split = SplitModes.At(Array.IndexOf(SplitModes, vertex.Split) + 1, true).Value;
+                            break;
                         }
                     });
                     break;
@@ -192,7 +220,10 @@ namespace TerrainEditor.UserControls
                     if (m_previewInfo.InsertionIndex != -1)
                     {
                         var index = m_previewInfo.InsertionIndex;
-                        Source.Vertices.Insert(index, new VertexInfo(m_previewInfo.Position, index == 0 ? VertexDirection.Auto : Source.Vertices[index - 1].Direction));
+                        Source.Vertices.Insert(index, new VertexInfo(
+                            m_previewInfo.Position, 
+                            index == 0 ? VertexDirection.Auto : Source.Vertices[index - 1].Direction,
+                            index == 0 ? SplitMode.No : Source.Vertices[index - 1].Split));
                         m_previewInfo.InsertionIndex = -1;
                     }
                 break;
@@ -262,6 +293,7 @@ namespace TerrainEditor.UserControls
             if (Source == null || e.ChangedButton != MouseButton.Left)
                 return;
 
+            Mouse.Capture(null);
             m_currentVertexIndex = -1;
         }
         private void ModifierActivated(object sender, KeyEventArgs e)
@@ -341,6 +373,14 @@ namespace TerrainEditor.UserControls
                 callBack(index, HitType.Direction);
                 return;
             }
+
+            index = m_splitJoinCallouts.IndexOf(callout);
+
+            if (index != -1)
+            {
+                callBack(index, HitType.SplitJoin);
+                return;
+            }
         }
         private void SourceOnRecursivePropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
@@ -390,7 +430,9 @@ namespace TerrainEditor.UserControls
 
                 switch (info.fst.Direction)
                 {
-                case VertexDirection.Auto: mat = DotAutoMaterial; break;
+                case VertexDirection.None:
+                case VertexDirection.Auto:
+                    mat = DotAutoMaterial; break;
                 case VertexDirection.Top:  mat = DotTopMaterial; break;
                 case VertexDirection.Down: mat = DotDownMaterial; break;
                 case VertexDirection.Left: mat = DotLeftMaterial; break;
@@ -403,10 +445,34 @@ namespace TerrainEditor.UserControls
                     Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.1).ToPoint3D(0.01),
                     Width = 15,
                     Height = 15,
-                    Material = mat
+                    Material = mat,
                 };
             }).ToList();
             m_changeDirectionCallouts.ForEach(Children.Add);
+
+            //Split-Join
+            m_splitJoinCallouts = vertices.Pairwise((fst, snd) => new { fst, snd }).Select(info =>
+            {
+                Material mat;
+
+                switch (info.fst.Split)
+                {
+                case SplitMode.No: mat = DotJoinMaterial; break;
+                case SplitMode.Left: mat = DotSplitLeftMaterial; break;
+                case SplitMode.Right: mat = DotSplitRightMaterial; break;
+                case SplitMode.Both: mat = DotSplitBothMaterial; break;
+                default: throw new ArgumentOutOfRangeException();
+                }
+
+                return new BillboardVisual3D
+                {
+                    Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.2).ToPoint3D(0.01),
+                    Width = 15,
+                    Height = 15,
+                    Material = mat
+                };
+            }).ToList();
+            m_splitJoinCallouts.ForEach(Children.Add);
 
             //Transform
             var transform = Source.Mesh.Transform;
@@ -429,7 +495,8 @@ namespace TerrainEditor.UserControls
             None,
             Vertex,
             AddNew,
-            Direction
+            Direction,
+            SplitJoin
         }
         private delegate void HitTest2DDelegate(int index, HitType type);
         private struct PreviewInfo

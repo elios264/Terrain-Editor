@@ -4,10 +4,10 @@ using System.Windows.Input;
 using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
-using TerrainEditor.ViewModels;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls
 {

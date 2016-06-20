@@ -22,5 +22,11 @@ namespace TerrainEditor.UserControls
             property.AutoUpdateText = true;
             return base.CreateDefaultControl(property);
         }
+
+        protected override FrameworkElement CreateSliderControl(PropertyItem property)
+        {
+            property.AutoUpdateText = true;
+            return base.CreateSliderControl(property);
+        }
     }
 }

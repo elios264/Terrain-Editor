@@ -9,28 +9,21 @@ namespace TerrainEditor.UserControls
 {
     internal class DefaultResourceProvider : IResourceInfoProvider
     {
-        public Type ResourceType => typeof(object);
-        public bool CanCreateNew => false;
+        public Type ResourceType => null;
         public string[] Extensions => new string[0];
 
-        public Task ShowEditor(FileInfo info, object resource)
+        public Task ShowEditor(object resource, FileInfo info)
         {
             Process.Start(info.FullName);
             return Task.CompletedTask;
         }
-        public void SaveToDisk(FileInfo info, object resource) {}
-        public object ReloadFromDisk(FileInfo info, object resource)
-        {
-            return resource;
-        }
-        public ImageSource GetPreview(FileInfo info)
+        public void Save(object resource, FileInfo info) {}
+        public void Reload(object resource, FileInfo info) {}
+        public object Load(FileInfo info) { return null; }
+        public ImageSource LoadPreview(FileInfo info)
         {
             using (ShellFile shellFile = ShellFile.FromFilePath(info.FullName))
-            {
-                var mediumBitmapSource = shellFile.Thumbnail.MediumBitmapSource;
-                mediumBitmapSource.Freeze();
-                return mediumBitmapSource;
-            }
+                return shellFile.Thumbnail.MediumBitmapSource;
         }
     }
 }

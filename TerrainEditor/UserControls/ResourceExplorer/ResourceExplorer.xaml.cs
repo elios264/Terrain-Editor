@@ -73,7 +73,7 @@ namespace TerrainEditor.UserControls
         }
         public IEnumerable<IResourceInfoProvider> VisibleResourceInfoProviders
         {
-            get { return ResourceInfoProviders.Where(i => i.CanCreateNew); }
+            get { return ResourceInfoProviders.Where(i => i.ResourceType != null); }
         }
 
         public ResourceExplorer()
@@ -118,7 +118,7 @@ namespace TerrainEditor.UserControls
                 IResourceInfoProvider provider;
                 if (m_resourceInfoProviders.TryGetValue(info.Extension, out provider))
                 {
-                    resource = provider.ReloadFromDisk(info, null);
+                    resource = provider.Load(info);
                     m_resourcesCache[localPath] = new WeakReference(resource);
                     return resource;
                 }
@@ -167,10 +167,8 @@ namespace TerrainEditor.UserControls
                 Info = info,
                 Preview = new Lazy<ImageSource>(() =>
                 {
-                    var preview = provider.GetPreview(info);
-                    if (!preview.IsFrozen)
-                        throw new InvalidOperationException($"{nameof(provider.GetPreview)} on provider {provider.GetType().Name} must return a frozen preview");
-
+                    var preview = provider.LoadPreview(info);
+                    preview.Freeze();
                     return preview;
                 })
             };
@@ -269,7 +267,7 @@ namespace TerrainEditor.UserControls
         {
             var selectedFileInfo = SelectedFile.Info;
 
-            await ProviderFor(selectedFileInfo.Extension).ShowEditor(selectedFileInfo, LoadResource(selectedFileInfo));
+            await ProviderFor(selectedFileInfo.Extension).ShowEditor(LoadResource(selectedFileInfo), selectedFileInfo);
 
             SelectedFile.Preview = FileFor(selectedFileInfo).Preview;
             Keyboard.Focus((IInputElement)FileList.ItemContainerGenerator.ContainerFromItem(SelectedFile));
@@ -368,7 +366,7 @@ namespace TerrainEditor.UserControls
                 newFileName = Path.Combine(SelectedDirectory.DirectoryInfo.FullName, infoProvider.ResourceType.Name + count++ + infoProvider.Extensions[0]);
 
             
-            infoProvider.SaveToDisk(new FileInfo(newFileName),null);
+            infoProvider.Save(Activator.CreateInstance(infoProvider.ResourceType), new FileInfo(newFileName));
             OnRefreshResources(this, default(DependencyPropertyChangedEventArgs));
 
             CurrentFiles.ForEach(f => f.IsSelected = false);

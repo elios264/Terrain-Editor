@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
-using TerrainEditor.ViewModels;
+using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls
 {
@@ -39,7 +39,7 @@ namespace TerrainEditor.UserControls
         {
             var info = ServiceLocator.Get<IResourceProviderService>().InfoForResource(DataContext);
 
-            new UvMappingResourceProvider().ShowEditor(info, DataContext);
+            new UvMappingResourceProvider().ShowEditor(DataContext, info);
         }
         private void OnShowInExplorer(object sender, RoutedEventArgs e)
         {

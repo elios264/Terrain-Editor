@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using TerrainEditor.Annotations;
 using TerrainEditor.Utilities;
 
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Core
 {
     public class PropertyChangeBase : INotifyPropertyChanged
     {

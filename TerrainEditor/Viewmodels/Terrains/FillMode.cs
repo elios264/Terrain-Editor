@@ -1,4 +1,4 @@
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Viewmodels.Terrains
 {
     public enum FillMode
     {

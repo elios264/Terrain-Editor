@@ -7,7 +7,7 @@ using HelixToolkit.Wpf;
 using MoreLinq;
 using Poly2Tri;
 using TerrainEditor.Utilities;
-using TerrainEditor.ViewModels;
+using TerrainEditor.Viewmodels.Terrains;
 using Polygon = Poly2Tri.Polygon;
 
 namespace TerrainEditor.Core
@@ -16,216 +16,244 @@ namespace TerrainEditor.Core
     {
         private bool IsClosed
         {
-            get { return Mesh.IsClosed && Mesh.Vertices.Count > 2; }
+            get { return Terrain.IsClosed && Terrain.Vertices.Count > 2; }
         }
         private bool IsInverted
         {
-            get { return Mesh.FillMode == FillMode.Inverted && Mesh.Vertices.Count > 2; }
+            get { return Terrain.FillMode == FillMode.Inverted && Terrain.Vertices.Count > 2; }
+        }
+        private Size EdgeUVSizeInUnits
+        {
+            get
+            {
+                return new Size(
+                    Terrain.UvMapping.EdgeTexture.PixelWidth / (double)Terrain.PixelsPerUnit,
+                    Terrain.UvMapping.EdgeTexture.PixelHeight / (double)Terrain.PixelsPerUnit);
+            }
+        }
+        private Size FillUVSizeInUnits
+        {
+            get
+            {
+                return new Size(
+                    Terrain.UvMapping.FillTexture.PixelWidth / (double)Terrain.PixelsPerUnit,
+                    Terrain.UvMapping.FillTexture.PixelHeight / (double)Terrain.PixelsPerUnit);
+            }
+        }
+        private IEnumerable<Edge> Edges
+        {
+            get
+            {
+                int size = IsClosed ? Terrain.Vertices.Count + 1 : Terrain.Vertices.Count;
+
+                for (int i = 1; i < size; i++)
+                {
+                    var prev2 = Terrain.Vertices.At(i - 2, IsClosed);
+                    var next = Terrain.Vertices.At(i + 1, IsClosed);
+
+                    var prev = Terrain.Vertices.At(i - 1, IsClosed);
+                    var cur = Terrain.Vertices.At(i, IsClosed);
+
+                    var edge = new Edge
+                    {
+                        Prev = Terrain.Vertices.At(i - 2, IsClosed)?.Position,
+                        Begin = prev.Position,
+                        End = cur.Position,
+                        Next = Terrain.Vertices.At(i + 1, IsClosed)?.Position,
+                        Direction = DirectionFor(prev, cur),
+                        PrevDirection = prev2 == null ? VertexDirection.None : DirectionFor(prev2, prev),
+                        NextDirection = next == null ? VertexDirection.None : DirectionFor(cur, next),
+                        Split = prev.Split,
+                        PrevSplit = prev2?.Split ?? SplitMode.No,
+                        NextSplit = cur?.Split ?? SplitMode.No,
+                    };
+
+                    if (IsInverted) edge.Invert();
+
+                    yield return edge;
+                }
+            }
         }
 
-        public Terrain Mesh { get; set; }
-        public MeshBuilder MeshEdgeData { get; }
-        public MeshBuilder MeshFillData { get; }
+        public Terrain Terrain { get; set; }
+        public MeshBuilder EdgeData { get; }
+        public MeshBuilder FillData { get; }
 
         public TerrainMeshBuilder()
         {
-            MeshFillData = new MeshBuilder(false,true);
-            MeshEdgeData = new MeshBuilder(false,true);
+            FillData = new MeshBuilder(false,true);
+            EdgeData = new MeshBuilder(false,true);
         }
+
         public void Tesellate()
         {
-            MeshEdgeData.Clear();
-            MeshFillData.Clear();
+            List<Vector> edgeCentalPoints = null;
 
-            if (Mesh.UvMapping.EdgeTexture == null)
-                return;
+            EdgeData.Clear();
+            FillData.Clear();
 
-            var fillVertices = new List<Vector>();
-            foreach (var fillPoints in GenerateSegments().Select(TesellateSegment))
+            if (Terrain.UvMapping.EdgeTexture != null && Terrain.UvMapping.Top.Bodies.Count > 0)
             {
-                if (IsInverted)
-                    fillPoints.Reverse();
+                TesellateEdges(out edgeCentalPoints);
 
-                fillVertices.AddRange(fillPoints);
-            }
-
-            TesellateFill(fillVertices);
-
-            var newIndices =
-                MeshEdgeData.TriangleIndices.Batch(3)
-                    .Select(ints =>
-                    {
-                        var indices = ints.ToArray();
-                        return new {indices, z = MeshEdgeData.Positions[indices[0]].Z };
-                    })
+                //Wpf needs the triangles to be sorted by depth
+                var triangleIndices = (List<int>)EdgeData.TriangleIndices;
+                var sortedIndices = EdgeData.TriangleIndices
+                    .Batch(3)
+                    .Select(ints => { var indices = ints.ToArray(); return new { indices, z = EdgeData.Positions[indices[0]].Z }; })
                     .OrderBy(arg => arg.z)
                     .SelectMany(arg => arg.indices)
                     .ToList();
-
-            MeshEdgeData.TriangleIndices.Clear();
-            newIndices.ForEach(MeshEdgeData.TriangleIndices.Add);
-        }
-
-        private IEnumerable<Segment> GenerateSegments()
-        {
-            int size = IsClosed ? Mesh.Vertices.Count + 1 : Mesh.Vertices.Count;
-           
-            for (int i = 1; i < size; i++)
-            {
-                var prev2 = Mesh.Vertices.ElementAt(i - 2, IsClosed);
-                var next = Mesh.Vertices.ElementAt(i + 1 , IsClosed);
-
-                var prev = Mesh.Vertices.ElementAt(i - 1, IsClosed);
-                var cur = Mesh.Vertices.ElementAt(i, IsClosed);
-
-                Segment segment = new Segment
-                {
-                    PrevPrev = Mesh.Vertices.ElementAt(i - 3, IsClosed)?.Position,
-                    Prev = Mesh.Vertices.ElementAt(i - 2, IsClosed)?.Position,
-                    Begin = prev.Position,
-                    End = cur.Position,
-                    Next = Mesh.Vertices.ElementAt(i + 1, IsClosed)?.Position,
-                    NextNext = Mesh.Vertices.ElementAt(i + 2, IsClosed)?.Position,
-                    Direction = CalculateDirection(prev, cur),
-                    PrevDirection = prev2 == null ? VertexDirection.None : CalculateDirection(prev2,prev),
-                    NextDirection = next == null ? VertexDirection.None : CalculateDirection(cur,next)
-                };
-
-                if (IsInverted)
-                    segment.Invert();
-
-                yield return segment;
-            }
-        }
-        private VertexDirection CalculateDirection(VertexInfo fst, VertexInfo snd)
-        {
-            if (fst.Direction != VertexDirection.Auto)
-                return fst.Direction;
-
-            var normal = (fst.Position - snd.Position).Normal();
-
-            if (Math.Abs(normal.X) > Math.Abs(normal.Y))
-            {
-                return normal.X < 0
-                    ? (IsInverted ? VertexDirection.Left : VertexDirection.Right)
-                    : (IsInverted ? VertexDirection.Right : VertexDirection.Left);
+                triangleIndices.Clear();
+                triangleIndices.AddRange(sortedIndices);
             }
 
-            return normal.Y < 0
-                ? (IsInverted ? VertexDirection.Down : VertexDirection.Top)
-                : (IsInverted ? VertexDirection.Top : VertexDirection.Down);
-        }
-        private List<Vector> TesellateSegment(Segment segment)
-        {
-            var curSegmentMapping = GetUvMappingOf(segment.Direction);
-
-            if (curSegmentMapping.Bodies.Count == 0)
-                return new List<Vector> { segment.Begin, segment.End };
-
-            var bodySizeInUV = Mesh.UvMapping.ToUV(curSegmentMapping.Bodies[0]).Size;
-            var edgeUVSizeInUnits = GetEdgeUVSizeInUnits();
-            var bodySizeInUnits = new Size(bodySizeInUV.Width * edgeUVSizeInUnits.X, bodySizeInUV.Height * edgeUVSizeInUnits.Y);
-        
-
-            var doLeftCap = ShouldCloseSegment(segment, SegmentSide.Left);
-            var doRightCap = ShouldCloseSegment(segment, SegmentSide.Right);
-
-            if (doLeftCap)
-                segment.PrevPrev = segment.Prev = null;
-
-            if (doRightCap)
-                segment.NextNext = segment.Next = null;
-
-            if (segment.PrevPrev.HasValue && segment.Prev.HasValue && ShouldCloseSegment(new Segment { Prev = segment.PrevPrev, Begin = segment.Prev.Value, End = segment.Begin, }, SegmentSide.Left))
-                segment.PrevPrev = null;
-
-            var currentCutUV = Rect.Empty;
-            var start = segment.Begin;
-            var smoothFactor = Math.Max(1, Mesh.SmoothFactor);
-
-            var prevNumOfCuts = (double)Math.Max((int)Math.Floor((segment.Begin - (segment.Prev ?? segment.Begin)).Length / (bodySizeInUnits.Width + Mesh.StrechThreshold)), 1) * smoothFactor;
-            var endPrevious = Utils.HermiteLerp(segment.PrevPrev ?? segment.Prev ?? segment.Begin, segment.Prev ??  segment.Begin, segment.Begin, segment.End, prevNumOfCuts == 1 ? 0.001 : ((prevNumOfCuts - 1) / prevNumOfCuts));
-            var startOffset = (start - endPrevious).Normal() * (bodySizeInUnits.Height / 2);
-
-          //  if (doLeftCap)
-                TesellateCap(curSegmentMapping.LeftCap, SegmentSide.Left, segment.Begin + startOffset, segment.Begin - startOffset, curSegmentMapping.ZOffset);
-
-            if (doLeftCap && doRightCap)
-                smoothFactor = 1;
-
-            var numberOfCuts = Math.Max((int) Math.Floor((segment.End - segment.Begin).Length/(bodySizeInUnits.Width + Mesh.StrechThreshold)),1)*smoothFactor;
-            var fillPoints = new List<Vector>(numberOfCuts);
-
-            for (int i = 0; i < numberOfCuts; i++)
+            if (Terrain.UvMapping.FillTexture != null)
             {
-                var percentEnd = (i + 1) / (double)numberOfCuts;
+                TesellateFill(edgeCentalPoints);
+            }
+        }
+        private void TesellateEdges(out List<Vector> centralPoints)
+        {
+            centralPoints = new List<Vector>();
 
-                var end = Utils.HermiteLerp(segment.Prev ?? segment.Begin, segment.Begin, segment.End, segment.Next ?? segment.End, percentEnd);
-                var endOffset = (end - start).Normal()* (bodySizeInUnits.Height/2);
+            var zOffsetInc = 0.0;
+            var firstCapDone = (bool?)null;
+            var normalStart = (Vector?)null;
+            var begin = Terrain.Vertices[0].Position;
+            var batches = (IsInverted ? Edges.Reverse() : Edges).BatchOfTakeUntil(e => ShouldCloseEdge(e, false)).ToArray();
 
-                var localTopLeft = start + startOffset;
-                var localTopRight = end + endOffset;
-                var localBottomLeft = start - startOffset;
-                var localBottomRight = end - endOffset;
-
-                fillPoints.Add(start);
-
-                start = end;
-                startOffset = endOffset;
-
-                if (i%smoothFactor == 0)
+            foreach (var edges in batches)
+            {
+                if (Terrain.SplitWhenDifferent
+                    || edges[0].Split == SplitMode.Left || edges[0].Split == SplitMode.Both
+                    || edges[0].PrevSplit == SplitMode.Both || edges[0].PrevSplit == SplitMode.Right)
                 {
-                    currentCutUV = Mesh.UvMapping.ToUV( curSegmentMapping.Bodies[Math.Abs(percentEnd.GetHashCode()%curSegmentMapping.Bodies.Count)]);
-                    currentCutUV.Width /= smoothFactor;
+                    normalStart = null;
+                    edges[0].Prev = null;
                 }
-                else
-                    currentCutUV.X += currentCutUV.Width;
+                var lst = edges.Length - 1;
+                if (Terrain.SplitWhenDifferent
+                    || edges[lst].Split == SplitMode.Right || edges[lst].Split == SplitMode.Both
+                    || edges[lst].NextSplit == SplitMode.Both || edges[lst].NextSplit == SplitMode.Left)
+                {
+                    edges[lst].Next = null;
+                }
 
-                MeshEdgeData.AddQuad(
-                    new Point3D(localBottomLeft.X, localBottomLeft.Y, curSegmentMapping.ZOffset),
-                    new Point3D(localTopLeft.X, localTopLeft.Y, curSegmentMapping.ZOffset),
-                    new Point3D(localTopRight.X, localTopRight.Y, curSegmentMapping.ZOffset),
-                    new Point3D(localBottomRight.X, localBottomRight.Y, curSegmentMapping.ZOffset),
-                    currentCutUV.BottomLeft,currentCutUV.TopLeft,currentCutUV.TopRight,currentCutUV.BottomRight);
+                double[] edgesLengths;
+                var segmentMapping = SegmentFor(edges[0].Direction);
+                var smoothFactor = edges.Length == 1 && edges[0].Prev == null && edges[lst].Next == null ? 1 : Terrain.SmoothFactor;
+                var totalLength = HermiteLength(edges, smoothFactor * 5, out edgesLengths);
+                var bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[0]); //redo the bodies to limit to one size only
+                var bodyCount = Math.Max((int)Math.Round(totalLength / (bodyUV.Width * EdgeUVSizeInUnits.Width) + Terrain.StrechThreshold), 1);
+                var finalBodySize = new Size(totalLength / bodyCount, bodyUV.Height * EdgeUVSizeInUnits.Height);
+                var halfFinalBodySizeHeight = finalBodySize.Height / 2;
+                var incLength = finalBodySize.Width / smoothFactor;
+                var currentLength = incLength;
+                var first = true;
+
+                zOffsetInc += 0.0001;
+                for (int i = 0; i < bodyCount; i++)
+                {
+                    bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[Math.Abs((finalBodySize.Width / currentLength).GetHashCode() % segmentMapping.Bodies.Count)]);
+                    bodyUV.Width /= smoothFactor;
+
+                    for (int j = 0; j < smoothFactor; j++, currentLength += incLength)
+                    {
+                        var end = HermiteLerp(edges, edgesLengths, currentLength);
+                        var normalEnd = (end - begin).Normal();
+                        var endOffset = normalEnd * halfFinalBodySizeHeight;
+                        var beginOffset = (normalStart ?? normalEnd) * halfFinalBodySizeHeight;
+                        var zOffset = segmentMapping.ZOffset + zOffsetInc;
+                        var localBottomLeft = begin - beginOffset;
+                        var localTopLeft = begin + beginOffset;
+                        var localBottomRight = end - endOffset;
+                        var localTopRight = end + endOffset;
+
+                        EdgeData.AddQuad(
+                            new Point3D(localBottomLeft.X, localBottomLeft.Y, zOffset),
+                            new Point3D(localTopLeft.X, localTopLeft.Y, zOffset),
+                            new Point3D(localTopRight.X, localTopRight.Y, zOffset),
+                            new Point3D(localBottomRight.X, localBottomRight.Y, zOffset),
+                            bodyUV.BottomLeft, bodyUV.TopLeft, bodyUV.TopRight, bodyUV.BottomRight);
+
+                        if (first)
+                        {
+                            first = false;
+                            firstCapDone = firstCapDone ?? TesellateCap(segmentMapping.LeftCap, true, edges[0], normalStart ?? normalEnd, zOffset);
+                        }
+
+                        centralPoints.Add(begin);
+                        begin = end;
+                        normalStart = normalEnd;
+                        bodyUV.X += bodyUV.Width;
+                    }
+                }
+                TesellateCap(segmentMapping.RightCap, false, edges[lst], normalStart.Value, segmentMapping.ZOffset + zOffsetInc);
             }
 
-          //  if(doRightCap)
-                TesellateCap(curSegmentMapping.RightCap, SegmentSide.Right, segment.End + startOffset, segment.End - startOffset, curSegmentMapping.ZOffset);
+            //fix normal of first
+            //if (IsClosed && batches[0][0].Prev != null)
+            //{
+            //    var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
+            //    var localBottomLeft = Terrain.Vertices[0].Position - offset;
+            //    var localTopLeft = Terrain.Vertices[0].Position + offset;
 
-            return fillPoints;
+            //    //Fix edge
+            //    EdgeData.Positions[0] = new Point3D(localBottomLeft.X, localBottomLeft.Y, EdgeData.Positions[0].Z);
+            //    EdgeData.Positions[1] = new Point3D(localTopLeft.X, localTopLeft.Y, EdgeData.Positions[1].Z);
+
+            //    //Fix Cap
+            //    if (firstCapDone ?? false)
+            //    {
+            //        EdgeData.Positions[6] = EdgeData.Positions[1];
+            //        EdgeData.Positions[7] = EdgeData.Positions[0];
+            //    }
+            //}
+
         }
-
-        private void TesellateCap(Rect rect, SegmentSide side, Vector top, Vector bottom, double zOffset)
+        private bool TesellateCap(Rect area, bool left, Edge edge, Vector normal, double offset)
         {
-            var capUv = Mesh.UvMapping.ToUV(rect);
-            var capOffset = (bottom - top).Normal()*capUv.Size.Width*GetEdgeUVSizeInUnits().X;
+            if (!ShouldCloseEdge(edge, left) || area == default(Rect))
+                return false;
 
-            var otherTop = side == SegmentSide.Left ? top - capOffset : top + capOffset;
-            var otherBottom = side == SegmentSide.Left ? bottom - capOffset : bottom + capOffset;
+            var capUv = Terrain.UvMapping.ToUV(area);
+            var capSize = new Size(capUv.Width * EdgeUVSizeInUnits.Width, capUv.Height * EdgeUVSizeInUnits.Height);
+            var top = (left ? edge.Begin : edge.End) + normal * (capSize.Height / 2);
+            var bottom = (left ? edge.Begin : edge.End) - normal * (capSize.Height / 2);
+            var capOffset = (bottom - top).Normal() * capSize.Width;
+            var otherTop = left ? top - capOffset : top + capOffset;
+            var otherBottom = left ? bottom - capOffset : bottom + capOffset;
 
-            if (side == SegmentSide.Left)
+            if (left)
             {
                 Utils.Swap(ref top, ref otherTop);
                 Utils.Swap(ref bottom, ref otherBottom);
             }
 
-            MeshEdgeData.AddQuad(
-                new Point3D(bottom.X, bottom.Y, zOffset), 
-                new Point3D(top.X,top.Y,zOffset), 
-                new Point3D(otherTop.X,otherTop.Y,zOffset), 
-                new Point3D(otherBottom.X,otherBottom.Y,zOffset),
-                capUv.BottomLeft,capUv.TopLeft,capUv.TopRight,capUv.BottomRight);
+            EdgeData.AddQuad(
+                new Point3D(bottom.X, bottom.Y, offset),
+                new Point3D(top.X, top.Y, offset),
+                new Point3D(otherTop.X, otherTop.Y, offset),
+                new Point3D(otherBottom.X, otherBottom.Y, offset),
+                capUv.BottomLeft, capUv.TopLeft, capUv.TopRight, capUv.BottomRight);
+
+            return true;
         }
-        private void TesellateFill(List<Vector> fillVertices)
+        private void TesellateFill(List<Vector> edgeVertices)
         {
-            if (Mesh.Vertices.Count <= 2 || Mesh.FillMode == FillMode.None || Mesh.UvMapping.FillTexture == null)
+            if (Terrain.Vertices.Count <= 2 || Terrain.FillMode == FillMode.None)
                 return;
 
-            if (!Mesh.IsClosed)
-                fillVertices.Add(Mesh.FillMode != FillMode.Inverted ? Mesh.Vertices.Last().Position : Mesh.Vertices.First().Position);
+            edgeVertices = edgeVertices == null || edgeVertices.Count > 10000
+                ? Terrain.Vertices.Select(v => v.Position).ToList()
+                : edgeVertices;
 
+            if (!Terrain.IsClosed)
+                edgeVertices.Add(Terrain.FillMode != FillMode.Inverted ? Terrain.Vertices.Last().Position : Terrain.Vertices.First().Position);
 
-            var polygon = new Polygon(fillVertices.Select(v => new PolygonPoint(v.X,v.Y)));
+            var polygon = new Polygon(edgeVertices.Select(v => new PolygonPoint(v.X,v.Y)));
+            polygon.Simplify();
 
             if (IsInverted)
             {
@@ -257,63 +285,112 @@ namespace TerrainEditor.Core
                 return;
             }
 
-            var unitsPerFill = GetFillUVSizeInUnits();
+            var unitsPerFill = FillUVSizeInUnits;
             foreach (var triangle in polygon.Triangles)
             {
-                MeshFillData.AddTriangle(
+                FillData.AddTriangle(
                     new Point3D(triangle.Points._0.X, triangle.Points._0.Y,0.0),
                     new Point3D(triangle.Points._1.X, triangle.Points._1.Y,0.0),
                     new Point3D(triangle.Points._2.X, triangle.Points._2.Y,0.0),
-                    new Point(triangle.Points._0.X / unitsPerFill.X, 1 - triangle.Points._0.Y / unitsPerFill.Y),
-                    new Point(triangle.Points._1.X / unitsPerFill.X, 1 - triangle.Points._1.Y / unitsPerFill.Y),
-                    new Point(triangle.Points._2.X / unitsPerFill.X, 1 - triangle.Points._2.Y / unitsPerFill.Y));
+                    new Point(triangle.Points._0.X / unitsPerFill.Width, 1 - triangle.Points._0.Y / unitsPerFill.Height),
+                    new Point(triangle.Points._1.X / unitsPerFill.Width, 1 - triangle.Points._1.Y / unitsPerFill.Height),
+                    new Point(triangle.Points._2.X / unitsPerFill.Width, 1 - triangle.Points._2.Y / unitsPerFill.Height));
             }
         }
 
-        private bool ShouldCloseSegment(Segment segment, SegmentSide side)
-        {
-            if (IsInverted)
-                side = side == SegmentSide.Left ? SegmentSide.Right : SegmentSide.Left;
-
-            if (Mesh.SplitWhenDifferent && (side == SegmentSide.Left && segment.Direction != segment.PrevDirection || (side == SegmentSide.Right && segment.Direction != segment.NextDirection)))
-                return true;
-
-            var angle = side == SegmentSide.Left ? segment.AngleWithPrev : segment.AngleWithNext;
-
-            if (angle < Mesh.SplitCornersThreshold || angle > (360 - Mesh.SplitCornersThreshold))
-                return true;
-
-            return angle == 180 && !(side == SegmentSide.Left ? segment.Prev.HasValue : segment.Next.HasValue);
-        }
-        private ViewModels.Segment GetUvMappingOf(VertexDirection direction)
+        private Segment SegmentFor(VertexDirection direction)
         {
             switch (direction)
             {
-                case VertexDirection.Top:
-                    return Mesh.UvMapping.Top;
-                case VertexDirection.Down:
-                    return Mesh.UvMapping.Bottom ?? Mesh.UvMapping.Top;
-                case VertexDirection.Left:
-                    return Mesh.UvMapping.Left ?? Mesh.UvMapping.Right ?? Mesh.UvMapping.Top;
-                case VertexDirection.Right:
-                    return Mesh.UvMapping.Right ?? Mesh.UvMapping.Left ?? Mesh.UvMapping.Top;
-                default:
-                    throw new ArgumentOutOfRangeException();
+            case VertexDirection.None:
+            case VertexDirection.Top:  return Terrain.UvMapping.Top;
+            case VertexDirection.Down: return Terrain.UvMapping.Bottom;
+            case VertexDirection.Left: return Terrain.UvMapping.Left;
+            case VertexDirection.Right:return Terrain.UvMapping.Right;
+            default: throw new ArgumentOutOfRangeException();
             }
         }
-        private Vector GetEdgeUVSizeInUnits()
+        private VertexDirection DirectionFor(VertexInfo fst, VertexInfo snd)
         {
-            return new Vector(
-                Mesh.UvMapping.EdgeTexture.PixelWidth / (double)Mesh.PixelsPerUnit, 
-                Mesh.UvMapping.EdgeTexture.PixelHeight / (double)Mesh.PixelsPerUnit);
-        }
-        private Vector GetFillUVSizeInUnits()
-        {
-            return new Vector(
-                Mesh.UvMapping.FillTexture.PixelWidth / (double)Mesh.PixelsPerUnit, 
-                Mesh.UvMapping.FillTexture.PixelHeight / (double)Mesh.PixelsPerUnit);
+            var normal = (fst.Position - snd.Position).Normal();
+            var candidate = fst.Direction != VertexDirection.Auto
+                ? fst.Direction
+                : (Math.Abs(normal.X) > Math.Abs(normal.Y)
+                    ? (normal.X < 0
+                        ? (IsInverted
+                            ? VertexDirection.Left
+                            : VertexDirection.Right)
+                        : (IsInverted
+                            ? VertexDirection.Right
+                            : VertexDirection.Left))
+                    : (normal.Y < 0
+                        ? (IsInverted
+                            ? VertexDirection.Down
+                            : VertexDirection.Top)
+                        : (IsInverted
+                            ? VertexDirection.Top
+                            : VertexDirection.Down)));
+
+            switch (candidate)
+            {
+            case VertexDirection.Top:
+                return candidate;
+            case VertexDirection.Down:
+                return Terrain.UvMapping.Bottom != null ? candidate : VertexDirection.Top;
+            case VertexDirection.Left:
+                return Terrain.UvMapping.Left != null ? candidate : (Terrain.UvMapping.Right != null ? VertexDirection.Right : VertexDirection.Top);
+            case VertexDirection.Right:
+                return Terrain.UvMapping.Right != null ? candidate : (Terrain.UvMapping.Left != null ? VertexDirection.Left : VertexDirection.Top);
+            }
+
+            return VertexDirection.None;
         }
 
+        private static bool ShouldCloseEdge(Edge edge, bool left)
+        {
+            return left
+                ? edge.Split == SplitMode.Both
+                  || edge.Split == SplitMode.Left
+                  || edge.PrevSplit == SplitMode.Both
+                  || edge.PrevSplit == SplitMode.Right
+                  || edge.PrevDirection == VertexDirection.None
+                  || edge.PrevDirection != edge.Direction
+                : edge.Split == SplitMode.Both
+                  || edge.Split == SplitMode.Right
+                  || edge.NextSplit == SplitMode.Both
+                  || edge.NextSplit == SplitMode.Left
+                  || edge.NextDirection == VertexDirection.None
+                  || edge.NextDirection != edge.Direction;
+        }
+        private static Vector HermiteLerp(Edge[] edges, double[] edgesLengths, double length)
+        {
+            var i = 0;
+            var percentaje = 1.0;
+            for (; i < edgesLengths.Length; i++)
+            {
+                if (length <= edgesLengths[i])
+                {
+                    percentaje = length / edgesLengths[i];
+                    break;
+                }
+                length -= edgesLengths[i];
+            }
+            if (i == edgesLengths.Length)
+                i--;
+
+            return Utils.HermiteLerp(edges[i].Prev ?? edges[i].Begin, edges[i].Begin, edges[i].End, edges[i].Next ?? edges[i].End, percentaje, 0, 0);
+        }
+        private static double HermiteLength(IEnumerable<Edge> edges, int resolution, out double[] partialLengths)
+        {
+            partialLengths = edges
+                .Select(e => Enumerable
+                .Range(0, resolution + 1)
+                .Select(cur => Utils.HermiteLerp(e.Prev ?? e.Begin, e.Begin, e.End, e.Next ?? e.End, 1.0 / resolution * cur, 0, 0))
+                .Pairwise((v1, v2) => (v2 - v1).Length)
+                .Sum()).ToArray();
+
+            return partialLengths.Sum();
+        }
         public static Model3DGroup GenerateMesh(Terrain mesh)
         {
             if (mesh.UvMapping == null)
@@ -321,17 +398,20 @@ namespace TerrainEditor.Core
                 return new Model3DGroup();
             }
 
-            var builder = new TerrainMeshBuilder { Mesh = mesh };
+            var builder = new TerrainMeshBuilder { Terrain = mesh };
             builder.Tesellate();
 
             var edgeAndFill = new List<Model3D>();
 
-            if (builder.Mesh.FillMode != FillMode.None)
+            if (builder.Terrain.FillMode != FillMode.None)
             {
                 DiffuseMaterial fillMaterial = Utils.CreateImageMaterial(mesh.UvMapping.FillTexture, true);
 
                 fillMaterial.AmbientColor = mesh.AmbientColor;
-                edgeAndFill.Add(new GeometryModel3D(builder.MeshFillData.ToMesh(true), fillMaterial) { BackMaterial = fillMaterial });
+                edgeAndFill.Add(new GeometryModel3D(builder.FillData.ToMesh(true), fillMaterial)
+                {
+                    BackMaterial = fillMaterial
+                });
             }
 
             if (mesh.UvMapping.EdgeTexture != null)
@@ -339,52 +419,31 @@ namespace TerrainEditor.Core
                 DiffuseMaterial edgeMaterial = Utils.CreateImageMaterial(mesh.UvMapping.EdgeTexture);
 
                 edgeMaterial.AmbientColor = mesh.AmbientColor;
-                edgeAndFill.Add(new GeometryModel3D(builder.MeshEdgeData.ToMesh(true), edgeMaterial) { BackMaterial = edgeMaterial });
+                edgeAndFill.Add(new GeometryModel3D(builder.EdgeData.ToMesh(true), edgeMaterial)
+                {
+                    BackMaterial = edgeMaterial
+                });
             }
 
-            return new Model3DGroup { Children = new Model3DCollection(edgeAndFill) };
+            return new Model3DGroup
+            {
+                Children = new Model3DCollection(edgeAndFill)
+            };
         }
 
-        private enum SegmentSide
-        {
-            Left, Right
-        }
-        private class Segment
+        private class Edge
         {
             public VertexDirection Direction, PrevDirection, NextDirection;
+            public SplitMode Split, PrevSplit, NextSplit;
 
             public Vector Begin, End;
-            public Vector? PrevPrev, Prev, Next, NextNext;
-
-            public double AngleWithPrev
-            {
-                get
-                {
-                    if (!Prev.HasValue)
-                        return 180;
-
-                    double angle = Vector.AngleBetween(End - Begin, Prev.Value - Begin);
-                    return angle < 0 ? angle + 360 : angle;
-                }
-            }
-
-            public double AngleWithNext
-            {
-                get
-                {
-                    if (!Next.HasValue)
-                        return 180;
-
-                    double angle = Vector.AngleBetween(Begin - End, Next.Value - End);
-                    return angle < 0 ? angle + 360 : angle;
-                }
-            }
+            public Vector? Prev, Next;
 
             public void Invert()
             {
                 Utils.Swap(ref Begin, ref End);
+                Utils.Swap(ref PrevSplit, ref NextSplit);
                 Utils.Swap(ref Prev, ref Next);
-                Utils.Swap(ref PrevPrev, ref NextNext);
                 Utils.Swap(ref PrevDirection, ref NextDirection);
             }
         }

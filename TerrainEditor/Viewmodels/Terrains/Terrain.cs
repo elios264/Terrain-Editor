@@ -10,7 +10,7 @@ using TerrainEditor.UserControls;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Viewmodels.Terrains
 {
     public class Terrain  : PropertyChangeBase
     {
@@ -18,9 +18,8 @@ namespace TerrainEditor.ViewModels
         private bool m_splitWhenDifferent;
 
         private int m_smoothFactor = 5;
-        private double m_strechThreshold  = 0.5;
-        private int m_splitCornersThreshold = 90;
-        private int m_pixelsPerUnit = 64; 
+        private double m_strechThreshold;
+        private int m_pixelsPerUnit = 64;
 
         private FillMode m_fillMode = FillMode.None;
         private Color m_ambientColor = Colors.White;
@@ -54,8 +53,6 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        
-
         [Category("Terrain Type")]
         public bool SplitWhenDifferent
         {
@@ -83,7 +80,7 @@ namespace TerrainEditor.ViewModels
             get { return m_smoothFactor; }
             set
             {
-                if (value == m_smoothFactor) return;
+                if (value == m_smoothFactor || value < 1) return;
                 m_smoothFactor = value;
                 OnPropertyChanged();
             }
@@ -100,7 +97,7 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-        [Slidable(0.0, 1.0)]
+        [Slidable(-1.0, 1.0)]
         [FormatString("0.00")]
         public double StrechThreshold
         {
@@ -109,17 +106,6 @@ namespace TerrainEditor.ViewModels
             {
                 if (value.Equals(m_strechThreshold)) return;
                 m_strechThreshold = value;
-                OnPropertyChanged();
-            }
-        }
-        [Slidable(0, 360)]
-        public int SplitCornersThreshold
-        {
-            get { return m_splitCornersThreshold; }
-            set
-            {
-                if (value == m_splitCornersThreshold) return;
-                m_splitCornersThreshold = value;
                 OnPropertyChanged();
             }
         }
@@ -144,7 +130,6 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
-
         [Category("Terrain Data"), SortIndex(5), CustomEditor(typeof(UvMappingPropertyEditor))]
         public UvMapping UvMapping
         {

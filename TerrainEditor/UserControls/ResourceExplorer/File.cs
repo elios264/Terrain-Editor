@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using TerrainEditor.Core;
 using TerrainEditor.Core.Services;
-using TerrainEditor.ViewModels;
 
 namespace TerrainEditor.UserControls
 {

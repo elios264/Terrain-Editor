@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -19,10 +18,10 @@ namespace TerrainEditor.Utilities
             lhs = rhs;
             rhs = temp;
         }
-        internal static T ElementAt<T>(this IList<T> source, int i, bool looped = false)
+        internal static T At<T>(this IList<T> source, int i, bool looped = false)
         {
             if (default(T) != null)
-                throw new InvalidOperationException("ElementAt<T> requires T to be a nullable type.");
+                throw new ArgumentException("At<T> requires T to be a nullable type.",nameof(T));
 
             int n = source.Count;
             return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
@@ -38,11 +37,11 @@ namespace TerrainEditor.Utilities
         {
             return new Vector(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
         }
-        internal static Vector HermiteLerp(Vector a, Vector b, Vector c, Vector d, double percentage, double tension = 0, double bias = 0)
+        internal static Vector HermiteLerp(Vector prev, Vector begin, Vector end, Vector next, double percentage, double tension, double bias)
         {
             return new Vector(
-                Hermite(a.X, b.X, c.X, d.X, percentage, tension, bias),
-                Hermite(a.Y, b.Y, c.Y, d.Y, percentage, tension, bias));
+                Hermite(prev.X, begin.X, end.X, next.X, percentage, tension, bias),
+                Hermite(prev.Y, begin.Y, end.Y, next.Y, percentage, tension, bias));
         }
         internal static double Hermite(double v1, double v2, double v3, double v4, double aPercentage, double aTension, double aBias)
         {
@@ -76,6 +75,22 @@ namespace TerrainEditor.Utilities
             dic.Remove(fromKey);
             dic[toKey] = value;
         }
+        internal static IEnumerable<TValue[]> BatchOfTakeUntil<TValue>(this IEnumerable<TValue> source, Predicate<TValue> predicate)
+        {
+            var batch = new List<TValue>();
+            foreach (TValue value in source)
+            {
+                batch.Add(value);
+                if (predicate(value))
+                {
+                    yield return batch.ToArray();
+                    batch.Clear();
+                }
+            }
+
+            if (batch.Count > 0)
+                yield return batch.ToArray();
+        }
 
         public static T[] IntoANewArray<T>(this T head)
         {
@@ -102,13 +117,13 @@ namespace TerrainEditor.Utilities
             if (pathInApplication[0] == Path.DirectorySeparatorChar)
                 pathInApplication = pathInApplication.Substring(1);
 
-            return new BitmapImage(new Uri(@"pack://application:,,,/" + assembly.GetName().Name + ";component/" + pathInApplication, UriKind.Absolute));
+            return new BitmapImage(new Uri($"pack://application:,,,/{assembly.GetName().Name};component/{pathInApplication}", UriKind.Absolute));
         }
         public static Point3D ToPoint3D(this Vector vector, double z = 0)
         {
             return new Point3D(vector.X,vector.Y,z);
         }
-        public static Vector ToVector(this Point3D point,int decimalRounds = 2)
+        public static Vector ToVector(this Point3D point, int decimalRounds = 2)
         {
             return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
         }

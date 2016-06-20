@@ -9,18 +9,18 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using elios.Persist;
 using TerrainEditor.Core.Services;
-using TerrainEditor.ViewModels;
+using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls
 {
     internal class UvMappingResourceProvider : IResourceInfoProvider
     {
         private readonly XmlArchive m_xmlArchive = new XmlArchive(typeof(UvMapping));
+
         public Type ResourceType => typeof(UvMapping);
-        public bool CanCreateNew => true;
         public string[] Extensions => new[] {".uvmapping"};
 
-        public Task ShowEditor(FileInfo info, object resource)
+        public Task ShowEditor(object resource, FileInfo info)
         {
             var dialogBoxService = ServiceLocator.Get<IDialogBoxService>();
             var uvMappingEditor = new UvMappingEditor { Source = (UvMapping)resource };
@@ -44,10 +44,10 @@ namespace TerrainEditor.UserControls
                     args.Cancel = true;
                     break;
                 case MessageBoxResult.Yes:
-                    Task.Run(() => SaveToDisk(info, resource)).ContinueWith(_ => completionSource.SetResult(null));
+                    Task.Run(() => Save(resource, info)).ContinueWith(_ => completionSource.SetResult(null));
                     break;
                 case MessageBoxResult.No:
-                    ReloadFromDisk(info, resource);
+                    Reload(resource, info);
                     completionSource.SetResult(null);
                     break;
                 case MessageBoxResult.None:
@@ -55,7 +55,7 @@ namespace TerrainEditor.UserControls
                     break;
                 }
 
-                if (!args.Cancel)
+                if (args.Cancel == false)
                     uvMappingEditor.Source.RecursivePropertyChanged -= notifier;
             };
 
@@ -63,49 +63,43 @@ namespace TerrainEditor.UserControls
 
             return completionSource.Task;
         }
-        public void SaveToDisk(FileInfo info, object resource)
+        public void Save(object resource, FileInfo info)
         {
-            resource = resource ?? new UvMapping();
-
             using (var writeStream = info.Open(FileMode.Create))
                 m_xmlArchive.Write(writeStream, (UvMapping)resource);
         }
-        public object ReloadFromDisk(FileInfo info, object resource)
+        public void Reload(object resource, FileInfo info)
+        {
+            var newObj = (UvMapping)Load(info);
+            var oldObject = (UvMapping)resource;
+
+            oldObject.Name = newObj.Name;
+            oldObject.Top = newObj.Top;
+            oldObject.Left = newObj.Left;
+            oldObject.Right = newObj.Right;
+            oldObject.Bottom = newObj.Bottom;
+            oldObject.EdgeTexture = newObj.EdgeTexture;
+            oldObject.FillTexture = newObj.FillTexture;
+        }
+        public object Load(FileInfo info)
         {
             using (var readStream = info.OpenRead())
-            {
-                var reloadedObject = (UvMapping)m_xmlArchive.Read(readStream);
-                var oldObject = (UvMapping)resource ?? reloadedObject;
-
-                oldObject.Name = reloadedObject.Name;
-                oldObject.Top = reloadedObject.Top;
-                oldObject.Left = reloadedObject.Left;
-                oldObject.Right = reloadedObject.Right;
-                oldObject.Bottom = reloadedObject.Bottom;
-                oldObject.EdgeTexture = reloadedObject.EdgeTexture;
-                oldObject.FillTexture = reloadedObject.FillTexture;
-
-                return oldObject;
-            }
+                return m_xmlArchive.Read(readStream);
         }
-        public ImageSource GetPreview(FileInfo info)
+        public ImageSource LoadPreview(FileInfo info)
         {
             try
             {
                 using (var readStream = info.OpenRead())
                 {
                     var node = XmlArchive.LoadNode(readStream);
-                    var previewPath = node.Attributes.First(a => a.Name == "EdgeTexture").Value;
-                    var img = new BitmapImage(new Uri(previewPath, UriKind.RelativeOrAbsolute));
-                    img.Freeze();
-                    return img;
+                    var previewPath = node.Attributes.First(a => a.Name == nameof(UvMapping.EdgeTexture)).Value;
+                    return new BitmapImage(new Uri(previewPath, UriKind.RelativeOrAbsolute));
                 }
             }
             catch (Exception)
             {
-                var image = new BitmapImage();
-                image.Freeze();
-                return image;
+                return new BitmapImage();
             }
         }
     }

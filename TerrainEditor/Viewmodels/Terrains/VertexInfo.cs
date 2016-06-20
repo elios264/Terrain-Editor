@@ -1,11 +1,14 @@
 using System.Windows;
+using TerrainEditor.Core;
 
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Viewmodels.Terrains
 {
+
     public class VertexInfo : PropertyChangeBase
     {
         private Vector m_position;
-        private VertexDirection m_direction;
+        private VertexDirection m_direction = VertexDirection.Auto;
+        private SplitMode m_split;
 
         public Vector Position
         {
@@ -27,16 +30,28 @@ namespace TerrainEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        public SplitMode Split
+        {
+            get { return m_split; }
+            set
+            {
+                if (value == m_split)
+                    return;
+                m_split = value;
+                OnPropertyChanged();
+            }
+        }
 
-        public VertexInfo(double x = 0, double y = 0, VertexDirection dir = VertexDirection.Auto)
+        public VertexInfo(double x = 0, double y = 0)
         {
             Position = new Vector(x, y);
-            Direction = dir;
         }
-        public VertexInfo(Vector v, VertexDirection dir = VertexDirection.Auto)
+
+        public VertexInfo(Vector pos, VertexDirection dir, SplitMode split)
         {
-            Position = v;
+            Position = pos;
             Direction = dir;
+            Split = split;
         }
     }
 

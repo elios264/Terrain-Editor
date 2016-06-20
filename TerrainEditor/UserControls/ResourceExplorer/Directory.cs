@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using TerrainEditor.ViewModels;
+using TerrainEditor.Core;
 
 namespace TerrainEditor.UserControls
 {

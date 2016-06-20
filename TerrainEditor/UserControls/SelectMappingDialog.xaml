@@ -6,6 +6,7 @@
              xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
              xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
              xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
+             xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
              mc:Ignorable="d"
             IsOpen="True"
             Title="Choose Mapping" 
@@ -19,7 +20,7 @@
 
     <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" ItemsSource="{Binding ElementName=MainControl, Path=CachedMappings}" >
         <ListBox.ItemTemplate>
-            <DataTemplate DataType="{x:Type viewModels:UvMapping}">
+            <DataTemplate DataType="{x:Type terrains:UvMapping}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
