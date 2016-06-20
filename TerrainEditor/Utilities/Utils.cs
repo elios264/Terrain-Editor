@@ -33,15 +33,21 @@ namespace TerrainEditor.Utilities
 
             return normal;
         }
-        internal static Vector LinearLerp(Vector a, Vector b, double t)
+        internal static Vector LinearInterpolate(Vector a, Vector b, double percentaje)
         {
-            return new Vector(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+            return new Vector(a.X + (b.X - a.X) * percentaje, a.Y + (b.Y - a.Y) * percentaje);
         }
-        internal static Vector HermiteLerp(Vector prev, Vector begin, Vector end, Vector next, double percentage, double tension, double bias)
+        internal static Vector HermiteInterpolate(Vector prev, Vector begin, Vector end, Vector next, double percentage, double tension = 0, double bias = 0)
         {
             return new Vector(
                 Hermite(prev.X, begin.X, end.X, next.X, percentage, tension, bias),
                 Hermite(prev.Y, begin.Y, end.Y, next.Y, percentage, tension, bias));
+        }
+        internal static Vector CubicInterpolate(Vector a, Vector b, Vector c, Vector d, double percentage)
+        {
+            return new Vector(
+                Cubic(a.X, b.X, c.X, d.X, percentage),
+                Cubic(a.Y, b.Y, c.Y, d.Y, percentage));
         }
         internal static double Hermite(double v1, double v2, double v3, double v4, double aPercentage, double aTension, double aBias)
         {
@@ -57,6 +63,16 @@ namespace TerrainEditor.Utilities
             double a3 = -2 * mu3 + 3 * mu2;
 
             return (a0 * v2 + a1 * m0 + a2 * m1 + a3 * v3);
+        }
+        internal static double Cubic(double v1, double v2, double v3, double v4, double aPercentage)
+        {
+            double percentageSquared = aPercentage * aPercentage;
+            double a1 = v4 - v3 - v1 + v2;
+            double a2 = v1 - v2 - a1;
+            double a3 = v3 - v1;
+            double a4 = v2;
+
+            return a1 * aPercentage * percentageSquared + a2 * percentageSquared + a3 * aPercentage + a4;
         }
         internal static void Clear(this MeshBuilder builder)
         {

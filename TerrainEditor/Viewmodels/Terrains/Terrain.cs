@@ -22,6 +22,7 @@ namespace TerrainEditor.Viewmodels.Terrains
         private int m_pixelsPerUnit = 64;
 
         private FillMode m_fillMode = FillMode.None;
+        private InterpolationMode m_interpolationMode = InterpolationMode.Hermite;
         private Color m_ambientColor = Colors.White;
         private Point3D m_position = new Point3D(0,0,1);
         private string m_name = "New Terrain";
@@ -30,7 +31,6 @@ namespace TerrainEditor.Viewmodels.Terrains
 
         private Model3DGroup m_meshCache;
         private bool m_isDirty = true;
-
 
         [Category("Misc")]
         public string Name
@@ -71,6 +71,18 @@ namespace TerrainEditor.Viewmodels.Terrains
             {
                 if (value == m_fillMode) return;
                 m_fillMode = value;
+                OnPropertyChanged();
+            }
+        }
+        [SelectorStyle(SelectorStyle.ListBox)]
+        public InterpolationMode InterpolationMode
+        {
+            get { return m_interpolationMode; }
+            set
+            {
+                if (value == m_interpolationMode)
+                    return;
+                m_interpolationMode = value;
                 OnPropertyChanged();
             }
         }

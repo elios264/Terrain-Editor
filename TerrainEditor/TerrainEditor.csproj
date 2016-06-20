@@ -154,6 +154,7 @@
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
     <Compile Include="Utilities\WeakEvent.cs" />
+    <Compile Include="Viewmodels\Terrains\InterpolationMode.cs" />
     <Compile Include="Viewmodels\Terrains\SplitMode.cs" />
     <Compile Include="Viewmodels\Terrains\Terrain.cs" />
     <Compile Include="Core\TerrainMeshBuilder.cs" />

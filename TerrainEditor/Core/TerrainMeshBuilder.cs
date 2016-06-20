@@ -120,30 +120,30 @@ namespace TerrainEditor.Core
             var zOffsetInc = 0.0;
             var firstCapDone = (bool?)null;
             var normalStart = (Vector?)null;
-            var begin = Terrain.Vertices[0].Position;
             var batches = (IsInverted ? Edges.Reverse() : Edges).BatchOfTakeUntil(e => ShouldCloseEdge(e, false)).ToArray();
+            var begin = batches[0][0].Begin;
 
-            foreach (var edges in batches)
+            foreach (var batch in batches)
             {
                 if (Terrain.SplitWhenDifferent
-                    || edges[0].Split == SplitMode.Left || edges[0].Split == SplitMode.Both
-                    || edges[0].PrevSplit == SplitMode.Both || edges[0].PrevSplit == SplitMode.Right)
+                    || batch[0].Split == SplitMode.Left || batch[0].Split == SplitMode.Both
+                    || batch[0].PrevSplit == SplitMode.Both || batch[0].PrevSplit == SplitMode.Right)
                 {
                     normalStart = null;
-                    edges[0].Prev = null;
+                    batch[0].Prev = null;
                 }
-                var lst = edges.Length - 1;
+                var lst = batch.Length - 1;
                 if (Terrain.SplitWhenDifferent
-                    || edges[lst].Split == SplitMode.Right || edges[lst].Split == SplitMode.Both
-                    || edges[lst].NextSplit == SplitMode.Both || edges[lst].NextSplit == SplitMode.Left)
+                    || batch[lst].Split == SplitMode.Right || batch[lst].Split == SplitMode.Both
+                    || batch[lst].NextSplit == SplitMode.Both || batch[lst].NextSplit == SplitMode.Left)
                 {
-                    edges[lst].Next = null;
+                    batch[lst].Next = null;
                 }
 
                 double[] edgesLengths;
-                var segmentMapping = SegmentFor(edges[0].Direction);
-                var smoothFactor = edges.Length == 1 && edges[0].Prev == null && edges[lst].Next == null ? 1 : Terrain.SmoothFactor;
-                var totalLength = HermiteLength(edges, smoothFactor * 5, out edgesLengths);
+                var segmentMapping = SegmentFor(batch[0].Direction);
+                var smoothFactor = batch.Length == 1 && batch[0].Prev == null && batch[lst].Next == null ? 1 : Terrain.SmoothFactor;
+                var totalLength = InterpolateLength(Terrain.InterpolationMode, batch, smoothFactor * 5, out edgesLengths);
                 var bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[0]); //redo the bodies to limit to one size only
                 var bodyCount = Math.Max((int)Math.Round(totalLength / (bodyUV.Width * EdgeUVSizeInUnits.Width) + Terrain.StrechThreshold), 1);
                 var finalBodySize = new Size(totalLength / bodyCount, bodyUV.Height * EdgeUVSizeInUnits.Height);
@@ -155,12 +155,12 @@ namespace TerrainEditor.Core
                 zOffsetInc += 0.0001;
                 for (int i = 0; i < bodyCount; i++)
                 {
-                    bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[Math.Abs((finalBodySize.Width / currentLength).GetHashCode() % segmentMapping.Bodies.Count)]);
+                    bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[Math.Abs(begin.GetHashCode() % segmentMapping.Bodies.Count)]);
                     bodyUV.Width /= smoothFactor;
 
                     for (int j = 0; j < smoothFactor; j++, currentLength += incLength)
                     {
-                        var end = HermiteLerp(edges, edgesLengths, currentLength);
+                        var end = Interpolate(Terrain.InterpolationMode, batch, edgesLengths, currentLength);
                         var normalEnd = (end - begin).Normal();
                         var endOffset = normalEnd * halfFinalBodySizeHeight;
                         var beginOffset = (normalStart ?? normalEnd) * halfFinalBodySizeHeight;
@@ -179,8 +179,9 @@ namespace TerrainEditor.Core
 
                         if (first)
                         {
+                            first = TesellateCap(segmentMapping.LeftCap, true, batch[0], normalStart ?? normalEnd, zOffset);
+                            firstCapDone = firstCapDone ?? first;
                             first = false;
-                            firstCapDone = firstCapDone ?? TesellateCap(segmentMapping.LeftCap, true, edges[0], normalStart ?? normalEnd, zOffset);
                         }
 
                         centralPoints.Add(begin);
@@ -189,27 +190,25 @@ namespace TerrainEditor.Core
                         bodyUV.X += bodyUV.Width;
                     }
                 }
-                TesellateCap(segmentMapping.RightCap, false, edges[lst], normalStart.Value, segmentMapping.ZOffset + zOffsetInc);
+                TesellateCap(segmentMapping.RightCap, false, batch[lst], normalStart.Value, segmentMapping.ZOffset + zOffsetInc);
             }
 
-            //fix normal of first
-            //if (IsClosed && batches[0][0].Prev != null)
-            //{
-            //    var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
-            //    var localBottomLeft = Terrain.Vertices[0].Position - offset;
-            //    var localTopLeft = Terrain.Vertices[0].Position + offset;
+            //close the terrain
+            if (IsClosed && batches[0][0].Prev != null)
+            {
+                var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
+                var bl = batches[0][0].Begin - offset;
+                var tl = batches[0][0].Begin + offset;
 
-            //    //Fix edge
-            //    EdgeData.Positions[0] = new Point3D(localBottomLeft.X, localBottomLeft.Y, EdgeData.Positions[0].Z);
-            //    EdgeData.Positions[1] = new Point3D(localTopLeft.X, localTopLeft.Y, EdgeData.Positions[1].Z);
+                EdgeData.Positions[0] = new Point3D(bl.X, bl.Y, EdgeData.Positions[0].Z);
+                EdgeData.Positions[1] = new Point3D(tl.X, tl.Y, EdgeData.Positions[1].Z);
 
-            //    //Fix Cap
-            //    if (firstCapDone ?? false)
-            //    {
-            //        EdgeData.Positions[6] = EdgeData.Positions[1];
-            //        EdgeData.Positions[7] = EdgeData.Positions[0];
-            //    }
-            //}
+                if (firstCapDone ?? false)
+                {
+                    EdgeData.Positions[6] = EdgeData.Positions[1];
+                    EdgeData.Positions[7] = EdgeData.Positions[0];
+                }
+            }
 
         }
         private bool TesellateCap(Rect area, bool left, Edge edge, Vector normal, double offset)
@@ -362,7 +361,7 @@ namespace TerrainEditor.Core
                   || edge.NextDirection == VertexDirection.None
                   || edge.NextDirection != edge.Direction;
         }
-        private static Vector HermiteLerp(Edge[] edges, double[] edgesLengths, double length)
+        private static Vector Interpolate(InterpolationMode mode ,Edge[] edges, double[] edgesLengths, double length)
         {
             var i = 0;
             var percentaje = 1.0;
@@ -378,19 +377,29 @@ namespace TerrainEditor.Core
             if (i == edgesLengths.Length)
                 i--;
 
-            return Utils.HermiteLerp(edges[i].Prev ?? edges[i].Begin, edges[i].Begin, edges[i].End, edges[i].Next ?? edges[i].End, percentaje, 0, 0);
+            return Interpolate(mode ,edges[i].Prev ?? edges[i].Begin, edges[i].Begin, edges[i].End, edges[i].Next ?? edges[i].End, percentaje);
         }
-        private static double HermiteLength(IEnumerable<Edge> edges, int resolution, out double[] partialLengths)
+        private static Vector Interpolate(InterpolationMode mode ,Vector a, Vector b, Vector c, Vector d, double percentaje)
+        {
+            switch (mode)
+            {
+            case InterpolationMode.Hermite: return Utils.HermiteInterpolate(a, b, c, d, percentaje);
+            case InterpolationMode.Cubic: return Utils.CubicInterpolate(a, b, c, d, percentaje);
+            default: throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
+        }
+        private static double InterpolateLength(InterpolationMode mode,IEnumerable<Edge> edges, int resolution, out double[] partialLengths)
         {
             partialLengths = edges
                 .Select(e => Enumerable
                 .Range(0, resolution + 1)
-                .Select(cur => Utils.HermiteLerp(e.Prev ?? e.Begin, e.Begin, e.End, e.Next ?? e.End, 1.0 / resolution * cur, 0, 0))
+                .Select(cur => Interpolate(mode ,e.Prev ?? e.Begin, e.Begin, e.End, e.Next ?? e.End, 1.0 / resolution * cur))
                 .Pairwise((v1, v2) => (v2 - v1).Length)
                 .Sum()).ToArray();
 
             return partialLengths.Sum();
         }
+
         public static Model3DGroup GenerateMesh(Terrain mesh)
         {
             if (mesh.UvMapping == null)
@@ -398,7 +407,10 @@ namespace TerrainEditor.Core
                 return new Model3DGroup();
             }
 
-            var builder = new TerrainMeshBuilder { Terrain = mesh };
+            var builder = new TerrainMeshBuilder
+            {
+                Terrain = mesh
+            };
             builder.Tesellate();
 
             var edgeAndFill = new List<Model3D>();

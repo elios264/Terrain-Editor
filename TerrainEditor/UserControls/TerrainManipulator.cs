@@ -416,7 +416,7 @@ namespace TerrainEditor.UserControls
             //AddVertex
             m_addVertexCallouts = vertices.Pairwise((fst, snd) => new {fst, snd}).Select(info => new BillboardVisual3D
             {
-                Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.5).ToPoint3D(0.01),
+                Position = Utils.LinearInterpolate(info.fst.Position, info.snd.Position, 0.5).ToPoint3D(0.01),
                 Width = 15,
                 Height = 15,
                 Material = DotAddMaterial
@@ -442,7 +442,7 @@ namespace TerrainEditor.UserControls
 
                 return new BillboardVisual3D
                 {
-                    Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.1).ToPoint3D(0.01),
+                    Position = Utils.LinearInterpolate(info.fst.Position, info.snd.Position, 0.1).ToPoint3D(0.01),
                     Width = 15,
                     Height = 15,
                     Material = mat,
@@ -466,7 +466,7 @@ namespace TerrainEditor.UserControls
 
                 return new BillboardVisual3D
                 {
-                    Position = Utils.LinearLerp(info.fst.Position, info.snd.Position, 0.2).ToPoint3D(0.01),
+                    Position = Utils.LinearInterpolate(info.fst.Position, info.snd.Position, 0.2).ToPoint3D(0.01),
                     Width = 15,
                     Height = 15,
                     Material = mat
