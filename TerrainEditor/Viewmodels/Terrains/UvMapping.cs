@@ -1,30 +1,14 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using elios.Persist;
-using TerrainEditor.Annotations;
 using TerrainEditor.Core;
 using TerrainEditor.Utilities;
 
 namespace TerrainEditor.Viewmodels.Terrains
 {
-    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-    [MetadataType(typeof(Rect))]
-    public class RectMeta
-    {
-        [Persist("x")]
-        public double X { get; set; }
-        [Persist("y")]
-        public double Y { get; set; }
-        [Persist("w")]
-        public double Width { get; set; }
-        [Persist("h")]
-        public double Height { get; set; }
-    }
-
     public class UvMapping : PropertyChangeBase
     {
         private string m_name;
@@ -180,6 +164,13 @@ namespace TerrainEditor.Viewmodels.Terrains
 
             return rect;
         }
+        public Size ToUV(Size size)
+        {
+            size.Width /= EdgeTexture.PixelWidth;
+            size.Height /= EdgeTexture.PixelHeight;
+
+            return size;
+        }
 
         public static readonly UvMapping Pipe;
         public static readonly UvMapping Mossy;
@@ -192,15 +183,19 @@ namespace TerrainEditor.Viewmodels.Terrains
                 EdgeTexture = Utils.LoadBitmapFromResource("Resources/pipe.png"),
                 Top = new Segment
                 {
-                    LeftCap = new Rect(new Point(14, 0), new Size(50, 128)),
-                    RightCap = new Rect(new Point(448, 0), new Size(50, 128)),
-                    Bodies = new ObservableCollection<Rect>
+                    Offsets = new Vector3D(0,0,0.01),
+                    CapSize = new Size(50, 128),
+                    BodySize = new Size(128, 128),
+
+                    LeftCap = new Point(14,0),
+                    RightCap = new Point(448,0),
+
+                    Bodies = new ObservableCollection<Point>
                     {
-                        new Rect(new Point(64, 0), new Size(128, 128)),
-                        new Rect(new Point(192, 0), new Size(128, 128)),
-                        new Rect(new Point(320, 0), new Size(128, 128)),
-                    },
-                    ZOffset = 0.01
+                        new Point(64, 0),
+                        new Point(192, 0),
+                        new Point(320, 0)
+                    }
                 }
             };
 
@@ -211,72 +206,81 @@ namespace TerrainEditor.Viewmodels.Terrains
                 FillTexture = Utils.LoadBitmapFromResource("Resources/MossyFill.png"),
                 Top = new Segment
                 {
-                    LeftCap = new Rect(new Point(0, 0), new Size(64, 220)),
-                    RightCap = new Rect(new Point(448, 0), new Size(64, 220)),
-                    Bodies = new ObservableCollection<Rect>
-                    {
-                        new Rect(new Point(64, 0), new Size(192, 220)),
-                        new Rect(new Point(256, 0), new Size(192, 220)),
-                    },
-                    ZOffset = 0.04
+                    Offsets = new Vector3D(0, 0, 0.04),
+                    CapSize = new Size(64, 220),
+                    BodySize = new Size(192, 220),
+
+                    LeftCap = new Point(0, 0),
+                    RightCap = new Point(448, 0),
+                    Bodies = new ObservableCollection<Point> { new Point(64,0), new Point(256,0) }
                 },
                 Left = new Segment
                 {
-                    Bodies = new ObservableCollection<Rect>
-                    {
-                        new Rect(new Point(5, 231), new Size(232, 64)),
-                    },
-                    ZOffset = 0.01
+                    Offsets = new Vector3D(0, 0, 0.01),
+                    BodySize = new Size(232, 64),
+                    Bodies = new ObservableCollection<Point> { new  Point(5, 231) }
                 },
                 Right = new Segment
                 {
-                    Bodies = new ObservableCollection<Rect>
-                    {
-                        new Rect(new Point(5, 231), new Size(232, 64)),
-                    },
-                    ZOffset = 0.02
+                    Offsets = new Vector3D(0, 0, 0.02),
+                    BodySize = new Size(232, 64),
+                    Bodies = new ObservableCollection<Point> { new Point(5, 231) },
                 },
                 Bottom = new Segment
                 {
-                    Bodies = new ObservableCollection<Rect>
-                    {
-                        new Rect(new Point(261, 199), new Size(232, 98)),
-                    },
-                    ZOffset = 0.03
+                    Offsets = new Vector3D(0, 0, 0.03),
+                    BodySize = new Size(232, 98),
+                    Bodies = new ObservableCollection<Point> { new Point(261, 199) }
                 }
             };
         }
-
     }
 
     public class Segment : PropertyChangeBase
     {
-        private SegmentEditor m_editor;
-        private ObservableCollection<Rect> m_bodies;
-        private Rect m_rightCap;
-        private Rect m_leftCap;
-        private double m_zOffset;
+        private Size m_capSize;
+        private Size m_bodySize;
+        private Point m_leftCap;
+        private Point m_rightCap;
+        private Vector3D m_offsets;
+        private ObservableCollection<Point> m_bodies = new ObservableCollection<Point>();
 
-        public ObservableCollection<Rect> Bodies
+        public Vector3D Offsets
         {
-            get
-            {
-                return m_bodies;
-            }
+            get { return m_offsets; }
             set
             {
-                if (Equals(value, m_bodies))
+                if (value.Equals(m_offsets))
                     return;
-                m_bodies = value;
+                m_offsets = value;
                 OnPropertyChanged();
             }
         }
-        public Rect LeftCap
+        public Size CapSize
         {
-            get
+            get { return m_capSize; }
+            set
             {
-                return m_leftCap;
+                if (value.Equals(m_capSize))
+                    return;
+                m_capSize = value;
+                OnPropertyChanged();
             }
+        }
+        public Size BodySize
+        {
+            get { return m_bodySize; }
+            set
+            {
+                if (value.Equals(m_bodySize))
+                    return;
+                m_bodySize = value;
+                OnPropertyChanged();
+            }
+        }
+        public Point LeftCap
+        {
+            get { return m_leftCap; }
             set
             {
                 if (value.Equals(m_leftCap))
@@ -285,12 +289,9 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Rect RightCap
+        public Point RightCap
         {
-            get
-            {
-                return m_rightCap;
-            }
+            get { return m_rightCap; }
             set
             {
                 if (value.Equals(m_rightCap))
@@ -299,180 +300,91 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public double ZOffset
+        public ObservableCollection<Point> Bodies
         {
-            get
-            {
-                return m_zOffset;
-            }
+            get { return m_bodies; }
             set
             {
-                if (value.Equals(m_zOffset))
+                if (Equals(value, m_bodies))
                     return;
-                m_zOffset = value;
+                m_bodies = value;
                 OnPropertyChanged();
             }
         }
-
-        [Persist(Ignore = true)]
-        public SegmentEditor Editor
-        {
-            get { return m_editor ?? (m_editor = new SegmentEditor(this)); }
-        }
-
-        public Segment()
-        {
-            m_bodies = new ObservableCollection<Rect>();
-        }
     }
 
-    public class SegmentEditor : PropertyChangeBase
+    /*[TypeConverter(typeof(PointConverter))]
+    public class Point : PropertyChangeBase
     {
-        private readonly Segment m_segment;
+        private double m_x;
+        private double m_y;
 
-        private Point m_position;
-        private int m_height;
-        private int m_capWidth;
-        private int m_bodyWidth;
-        private int m_bodySlices = 1;
-        private bool m_isAdvanced = true;
-
-        public SegmentEditor(Segment segment)
+        public double X
         {
-            m_segment = segment;
-
-            if (m_segment.Bodies.Count == 0)
-                return;
-
-            Size size = m_segment.Bodies[0].Size;
-
-            m_isAdvanced = !( m_segment.LeftCap.Size == m_segment.RightCap.Size &&
-                              m_segment.Bodies.All(s => s.Size == size) &&
-                              m_segment.Bodies[0].Location.X - m_segment.LeftCap.Width == m_segment.LeftCap.Location.X );
-
-
-            UpdateEditor();
-        }
-
-        public bool IsAdvanced
-        {
-            get
-            {
-                return m_isAdvanced;
-            }
+            get { return m_x; }
             set
             {
-                if (value == m_isAdvanced)
+                if (value.Equals(m_x))
                     return;
-                m_isAdvanced = value;
-                UpdateEditor();
+                m_x = value;
                 OnPropertyChanged();
             }
         }
-        public Point Position
+        public double Y
         {
-            get
-            {
-                return m_position;
-            }
+            get { return m_y; }
             set
             {
-                if (value.Equals(m_position))
+                if (value.Equals(m_y))
                     return;
-                m_position = value;
-                UpdateSegment();
-                OnPropertyChanged();
-            }
-        }
-        public int Height
-        {
-            get
-            {
-                return m_height;
-            }
-            set
-            {
-                if (value == m_height)
-                    return;
-                m_height = value;
-                UpdateSegment();
-                OnPropertyChanged();
-            }
-        }
-        public int CapWidth
-        {
-            get
-            {
-                return m_capWidth;
-            }
-            set
-            {
-                if (value == m_capWidth)
-                    return;
-                m_capWidth = value;
-                UpdateSegment();
-                OnPropertyChanged();
-            }
-        }
-        public int BodyWidth
-        {
-            get
-            {
-                return m_bodyWidth;
-            }
-            set
-            {
-                if (value == m_bodyWidth)
-                    return;
-                m_bodyWidth = value;
-                UpdateSegment();
-                OnPropertyChanged();
-            }
-        }
-        public int BodySlices
-        {
-            get
-            {
-                return m_bodySlices;
-            }
-            set
-            {
-                if (value == m_bodySlices)
-                    return;
-                m_bodySlices = value;
-                UpdateSegment();
+                m_y = value;
                 OnPropertyChanged();
             }
         }
 
-        private void UpdateSegment()
+        public Point() {}
+        public Point(double x, double y)
         {
-            BodySlices = BodySlices < 1 ? 1 : BodySlices;
-            m_segment.Bodies.Clear();
-
-            Size bodySize = new Size(BodyWidth,Height);
-            int startX = (int) ( CapWidth + Position.X );
-            for (int i = 0; i < BodySlices; i++)
-            {
-                var bodyStartPos = new Point(startX,Position.Y);
-                m_segment.Bodies.Add(new Rect(bodyStartPos, bodySize));
-                startX += BodyWidth;
-            }
-
-            m_segment.LeftCap = new Rect(Position, new Size(CapWidth, Height));
-            m_segment.RightCap = new Rect(new Point(Position.X + CapWidth + BodyWidth * BodySlices, Position.Y), new Size(CapWidth, Height));
+            m_x = x;
+            m_y = y;
         }
-        private void UpdateEditor()
+
+        public static implicit operator System.Windows.Point(Point point)
         {
-            if (IsAdvanced== false)
+            return point == null
+                ? default(System.Windows.Point)
+                : new System.Windows.Point(point.X,point.Y);
+        }
+
+        public override string ToString()
+        {
+            return ((System.Windows.Point)this).ToString();
+        }
+ 
+
+        public class PointConverter : TypeConverter
+        {
+            private static readonly System.Windows.PointConverter Pconverter = new System.Windows.PointConverter();
+
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
             {
-                m_position = m_segment.LeftCap.TopLeft;
-                m_height = (int) m_segment.LeftCap.Height;
-                m_capWidth = (int) m_segment.LeftCap.Width;
-                m_bodyWidth = m_segment.Bodies.Count > 0 ? (int)m_segment.Bodies[0].Width : 0;
-                m_bodySlices = m_segment.Bodies.Count;
+                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+            }
+            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+            {
+                return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+            }
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
+                var p = (System.Windows.Point)Pconverter.ConvertFrom(context, culture, value);
+
+                return new Point { X = p.X, Y = p.Y };
+            }
+            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+            {
+                var point = (Point)value ?? new Point();
+                return Pconverter.ConvertTo(context, culture, new System.Windows.Point(point.X, point.Y), destinationType);
             }
         }
-    }
-
+    }*/
 }

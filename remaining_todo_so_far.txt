@@ -1,19 +1,20 @@
 Terrain Editor
+	
+	AddSupport for typeConverter to persist ✓
+	Implement yoffset & capoffset
+	Redo uvmapping editor with draggables and all
+	add x arrow to textures in uvmapping✓
+	Create a chida datagrid
+	
 
 	Redo algorithm
 		- inverted ✓
 		- option for split segment just like direction  ( split left, right, both, don't) ✓
 		- each edge must increment slighly the z offset ✓
 		- caps ✓
-		- gap in last closed 
-		- fix isinverted open -> :-( 
-		
-		- height offset for segments, capoffset 
-		- all bodies are now restricted to be same size, modify editor of bodies so they are the same size (remove as an X in the top right)
-		- draggable rects
-		- add to mapping a number of importance to the bodies
+		- gap in last closed  ✓
 
-
+	
 	Finish UVMapping Editor ✓
 	Make ResourceExplorer a service ✓
 	connect Resource Explorer to property editor ✓
@@ -23,6 +24,7 @@ Terrain Editor
 	improve resource explorer handle of a lot of files (like when deleting, and the binding for preview should be done in a single worker thread), right click on a heavy folder is awesomely slow
 	wireframe mode
 	fix terrain manipulator predictor
+	rotate splitmode billboards 
 	terrain position manipulator (three arrows)
 	show folders in resource explorer
 	Themes support, language support, settings

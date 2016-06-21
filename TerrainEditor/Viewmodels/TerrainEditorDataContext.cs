@@ -7,7 +7,7 @@ using TerrainEditor.UserControls;
 using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
 
-namespace TerrainEditor.ViewModels
+namespace TerrainEditor.Viewmodels
 {
     public class TerrainEditorDataContext : PropertyChangeBase
     {
@@ -25,7 +25,7 @@ namespace TerrainEditor.ViewModels
         }
         public ObservableCollection<Terrain> Terrains { get; } = new ObservableCollection<Terrain>();
         public Model3DCollection TerrainsMeshes => new Model3DCollection(Terrains.Select(mesh => mesh.Mesh));
-        public IEnumerable<IResourceInfoProvider> ResourceInfoProviders => new IResourceInfoProvider[] {new UvMappingResourceProvider() };
+        public IEnumerable<IResourceInfoProvider> ResourceInfoProviders { get;  } = new IResourceInfoProvider[] {new UvMappingResourceProvider() };
 
         public TerrainEditorDataContext()
         {
@@ -33,10 +33,10 @@ namespace TerrainEditor.ViewModels
 
             Terrains.Add(new Terrain(new[]
             {
-                new VertexInfo(0, 10),
-                new VertexInfo(10, 10),
-                new VertexInfo(10, 0),
-                new VertexInfo(0, 0)
+                new VertexInfo(-5, 5),
+                new VertexInfo(5, 5),
+                new VertexInfo(5, -5),
+                new VertexInfo(-5, -5)
             })
             {
                 UvMapping = UvMapping.Mossy,

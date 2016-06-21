@@ -3,10 +3,10 @@
                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                               xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
                                xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
                                xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
                                xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
+                               xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
                                xmlns:pt="http://propertytools.org/wpf"
                                xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
                                mc:Ignorable="d"
@@ -14,93 +14,93 @@
                                Title="UV Mapping Editor" 
                                AllowMove="True"  ChildWindowWidth="800"
                                OverlayBrush="{StaticResource AccentColorBrush4}" 
-                               IsModal="True" ShowCloseButton="True" 
+                               IsModal="False" ShowCloseButton="True" 
                                EnableDropShadow="True" CloseOnOverlay="False" CloseByEscape="False"
                                x:Name="ParentControl"
                                d:DesignHeight="600" d:DesignWidth="800" >
     <Grid d:DataContext="{x:Static terrains:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
         <Grid.Resources>
+            <utilities:SelectManyConverter x:Key="SelectManyConverter" />
+            <utilities:NullToBooleanConveter x:Key="NullToBooleanConveter" />
+            <Path x:Key="X" x:Shared="False"  Data="M 10.009,1.704 L 8.331,0.026 5.03,3.327 1.703,0 0,1.704 3.326,5.031 0.025,8.332 1.703,10.009 5.004,6.708 8.305,10.009 10.009,8.305 6.708,5.005 " SnapsToDevicePixels="true" Fill="{StaticResource AccentColorBrush}" />
             <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type terrains:Segment}">
-                <Grid>
-                    <StackPanel controls:VisibilityHelper.IsCollapsed="{Binding Path=Editor.IsAdvanced, FallbackValue=true}">
+                <Grid Name ="TheGrid"  >
+                    <StackPanel >
                         <DockPanel Margin="0,1">
-                            <TextBlock Text="Advanced Mode" VerticalAlignment="Center" />
-                            <CheckBox Width="150" HorizontalAlignment="Right" IsChecked="{Binding Editor.IsAdvanced}" />
+                            <TextBlock Text="Offsets [X,Y,Z]" VerticalAlignment="Center" />
+                            <TextBox Width="130" HorizontalAlignment="Right" Text="{Binding Offsets, Delay=500, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Z Offset" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right" Text="{Binding ZOffset }" />
-                        </DockPanel>
-
                         <DockPanel>
-                            <TextBlock Text="Position" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding Editor.Position, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Cap Size" VerticalAlignment="Center" />
+                            <TextBox Width="130" HorizontalAlignment="Right" Text="{Binding CapSize, Delay=500, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
                         <DockPanel Margin="0,1">
-                            <TextBlock Text="Height" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding Editor.Height, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Body Size" VerticalAlignment="Center" />
+                            <TextBox Width="130" HorizontalAlignment="Right" Text="{Binding BodySize, Delay=500, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
                         <DockPanel Margin="0,1">
-                            <TextBlock Text="Cap Width" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding Editor.CapWidth, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Left Cap Position" VerticalAlignment="Center" />
+                            <TextBox Width="130" HorizontalAlignment="Right" Text="{Binding LeftCap, Delay=500, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
                         <DockPanel Margin="0,1">
-                            <TextBlock Text="Body Width" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding Editor.BodyWidth, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Right Cap Position" VerticalAlignment="Center" />
+                            <TextBox Width="130" HorizontalAlignment="Right" Text="{Binding RightCap, Delay=500, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Body Slices" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding Editor.BodySlices, UpdateSourceTrigger=PropertyChanged}" />
-                        </DockPanel>
-                    </StackPanel>
-                    <StackPanel controls:VisibilityHelper.IsVisible="{Binding Path=Editor.IsAdvanced,FallbackValue=false}">
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Advanced Mode" VerticalAlignment="Center" />
-                            <CheckBox Width="150" HorizontalAlignment="Right" IsChecked="{Binding Editor.IsAdvanced}" />
-                        </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Z Offset" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right" Text="{Binding ZOffset}" />
-                        </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Left Cap" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding LeftCap, UpdateSourceTrigger=PropertyChanged}" />
-                        </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock Text="Right Cap" VerticalAlignment="Center" />
-                            <TextBox Width="150" HorizontalAlignment="Right"
-                                     Text="{Binding RightCap, UpdateSourceTrigger=PropertyChanged}" />
-                        </DockPanel>
-                        <DockPanel Margin="0,1">
-                            <TextBlock DockPanel.Dock="Left" Text="Bodies" VerticalAlignment="Center" />
-                            <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Content="Add" Click="OnAddBody"
-                                    CommandParameter="{Binding}" />
-                            <pt:DataGrid Width="150" HorizontalAlignment="Right" AutoGenerateColumns="False" ItemsSource="{Binding Bodies}" CanInsert="False" >
+                        <Grid Margin="0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock DockPanel.Dock="Left" Text="Bodies" VerticalAlignment="Top" />
+                            <pt:DataGrid Grid.RowSpan="2" VerticalAlignment="Top" Grid.Column="1" Width="130" HorizontalAlignment="Right" AutoGenerateColumns="False" ItemsSource="{Binding Bodies}" CanInsert="False" >
                                 <pt:DataGrid.ColumnDefinitions>
-                                    <pt:ColumnDefinition Width="*" Header="" />
+                                    <pt:ColumnDefinition Width="*" Header="Position [X,Y]" />
                                 </pt:DataGrid.ColumnDefinitions>
                             </pt:DataGrid>
-                        </DockPanel>
-
+                            <Button Content="Add" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,3,0" Click="OnAddBody" CommandParameter="{Binding}" />
+                            <DockPanel Grid.Row="1" LastChildFill="False" Margin="0">
+                                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" TextAlignment="Center">
+                                    <Run>Recreate</Run> 
+                                    <InlineUIContainer>
+                                        <TextBox Padding="0" VerticalContentAlignment="Bottom" HorizontalContentAlignment="Center" controls:TextBoxHelper.SelectAllOnFocus="True" VerticalAlignment="Top" Text="{Binding ElementName=ParentControl, Path=BodyCount, UpdateSourceTrigger=PropertyChanged}" PreviewMouseDown="OnChangeBodyCount">
+                                            <TextBox.ContextMenu>
+                                                <ContextMenu Visibility="Collapsed"/>
+                                            </TextBox.ContextMenu>
+                                        </TextBox>
+                                    </InlineUIContainer>
+                                    <Run>bodies and the caps</Run>
+                                    <InlineUIContainer>
+                                        <CheckBox VerticalAlignment="Bottom" IsChecked="{Binding ElementName=ParentControl, Path=CapsToo}"/>
+                                    </InlineUIContainer> 
+                                    <Run>?</Run>
+                                </TextBlock>
+                                <Button DockPanel.Dock="Top" Content="REGenerate" VerticalAlignment="Top" Margin="5,3,5,0" CommandParameter="{Binding}" Click="OnRegenerateBodies"/>
+                            </DockPanel>
+                        </Grid>
                     </StackPanel>
                 </Grid>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Path=., FallbackValue={x:Null}}" Value="{x:Null}">
+                        <Setter TargetName="TheGrid" Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>                
             </DataTemplate>
-            <ControlTemplate x:Key="PreviewRectsTemplate" TargetType="ContentControl" >
-                <ItemsControl ItemsSource="{TemplateBinding Content}">
+            <DataTemplate x:Key="PreviewBodiesTemplate" DataType="{x:Type terrains:Segment}"  >
+                <ItemsControl ItemsSource="{Binding Bodies}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Canvas />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type Rect}">
-                            <Rectangle Stroke="#CBCBCB" StrokeThickness="1" Width="{Binding Width}" Height="{Binding Height}" />
+                        <DataTemplate DataType="{x:Type Point}">
+                            <Rectangle Stroke="#CBCBCB" StrokeThickness="2" 
+                                       Width="{Binding Path=DataContext.BodySize.Width, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" 
+                                       Height="{Binding Path=DataContext.BodySize.Height, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                     <ItemsControl.ItemContainerStyle>
@@ -110,9 +110,35 @@
                         </Style>
                     </ItemsControl.ItemContainerStyle>
                 </ItemsControl>
-            </ControlTemplate>
-            <utilities:NullToBooleanConveter x:Key="NullToBooleanConveter" />
-            <utilities:SelectManyConverter x:Key="SelectManyConverter" />
+            </DataTemplate>
+            <DataTemplate x:Key="PreviewCapsTemplate" DataType="{x:Type terrains:Segment}" >
+                <ItemsControl>
+                    <ItemsControl.ItemsSource>
+                        <MultiBinding Converter="{StaticResource SelectManyConverter}">
+                            <Binding Path="LeftCap" />
+                            <Binding Path="RightCap" />
+                        </MultiBinding>
+                    </ItemsControl.ItemsSource>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type Point}">
+                            <Rectangle Stroke="#070707" StrokeThickness="2" 
+                                       Width="{Binding Path=DataContext.CapSize.Width, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" 
+                                       Height="{Binding Path=DataContext.CapSize.Height, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                            <Setter Property="Canvas.Left" Value="{Binding X}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </DataTemplate>
         </Grid.Resources>
         
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -140,7 +166,7 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <TextBlock Text="Name" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" />
-                        <TextBox Grid.Row="1" VerticalAlignment="Center"  Text="{Binding Name}" TextAlignment="Center"/>
+                        <TextBox Grid.Row="1" VerticalAlignment="Center"  Text="{Binding Name, Delay=500, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
                     </Grid>
                     <Grid Grid.Column="1" Margin="5">
                         <Grid.ColumnDefinitions>
@@ -148,9 +174,32 @@
                             <ColumnDefinition Width="2*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Margin="0,0,5,0" Click="OnSelectEdgeTexture" MouseRightButtonUp="OnRemoveEdgeTexture" >
-                            <Image Source="{Binding EdgeTexture}" Stretch="Fill" />
-                        </Button>
+                        <ContentPresenter Content="{Binding EdgeTexture}">
+                            <ContentPresenter.ContentTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#CBCBCB"  BorderThickness="2" CornerRadius="3"  >
+                                        <Grid Margin="2" >
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <Border Background="#4D4D4D" Grid.RowSpan="2" x:Name="Image" MouseLeftButtonUp="OnSelectEdgeTexture" >
+                                                <Image Source="{Binding}" Stretch="Uniform" Margin="3" />
+                                            </Border>
+                                            <Button Name="close" HorizontalAlignment="Right" Content="{StaticResource X}" Click="OnRemoveEdgeTexture" />
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <Trigger SourceName="Image" Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Image" Property="Background" Value="#5E5E5E"/>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                            <Setter TargetName="close" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ContentPresenter.ContentTemplate>
+                        </ContentPresenter>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" >
                             <TextBlock Text="Edge Texture:" TextAlignment="Center" />
                             <TextBlock Margin="0,5" Text="{Binding EdgeTexturePath, TargetNullValue=None Selected}" TextWrapping="Wrap" TextAlignment="Center"  />
@@ -162,9 +211,32 @@
                             <ColumnDefinition Width="2*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Margin="0,0,5,0" Click="OnSelectFillTexture" MouseRightButtonUp="OnRemoveFillTexture" >
-                            <Image Source="{Binding FillTexture}" Stretch="Fill" />
-                        </Button>
+                        <ContentPresenter Content="{Binding FillTexture}">
+                            <ContentPresenter.ContentTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#CBCBCB"  BorderThickness="2" CornerRadius="3"  >
+                                        <Grid Margin="2" >
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <Border Background="#4D4D4D" Grid.RowSpan="2" x:Name="Image" MouseLeftButtonUp="OnSelectFillTexture" >
+                                                <Image Source="{Binding}" Stretch="Uniform" Margin="3"  />
+                                            </Border>
+                                            <Button Name="close" HorizontalAlignment="Right" Content="{StaticResource X}" Click="OnRemoveFillTexture" />
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <Trigger SourceName="Image" Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Image" Property="Background" Value="#5E5E5E"/>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                            <Setter TargetName="close" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ContentPresenter.ContentTemplate>
+                        </ContentPresenter>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" >
                             <TextBlock Text="Fill Texture:" TextAlignment="Center" />
                             <TextBlock Margin="0,5" Text="{Binding FillTexturePath, TargetNullValue=None Selected}" TextWrapping="Wrap" TextAlignment="Center"  />
@@ -202,24 +274,15 @@
                 <Viewbox Grid.Row="1" Grid.Column="1" Margin="0" Stretch="Uniform">
                     <Grid Width="{Binding EdgeTexture.PixelWidth}" Height="{Binding EdgeTexture.PixelHeight}">
                         <Image Source="{Binding EdgeTexture}" Stretch="Uniform" />
-                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Top.Bodies}"/>
-                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Left.Bodies}"/>
-                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Right.Bodies}"/>
-                        <ContentControl Template="{StaticResource PreviewRectsTemplate}" Content="{Binding Bottom.Bodies}"/>
-                        <ContentControl Template="{StaticResource PreviewRectsTemplate}">
-                            <ContentControl.Content>
-                                <MultiBinding Converter="{StaticResource SelectManyConverter}" >
-                                    <Binding Path="Top.LeftCap" />
-                                    <Binding Path="Top.RightCap" />
-                                    <Binding Path="Left.LeftCap" />
-                                    <Binding Path="Left.RightCap" />
-                                    <Binding Path="Right.LeftCap" />
-                                    <Binding Path="Right.RightCap" />
-                                    <Binding Path="Bottom.LeftCap" />
-                                    <Binding Path="Bottom.RightCap" />
-                                </MultiBinding>
-                            </ContentControl.Content>
-                        </ContentControl>
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Top}"/>
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Left}"/>
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Right}"/>
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Bottom}"/>
+                        
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Top}" />
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Left}" />
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Right}" />
+                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Bottom}" />
                     </Grid>
                 </Viewbox>
 

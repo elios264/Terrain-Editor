@@ -113,6 +113,7 @@ namespace TerrainEditor.UserControls
                 {
                     m_resourcesCache = m_resourcesCache.Where(p => p.Value.IsAlive).ToDictionary(p => p.Key, p => p.Value);
                     m_lastCleanTime = now;
+                    OnPropertyChanged(nameof(LoadedResources));
                 }
 
                 IResourceInfoProvider provider;
@@ -120,6 +121,7 @@ namespace TerrainEditor.UserControls
                 {
                     resource = provider.Load(info);
                     m_resourcesCache[localPath] = new WeakReference(resource);
+                    OnPropertyChanged(nameof(LoadedResources));
                     return resource;
                 }
 

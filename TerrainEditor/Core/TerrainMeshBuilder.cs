@@ -144,9 +144,9 @@ namespace TerrainEditor.Core
                 var segmentMapping = SegmentFor(batch[0].Direction);
                 var smoothFactor = batch.Length == 1 && batch[0].Prev == null && batch[lst].Next == null ? 1 : Terrain.SmoothFactor;
                 var totalLength = InterpolateLength(Terrain.InterpolationMode, batch, smoothFactor * 5, out edgesLengths);
-                var bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[0]); //redo the bodies to limit to one size only
-                var bodyCount = Math.Max((int)Math.Round(totalLength / (bodyUV.Width * EdgeUVSizeInUnits.Width) + Terrain.StrechThreshold), 1);
-                var finalBodySize = new Size(totalLength / bodyCount, bodyUV.Height * EdgeUVSizeInUnits.Height);
+                var bodyUVSize = Terrain.UvMapping.ToUV(segmentMapping.BodySize);
+                var bodyCount = Math.Max((int)Math.Round(totalLength / (bodyUVSize.Width * EdgeUVSizeInUnits.Width) + Terrain.StrechThreshold), 1);
+                var finalBodySize = new Size(totalLength / bodyCount, bodyUVSize.Height * EdgeUVSizeInUnits.Height);
                 var halfFinalBodySizeHeight = finalBodySize.Height / 2;
                 var incLength = finalBodySize.Width / smoothFactor;
                 var currentLength = incLength;
@@ -155,7 +155,7 @@ namespace TerrainEditor.Core
                 zOffsetInc += 0.0001;
                 for (int i = 0; i < bodyCount; i++)
                 {
-                    bodyUV = Terrain.UvMapping.ToUV(segmentMapping.Bodies[Math.Abs(begin.GetHashCode() % segmentMapping.Bodies.Count)]);
+                    var bodyUV = Terrain.UvMapping.ToUV(new Rect(segmentMapping.Bodies[Math.Abs(begin.GetHashCode() % segmentMapping.Bodies.Count)], segmentMapping.BodySize));
                     bodyUV.Width /= smoothFactor;
 
                     for (int j = 0; j < smoothFactor; j++, currentLength += incLength)
@@ -164,7 +164,7 @@ namespace TerrainEditor.Core
                         var normalEnd = (end - begin).Normal();
                         var endOffset = normalEnd * halfFinalBodySizeHeight;
                         var beginOffset = (normalStart ?? normalEnd) * halfFinalBodySizeHeight;
-                        var zOffset = segmentMapping.ZOffset + zOffsetInc;
+                        var zOffset = segmentMapping.Offsets.Z + zOffsetInc;
                         var localBottomLeft = begin - beginOffset;
                         var localTopLeft = begin + beginOffset;
                         var localBottomRight = end - endOffset;
@@ -179,7 +179,7 @@ namespace TerrainEditor.Core
 
                         if (first)
                         {
-                            first = TesellateCap(segmentMapping.LeftCap, true, batch[0], normalStart ?? normalEnd, zOffset);
+                            first = TesellateCap(new Rect(segmentMapping.LeftCap, segmentMapping.CapSize), true, batch[0], normalStart ?? normalEnd, zOffset);
                             firstCapDone = firstCapDone ?? first;
                             first = false;
                         }
@@ -190,7 +190,7 @@ namespace TerrainEditor.Core
                         bodyUV.X += bodyUV.Width;
                     }
                 }
-                TesellateCap(segmentMapping.RightCap, false, batch[lst], normalStart.Value, segmentMapping.ZOffset + zOffsetInc);
+                TesellateCap(new Rect(segmentMapping.RightCap, segmentMapping.CapSize), false, batch[lst], normalStart.Value, segmentMapping.Offsets.Z + zOffsetInc);
             }
 
             //close the terrain
@@ -417,7 +417,7 @@ namespace TerrainEditor.Core
 
             if (builder.Terrain.FillMode != FillMode.None)
             {
-                DiffuseMaterial fillMaterial = Utils.CreateImageMaterial(mesh.UvMapping.FillTexture, true);
+                var fillMaterial = Utils.CreateImageMaterial(mesh.UvMapping.FillTexture, true);
 
                 fillMaterial.AmbientColor = mesh.AmbientColor;
                 edgeAndFill.Add(new GeometryModel3D(builder.FillData.ToMesh(true), fillMaterial)
@@ -428,7 +428,7 @@ namespace TerrainEditor.Core
 
             if (mesh.UvMapping.EdgeTexture != null)
             {
-                DiffuseMaterial edgeMaterial = Utils.CreateImageMaterial(mesh.UvMapping.EdgeTexture);
+                var edgeMaterial = Utils.CreateImageMaterial(mesh.UvMapping.EdgeTexture);
 
                 edgeMaterial.AmbientColor = mesh.AmbientColor;
                 edgeAndFill.Add(new GeometryModel3D(builder.EdgeData.ToMesh(true), edgeMaterial)
@@ -447,7 +447,6 @@ namespace TerrainEditor.Core
         {
             public VertexDirection Direction, PrevDirection, NextDirection;
             public SplitMode Split, PrevSplit, NextSplit;
-
             public Vector Begin, End;
             public Vector? Prev, Next;
 

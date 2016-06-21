@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using System.Windows.Threading;
+using TerrainEditor.Core.Services;
 
 namespace TerrainEditor
 {

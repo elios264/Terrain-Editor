@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
              xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
-             xmlns:viewModels="clr-namespace:TerrainEditor.ViewModels"
+             xmlns:viewModels="clr-namespace:TerrainEditor.Viewmodels"
              xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
              mc:Ignorable="d"
             IsOpen="True"
@@ -13,10 +13,10 @@
             AllowMove="True"
             ChildWindowWidth="200"
             OverlayBrush="{StaticResource AccentColorBrush4}" 
-            IsModal="True" 
+            IsModal="False" 
             ShowCloseButton="True" Name="MainControl"
             EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"                               
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300"   >
 
     <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" ItemsSource="{Binding ElementName=MainControl, Path=CachedMappings}" >
         <ListBox.ItemTemplate>
@@ -38,7 +38,7 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate>
-                                    <TextBlock TextWrapping="Wrap" Text="Could not find any opened mapping. Please find one in the Resource Explorer and drag it to the property window" TextAlignment="Center"/>
+                                    <TextBlock TextWrapping="Wrap" Text="Could not find any open mapping. Please find one in the Resource Explorer and drag it to the property window" TextAlignment="Center"/>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>

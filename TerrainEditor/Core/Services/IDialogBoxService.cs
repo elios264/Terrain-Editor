@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.Annotations;
@@ -18,7 +20,15 @@ namespace TerrainEditor.Core.Services
 
         public void ShowCustomDialog(ChildWindow window, ChildWindowManager.OverlayFillBehavior behavior = ChildWindowManager.OverlayFillBehavior.WindowContent)
         {
-            ActiveWindow.ShowChildWindowAsync(window, behavior);
+            var actWindow = ActiveWindow;
+
+            CancelEventHandler onClosing = (o, eventArgs) => { eventArgs.Cancel = !window.Close(); };
+            RoutedEventHandler onClosed = (sender, args) => { actWindow.Closing -= onClosing; };
+
+            window.ClosingFinished += onClosed;
+
+            actWindow.Closing += onClosing;
+            actWindow.ShowChildWindowAsync(window, behavior);
         }
         public MessageBoxResult ShowNativeDialog(string messageBoxText, string caption, MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
         {

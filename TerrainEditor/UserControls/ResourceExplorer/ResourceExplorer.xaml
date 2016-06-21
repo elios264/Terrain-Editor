@@ -157,7 +157,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Image Grid.Row="0" Stretch="UniformToFill" MinHeight="55"
-                               Source="{Binding Preview.Value, IsAsync=True, TargetNullValue={StaticResource DefaultFileIcon}}" />
+                               Source="{Binding Preview.Value, TargetNullValue={StaticResource DefaultFileIcon}}" />
                         <Grid Grid.Row="1">
                             <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom" 
                                                   Text="{Binding Name}"

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using elios.Persist;
 using HelixToolkit.Wpf;
 using PropertyTools.DataAnnotations;
 using TerrainEditor.Core;
@@ -156,15 +157,19 @@ namespace TerrainEditor.Viewmodels.Terrains
         [Category("Terrain Data"), List(false,true),SortIndex(6)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
-        public Terrain(IEnumerable<VertexInfo> vertices = null)
+        public Terrain(IEnumerable<VertexInfo> vertices)
         {
-            vertices = vertices ?? Enumerable.Empty<VertexInfo>();
             Vertices = new ObservableCollection<VertexInfo>(vertices);
-
+            RecursivePropertyChanged += (sender, args) => m_isDirty = true;
+        }
+        public Terrain()
+        {
+            Vertices = new ObservableCollection<VertexInfo>();
             RecursivePropertyChanged += (sender, args) => m_isDirty = true;
         }
 
         [Browsable(false)]
+        [Persist(Ignore = true)]
         public Model3DGroup Mesh
         {
             get

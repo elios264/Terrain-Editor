@@ -42,11 +42,11 @@ namespace TerrainEditor.Viewmodels.Terrains
             }
         }
 
+        public VertexInfo() { }
         public VertexInfo(double x = 0, double y = 0)
         {
             Position = new Vector(x, y);
         }
-
         public VertexInfo(Vector pos, VertexDirection dir, SplitMode split)
         {
             Position = pos;

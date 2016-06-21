@@ -76,8 +76,8 @@
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Persist, Version=1.0.0.26411, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Persist.1.0.0.26411\lib\net45\Persist.dll</HintPath>
+    <Reference Include="Persist, Version=1.0.0.26437, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Persist.1.0.0.26437\lib\net45\Persist.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Poly2Tri, Version=1.0.0.0, Culture=neutral, PublicKeyToken=db87057254d2bb1c, processorArchitecture=MSIL">
@@ -258,6 +258,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\dot-split-side.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\refresh.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

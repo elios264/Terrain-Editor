@@ -54,10 +54,6 @@ namespace TerrainEditor.UserControls
             get { return (UIElement)GetValue(InputSourceProperty); }
             set { SetValue(InputSourceProperty, value); }
         }
-        private bool IsInverted
-        {
-            get { return Source.FillMode == FillMode.Inverted && Source.Vertices.Count > 2; }
-        }
 
         static TerrainManipulator()
         {

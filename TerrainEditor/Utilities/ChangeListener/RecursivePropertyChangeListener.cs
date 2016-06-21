@@ -25,12 +25,15 @@ namespace TerrainEditor.Utilities
             }
             remove
             {
-                m_changeListener.PropertyChanged -= value;
-
-                if (m_changeListener.ChangedEventHandler == null)
+                if (m_changeListener != null)
                 {
-                    m_changeListener.Unsubscribe();
-                    m_changeListener = null;
+                    m_changeListener.PropertyChanged -= value;
+
+                    if (m_changeListener.ChangedEventHandler == null)
+                    {
+                        m_changeListener.Unsubscribe();
+                        m_changeListener = null;
+                    }
                 }
             }
         }
