@@ -10,7 +10,7 @@ using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
 
-namespace TerrainEditor.UserControls
+namespace TerrainEditor.UserControls.UvMappingControls
 {
 
     public partial class SelectMappingDialog : ChildWindow , INotifyPropertyChanged

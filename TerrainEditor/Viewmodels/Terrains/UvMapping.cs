@@ -164,13 +164,7 @@ namespace TerrainEditor.Viewmodels.Terrains
 
             return rect;
         }
-        public Size ToUV(Size size)
-        {
-            size.Width /= EdgeTexture.PixelWidth;
-            size.Height /= EdgeTexture.PixelHeight;
 
-            return size;
-        }
 
         public static readonly UvMapping Pipe;
         public static readonly UvMapping Mossy;

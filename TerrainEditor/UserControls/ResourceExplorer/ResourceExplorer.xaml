@@ -63,7 +63,6 @@
                 <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}"/>
                     <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
-                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewMouseButtonDown"/>
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>
@@ -157,7 +156,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Image Grid.Row="0" Stretch="UniformToFill" MinHeight="55"
-                               Source="{Binding Preview.Value, TargetNullValue={StaticResource DefaultFileIcon}}" />
+                               Source="{Binding Preview, TargetNullValue={StaticResource DefaultFileIcon}}" />
                         <Grid Grid.Row="1">
                             <pt:EditableTextBlock Name="Block" DockPanel.Dock="Bottom" 
                                                   Text="{Binding Name}"

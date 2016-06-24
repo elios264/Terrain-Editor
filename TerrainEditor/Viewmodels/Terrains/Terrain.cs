@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using elios.Persist;
@@ -8,6 +7,7 @@ using HelixToolkit.Wpf;
 using PropertyTools.DataAnnotations;
 using TerrainEditor.Core;
 using TerrainEditor.UserControls;
+using TerrainEditor.UserControls.UvMappingControls;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
 

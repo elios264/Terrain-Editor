@@ -1,4 +1,4 @@
-﻿<simpleChildWindow:ChildWindow x:Class="TerrainEditor.UserControls.UvMappingEditor"
+﻿<simpleChildWindow:ChildWindow x:Class="TerrainEditor.UserControls.UvMappingControls.UvMappingEditor"
                                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,9 +6,10 @@
                                xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
                                xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
                                xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
-                               xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
                                xmlns:pt="http://propertytools.org/wpf"
                                xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
+                               xmlns:uvMappingControls="clr-namespace:TerrainEditor.UserControls.UvMappingControls"
+                               xmlns:system="clr-namespace:System;assembly=mscorlib"
                                mc:Ignorable="d"
                                IsOpen="True"
                                Title="UV Mapping Editor" 
@@ -20,7 +21,6 @@
                                d:DesignHeight="600" d:DesignWidth="800" >
     <Grid d:DataContext="{x:Static terrains:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
         <Grid.Resources>
-            <utilities:SelectManyConverter x:Key="SelectManyConverter" />
             <utilities:NullToBooleanConveter x:Key="NullToBooleanConveter" />
             <Path x:Key="X" x:Shared="False"  Data="M 10.009,1.704 L 8.331,0.026 5.03,3.327 1.703,0 0,1.704 3.326,5.031 0.025,8.332 1.703,10.009 5.004,6.708 8.305,10.009 10.009,8.305 6.708,5.005 " SnapsToDevicePixels="true" Fill="{StaticResource AccentColorBrush}" />
             <DataTemplate x:Key="SegmentTemplate" DataType="{x:Type terrains:Segment}">
@@ -56,11 +56,11 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock DockPanel.Dock="Left" Text="Bodies" VerticalAlignment="Top" />
-                            <pt:DataGrid Grid.RowSpan="2" VerticalAlignment="Top" Grid.Column="1" Width="130" HorizontalAlignment="Right" AutoGenerateColumns="False" ItemsSource="{Binding Bodies}" CanInsert="False" >
-                                <pt:DataGrid.ColumnDefinitions>
-                                    <pt:ColumnDefinition Width="*" Header="Position [X,Y]" />
-                                </pt:DataGrid.ColumnDefinitions>
-                            </pt:DataGrid>
+                            <DataGrid Grid.RowSpan="2" Grid.Column="1" BorderThickness="1" BorderBrush="{StaticResource AccentColorBrush}" ItemsSource="{Binding Bodies, Converter={utilities:CollectionByIndexProxyConverter}}" VerticalAlignment="Top" Width="130" HorizontalAlignment="Right" AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="False" CanUserSortColumns="False" CanUserResizeRows="False" ColumnWidth="*">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Binding="{Binding Path=Value, Mode=TwoWay}" Header="Position [X,Y]" />
+                                </DataGrid.Columns>
+                            </DataGrid>
                             <Button Content="Add" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,3,0" Click="OnAddBody" CommandParameter="{Binding}" />
                             <DockPanel Grid.Row="1" LastChildFill="False" Margin="0">
                                 <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" TextAlignment="Center">
@@ -89,55 +89,25 @@
                     </DataTrigger>
                 </DataTemplate.Triggers>                
             </DataTemplate>
-            <DataTemplate x:Key="PreviewBodiesTemplate" DataType="{x:Type terrains:Segment}"  >
-                <ItemsControl ItemsSource="{Binding Bodies}">
-                    <ItemsControl.ItemsPanel>
+            <DataTemplate x:Key="PreviewBodiesTemplate" DataType="{x:Type terrains:Segment}" >
+                <DataTemplate.Resources>
+                    <Point x:Key="Point"/>
+                </DataTemplate.Resources>
+                <utilities:IndexedItemsControl ItemsSource="{Binding Bodies, Converter={utilities:CollectionByIndexProxyConverter}}" Tag="{Binding BodySize, Mode=TwoWay}">
+                    <utilities:IndexedItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <Canvas />
+                            <Grid/>
                         </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type Point}">
-                            <Rectangle Stroke="#CBCBCB" StrokeThickness="2" 
-                                       Width="{Binding Path=DataContext.BodySize.Width, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" 
-                                       Height="{Binding Path=DataContext.BodySize.Height, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" />
+                    </utilities:IndexedItemsControl.ItemsPanel>
+                    <utilities:IndexedItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <uvMappingControls:MoveResizeThumb 
+                                Size="{Binding Path=Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}, Mode=TwoWay}"
+                                Location="{Binding Path=Value, Mode=TwoWay}">
+                            </uvMappingControls:MoveResizeThumb>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                    <ItemsControl.ItemContainerStyle>
-                        <Style TargetType="ContentPresenter">
-                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
-                            <Setter Property="Canvas.Left" Value="{Binding X}" />
-                        </Style>
-                    </ItemsControl.ItemContainerStyle>
-                </ItemsControl>
-            </DataTemplate>
-            <DataTemplate x:Key="PreviewCapsTemplate" DataType="{x:Type terrains:Segment}" >
-                <ItemsControl>
-                    <ItemsControl.ItemsSource>
-                        <MultiBinding Converter="{StaticResource SelectManyConverter}">
-                            <Binding Path="LeftCap" />
-                            <Binding Path="RightCap" />
-                        </MultiBinding>
-                    </ItemsControl.ItemsSource>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <Canvas />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type Point}">
-                            <Rectangle Stroke="#070707" StrokeThickness="2" 
-                                       Width="{Binding Path=DataContext.CapSize.Width, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" 
-                                       Height="{Binding Path=DataContext.CapSize.Height, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                    <ItemsControl.ItemContainerStyle>
-                        <Style TargetType="ContentPresenter">
-                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
-                            <Setter Property="Canvas.Left" Value="{Binding X}" />
-                        </Style>
-                    </ItemsControl.ItemContainerStyle>
-                </ItemsControl>
+                    </utilities:IndexedItemsControl.ItemTemplate>
+                </utilities:IndexedItemsControl>
             </DataTemplate>
         </Grid.Resources>
         
@@ -151,15 +121,15 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
-                
+
                 <Grid Grid.ColumnSpan="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    
-                    
+
+
                     <Grid Margin="5">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -244,48 +214,56 @@
                     </Grid>
 
                 </Grid>
-
                 <StackPanel Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch">
                     <Expander IsExpanded="True">
                         <Expander.Header>
                             <CheckBox Margin="5,0" Content="Use Top" IsChecked="True" IsEnabled="False" />
                         </Expander.Header>
-                        <ContentControl Content="{Binding Top}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                        <ContentPresenter Content="{Binding Top}" ContentTemplate="{StaticResource SegmentTemplate}" />
                     </Expander>
                     <Expander >
                         <Expander.Header>
                             <CheckBox Margin="5,0" Content="Use Left" CommandParameter="Left"  IsChecked="{Binding Left, Converter={StaticResource NullToBooleanConveter}}" />
                         </Expander.Header>
-                        <ContentControl Content="{Binding Left}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                        <ContentPresenter Content="{Binding Left}" ContentTemplate="{StaticResource SegmentTemplate}" />
                     </Expander>
                     <Expander>
                         <Expander.Header>
                             <CheckBox Margin="5,0" Content="Use Right" CommandParameter="Right" IsChecked="{Binding Right, Converter={StaticResource NullToBooleanConveter}}" />
                         </Expander.Header>
-                        <ContentControl Content="{Binding Right}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                        <ContentPresenter Content="{Binding Right}" ContentTemplate="{StaticResource SegmentTemplate}" />
                     </Expander>
                     <Expander>
                         <Expander.Header>
                             <CheckBox Margin="5,0" Content="Use Bottom" CommandParameter="Bottom" IsChecked="{Binding Bottom, Converter={StaticResource NullToBooleanConveter}}" />
                         </Expander.Header>
-                        <ContentControl Content="{Binding Bottom}" ContentTemplate="{StaticResource SegmentTemplate}" />
+                        <ContentPresenter Content="{Binding Bottom}" ContentTemplate="{StaticResource SegmentTemplate}" />
                     </Expander>
                 </StackPanel>
-                <Viewbox Grid.Row="1" Grid.Column="1" Margin="0" Stretch="Uniform">
-                    <Grid Width="{Binding EdgeTexture.PixelWidth}" Height="{Binding EdgeTexture.PixelHeight}">
-                        <Image Source="{Binding EdgeTexture}" Stretch="Uniform" />
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Top}"/>
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Left}"/>
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Right}"/>
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Bottom}"/>
-                        
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Top}" />
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Left}" />
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Right}" />
-                        <ContentPresenter ContentTemplate="{StaticResource PreviewCapsTemplate}" Content="{Binding Bottom}" />
-                    </Grid>
-                </Viewbox>
+                <ScrollViewer  Grid.Row="1" Grid.Column="1" Background="Transparent" PreviewMouseWheel="OnZoom" MouseDown="OnStartPan" MouseMove="OnPan" MouseUp="OnEndPan" VerticalScrollBarVisibility="Hidden" Focusable="False">
+                    <Viewbox Margin="0" Stretch="Uniform" >
+                        <Grid x:Name="DesignArea" Width="{Binding EdgeTexture.PixelWidth}" Height="{Binding EdgeTexture.PixelHeight}">
+                            <Grid.RenderTransform>
+                                <MatrixTransform x:Name="PreviewTransform" />
+                            </Grid.RenderTransform>
+                            <Image Source="{Binding EdgeTexture}" Stretch="Uniform" />
+                       
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Top.LeftCap}" Size="{Binding Top.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Top.RightCap}" Size="{Binding Top.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Right.LeftCap}" Size="{Binding Right.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Right.RightCap}" Size="{Binding Right.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Bottom.LeftCap}" Size="{Binding Bottom.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Bottom.RightCap}" Size="{Binding Bottom.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Left.LeftCap}" Size="{Binding Left.CapSize}" />
+                            <uvMappingControls:MoveResizeThumb Location="{Binding Left.RightCap}" Size="{Binding Left.CapSize}" />
 
+                            <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Top}"/>
+                            <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Left}"/>
+                            <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Right}"/>
+                            <ContentPresenter ContentTemplate="{StaticResource PreviewBodiesTemplate}" Content="{Binding Bottom}"/>
+                        </Grid>
+                    </Viewbox>
+                </ScrollViewer>
             </Grid>
         </ScrollViewer>
     </Grid>

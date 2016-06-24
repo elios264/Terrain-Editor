@@ -122,8 +122,10 @@
     <Compile Include="Core\Services\IsServiceAttribute.cs" />
     <Compile Include="Core\Services\ServiceLocator.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="UserControls\UvMappingControls\MoveResizeThumb.cs" />
     <Compile Include="UserControls\ResourceExplorer\DefaultResourceProvider.cs" />
     <Compile Include="Core\Services\IResourceProviderService.cs" />
+    <Compile Include="Core\EditorWindowManager.cs" />
     <Compile Include="UserControls\ResourceExplorer\ResourceExplorer.xaml.cs">
       <DependentUpon>ResourceExplorer.xaml</DependentUpon>
     </Compile>
@@ -135,13 +137,13 @@
       <DependentUpon>PropertiesEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\PropertiesEditor\CustomEditorAttribute.cs" />
-    <Compile Include="UserControls\SelectMappingDialog.xaml.cs">
+    <Compile Include="UserControls\UvMappingControls\SelectMappingDialog.xaml.cs">
       <DependentUpon>SelectMappingDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\UvMappingEditor.xaml.cs">
+    <Compile Include="UserControls\UvMappingControls\UvMappingEditor.xaml.cs">
       <DependentUpon>UvMappingEditor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\UvMappingPropertyEditor.xaml.cs">
+    <Compile Include="UserControls\UvMappingControls\UvMappingPropertyEditor.xaml.cs">
       <DependentUpon>UvMappingPropertyEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\TerrainManipulator.cs" />
@@ -151,6 +153,7 @@
     <Compile Include="Utilities\ChangeListener\RecursivePropertyChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\FileOperationAPIWrapper.cs" />
+    <Compile Include="Utilities\IndexedItemsControl.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
     <Compile Include="Utilities\WeakEvent.cs" />
@@ -176,6 +179,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="UserControls\ResourceExplorer\ResourceExplorer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -184,15 +191,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\SelectMappingDialog.xaml">
+    <Page Include="UserControls\UvMappingControls\SelectMappingDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\UvMappingEditor.xaml">
+    <Page Include="UserControls\UvMappingControls\UvMappingEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\UvMappingPropertyEditor.xaml">
+    <Page Include="UserControls\UvMappingControls\UvMappingPropertyEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

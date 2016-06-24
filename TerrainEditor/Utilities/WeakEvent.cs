@@ -18,7 +18,7 @@ namespace TerrainEditor.Utilities
     {
         private readonly object m_eventOwner;
         private readonly EventInfo m_eventInfo;
-        private readonly ConditionalWeakTable<object,List<Tuple<WeakReference,TDelegate>>>  m_realWeakMapping;
+        private readonly ConditionalWeakTable<object,Dictionary<MethodInfo,TDelegate>>  m_realWeakMapping;
 
         static WeakEvent()
         {
@@ -42,7 +42,7 @@ namespace TerrainEditor.Utilities
 
             m_eventOwner = ownerOrType;
             m_eventInfo = eventInfo;
-            m_realWeakMapping = new ConditionalWeakTable<object, List<Tuple<WeakReference, TDelegate>>>();
+            m_realWeakMapping = new ConditionalWeakTable<object, Dictionary<MethodInfo,TDelegate>>();
         }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -52,6 +52,7 @@ namespace TerrainEditor.Utilities
             if (del.Target == null)
             {
                 m_eventInfo.AddEventHandler(m_eventOwner, del);
+                
             }
             else
             {
@@ -64,7 +65,7 @@ namespace TerrainEditor.Utilities
                 //this is only for the remove ability
                 m_realWeakMapping
                     .GetOrCreateValue(del.Target)
-                    .Add(Tuple.Create(new WeakReference(handler), weakEventHandler.WeakDelegate));
+                    .Add(del.Method,weakEventHandler.WeakDelegate);
             }
         }
         [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -78,10 +79,11 @@ namespace TerrainEditor.Utilities
             else
             {
                 TDelegate weakDelegate;
-                List<Tuple<WeakReference, TDelegate>> list;
-                if (m_realWeakMapping.TryGetValue(del.Target, out list) && (weakDelegate = list.FirstOrDefault(t => del.Equals(t.Item1.Target))?.Item2) != null)
+                Dictionary<MethodInfo, TDelegate> dict;
+                if (m_realWeakMapping.TryGetValue(del.Target, out dict) && dict.TryGetValue(del.Method,out weakDelegate))
                 {
                     m_eventInfo.RemoveEventHandler(m_eventOwner, weakDelegate as Delegate);
+                    dict.Remove(del.Method);
                 }
             }
         }

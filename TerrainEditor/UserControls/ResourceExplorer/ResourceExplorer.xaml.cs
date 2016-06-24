@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using MoreLinq;
@@ -34,6 +39,8 @@ namespace TerrainEditor.UserControls
         private readonly DefaultResourceProvider m_defaultResourceProvider;
         private Dictionary<string, IResourceInfoProvider> m_resourceInfoProviders;
         private Dictionary<string, WeakReference> m_resourcesCache;
+        private readonly Thread m_previewGenerator;
+        private readonly BlockingCollection<File> m_previewGeneratorFileQueue;
 
         private File SelectedFile
         {
@@ -79,7 +86,20 @@ namespace TerrainEditor.UserControls
         public ResourceExplorer()
         {
             InitializeComponent();
+            m_previewGeneratorFileQueue = new BlockingCollection<File>();
 
+            m_previewGenerator = new Thread(() =>
+            {
+                File nextFile;
+                while (m_previewGeneratorFileQueue.TryTake(out nextFile, -1))
+                {
+                    var preview = ProviderFor(nextFile.Info.Extension).LoadPreview(nextFile.Info);
+                    preview.Freeze();
+                    nextFile.Preview = preview;
+                }
+            }) { IsBackground = true, Name = $"{nameof(ResourceExplorer)}_preview_generator_thread"};
+            m_previewGenerator.Start();
+            
             m_resourcesCache = new Dictionary<string, WeakReference>();
             m_defaultResourceProvider = new DefaultResourceProvider();
 
@@ -88,6 +108,11 @@ namespace TerrainEditor.UserControls
 
             if (!ServiceLocator.IsRegistered<IResourceProviderService>())
                 ServiceLocator.Register<IResourceProviderService>(this);
+        }
+        ~ResourceExplorer()
+        {
+            m_previewGeneratorFileQueue.CompleteAdding();
+            m_previewGeneratorFileQueue.Dispose();
         }
 
         public object LoadResource(FileInfo info)
@@ -157,23 +182,9 @@ namespace TerrainEditor.UserControls
 
         private File FileFor(FileInfo info)
         {
-            if (!info.FullName.Contains(WorkPath))
-                throw new ArgumentException($"the path: {{{info.FullName}}},\n is outside the scope of: {{{WorkPath}}} ");
-
-            if (!info.Exists)
-                throw new ArgumentException($"the file: {info.FullName} does not exist");
-
-            var provider = ProviderFor(info.Extension);
-            return new File
-            {
-                Info = info,
-                Preview = new Lazy<ImageSource>(() =>
-                {
-                    var preview = provider.LoadPreview(info);
-                    preview.Freeze();
-                    return preview;
-                })
-            };
+            var fileItem = new File { Info = info, };
+            m_previewGeneratorFileQueue.Add(fileItem);
+            return fileItem;
         }
         private IResourceInfoProvider ProviderFor(string extension)
         {
@@ -221,10 +232,6 @@ namespace TerrainEditor.UserControls
                 .ToList();
         }
 
-        private void TreeViewMouseButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            (sender as TreeViewItem).IsSelected = true;
-        }
         private void TreeViewOnSelectedFolderChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             SelectedDirectory = (Directory) e.NewValue;
@@ -271,7 +278,7 @@ namespace TerrainEditor.UserControls
 
             await ProviderFor(selectedFileInfo.Extension).ShowEditor(LoadResource(selectedFileInfo), selectedFileInfo);
 
-            SelectedFile.Preview = FileFor(selectedFileInfo).Preview;
+            m_previewGeneratorFileQueue.Add(SelectedFile);
             Keyboard.Focus((IInputElement)FileList.ItemContainerGenerator.ContainerFromItem(SelectedFile));
         }
         private void OnCutResource(object sender, ExecutedRoutedEventArgs e)
@@ -342,7 +349,7 @@ namespace TerrainEditor.UserControls
                     if (m_resourcesCache.ContainsKey(prevName))
                         m_resourcesCache.RenameKey(prevName,((File)o).Info.RelativePath());
 
-                    SelectedFile.Preview = FileFor(SelectedFile.Info).Preview;
+                    m_previewGeneratorFileQueue.Add(SelectedFile);
                 }
             };
 

@@ -22,24 +22,7 @@ namespace TerrainEditor.Core
         {
             get { return Terrain.FillMode == FillMode.Inverted && Terrain.Vertices.Count > 2; }
         }
-        private Size EdgeUVSizeInUnits
-        {
-            get
-            {
-                return new Size(
-                    Terrain.UvMapping.EdgeTexture.PixelWidth / (double)Terrain.PixelsPerUnit,
-                    Terrain.UvMapping.EdgeTexture.PixelHeight / (double)Terrain.PixelsPerUnit);
-            }
-        }
-        private Size FillUVSizeInUnits
-        {
-            get
-            {
-                return new Size(
-                    Terrain.UvMapping.FillTexture.PixelWidth / (double)Terrain.PixelsPerUnit,
-                    Terrain.UvMapping.FillTexture.PixelHeight / (double)Terrain.PixelsPerUnit);
-            }
-        }
+
         private IEnumerable<Edge> Edges
         {
             get
@@ -67,7 +50,6 @@ namespace TerrainEditor.Core
                         PrevSplit = prev2?.Split ?? SplitMode.No,
                         NextSplit = cur?.Split ?? SplitMode.No,
                     };
-
                     if (IsInverted) edge.Invert();
 
                     yield return edge;
@@ -117,9 +99,10 @@ namespace TerrainEditor.Core
         {
             centralPoints = new List<Vector>();
 
-            var zOffsetInc = 0.0;
-            var firstCapDone = (bool?)null;
             var normalStart = (Vector?)null;
+            var firstCapDone = (bool?)null;
+            var pixelsPerUnit = Terrain.PixelsPerUnit;
+
             var batches = (IsInverted ? Edges.Reverse() : Edges).BatchOfTakeUntil(e => ShouldCloseEdge(e, false)).ToArray();
             var begin = batches[0][0].Begin;
 
@@ -144,15 +127,16 @@ namespace TerrainEditor.Core
                 var segmentMapping = SegmentFor(batch[0].Direction);
                 var smoothFactor = batch.Length == 1 && batch[0].Prev == null && batch[lst].Next == null ? 1 : Terrain.SmoothFactor;
                 var totalLength = InterpolateLength(Terrain.InterpolationMode, batch, smoothFactor * 5, out edgesLengths);
-                var bodyUVSize = Terrain.UvMapping.ToUV(segmentMapping.BodySize);
-                var bodyCount = Math.Max((int)Math.Round(totalLength / (bodyUVSize.Width * EdgeUVSizeInUnits.Width) + Terrain.StrechThreshold), 1);
-                var finalBodySize = new Size(totalLength / bodyCount, bodyUVSize.Height * EdgeUVSizeInUnits.Height);
+                var bodyCount = Math.Max((int)Math.Round(totalLength / (segmentMapping.BodySize.Width / pixelsPerUnit) + Terrain.StrechThreshold), 1);
+                var finalBodySize = new Size(totalLength / bodyCount, segmentMapping.BodySize.Height / pixelsPerUnit);
                 var halfFinalBodySizeHeight = finalBodySize.Height / 2;
                 var incLength = finalBodySize.Width / smoothFactor;
                 var currentLength = incLength;
                 var first = true;
+                var offsets = segmentMapping.Offsets;
+                offsets = new Vector3D(offsets.X / pixelsPerUnit,offsets.Y / pixelsPerUnit, offsets.Z / pixelsPerUnit);
 
-                zOffsetInc += 0.0001;
+
                 for (int i = 0; i < bodyCount; i++)
                 {
                     var bodyUV = Terrain.UvMapping.ToUV(new Rect(segmentMapping.Bodies[Math.Abs(begin.GetHashCode() % segmentMapping.Bodies.Count)], segmentMapping.BodySize));
@@ -164,65 +148,80 @@ namespace TerrainEditor.Core
                         var normalEnd = (end - begin).Normal();
                         var endOffset = normalEnd * halfFinalBodySizeHeight;
                         var beginOffset = (normalStart ?? normalEnd) * halfFinalBodySizeHeight;
-                        var zOffset = segmentMapping.Offsets.Z + zOffsetInc;
-                        var localBottomLeft = begin - beginOffset;
-                        var localTopLeft = begin + beginOffset;
-                        var localBottomRight = end - endOffset;
-                        var localTopRight = end + endOffset;
+
+                        var yOffset = (normalStart ?? normalEnd) * offsets.Y;
+                        var localBottomLeft = begin - beginOffset + yOffset;
+                        var localTopLeft = begin + beginOffset + yOffset;
+
+                        yOffset = normalEnd * offsets.Y;
+                        var localBottomRight = end - endOffset + yOffset;
+                        var localTopRight = end + endOffset + yOffset;
 
                         EdgeData.AddQuad(
-                            new Point3D(localBottomLeft.X, localBottomLeft.Y, zOffset),
-                            new Point3D(localTopLeft.X, localTopLeft.Y, zOffset),
-                            new Point3D(localTopRight.X, localTopRight.Y, zOffset),
-                            new Point3D(localBottomRight.X, localBottomRight.Y, zOffset),
+                            new Point3D(localBottomLeft.X, localBottomLeft.Y, offsets.Z),
+                            new Point3D(localTopLeft.X, localTopLeft.Y, offsets.Z),
+                            new Point3D(localTopRight.X, localTopRight.Y, offsets.Z),
+                            new Point3D(localBottomRight.X, localBottomRight.Y, offsets.Z),
                             bodyUV.BottomLeft, bodyUV.TopLeft, bodyUV.TopRight, bodyUV.BottomRight);
 
                         if (first)
                         {
-                            first = TesellateCap(new Rect(segmentMapping.LeftCap, segmentMapping.CapSize), true, batch[0], normalStart ?? normalEnd, zOffset);
+                            first = TesellateCap(new Rect(segmentMapping.LeftCap, segmentMapping.CapSize), true, batch[0], normalStart ?? normalEnd, offsets);
                             firstCapDone = firstCapDone ?? first;
                             first = false;
                         }
 
                         centralPoints.Add(begin);
-                        begin = end;
                         normalStart = normalEnd;
                         bodyUV.X += bodyUV.Width;
+                        begin = end;
                     }
                 }
-                TesellateCap(new Rect(segmentMapping.RightCap, segmentMapping.CapSize), false, batch[lst], normalStart.Value, segmentMapping.Offsets.Z + zOffsetInc);
+                TesellateCap(new Rect(segmentMapping.RightCap, segmentMapping.CapSize), false, batch[lst], normalStart.Value, offsets);
             }
 
             //close the terrain
             if (IsClosed && batches[0][0].Prev != null)
             {
+                var offsets = SegmentFor(batches[0][0].Direction).Offsets;
+
+                var offsetY = offsets.Y / pixelsPerUnit * normalStart.Value;
                 var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
-                var bl = batches[0][0].Begin - offset;
-                var tl = batches[0][0].Begin + offset;
+                var bl = batches[0][0].Begin - offset + offsetY;
+                var tl = batches[0][0].Begin + offset + offsetY;
 
                 EdgeData.Positions[0] = new Point3D(bl.X, bl.Y, EdgeData.Positions[0].Z);
                 EdgeData.Positions[1] = new Point3D(tl.X, tl.Y, EdgeData.Positions[1].Z);
 
                 if (firstCapDone ?? false)
                 {
-                    EdgeData.Positions[6] = EdgeData.Positions[1];
-                    EdgeData.Positions[7] = EdgeData.Positions[0];
+                    var horizontalNormal = (EdgeData.Positions[1].ToVector(10) - EdgeData.Positions[0].ToVector(10)).Normal() * (offsets.X / pixelsPerUnit);
+
+                    EdgeData.Positions[6] = EdgeData.Positions[1] + new Vector3D(horizontalNormal.X, horizontalNormal.Y,0);
+                    EdgeData.Positions[7] = EdgeData.Positions[0] + new Vector3D(horizontalNormal.X, horizontalNormal.Y, 0);
                 }
             }
 
         }
-        private bool TesellateCap(Rect area, bool left, Edge edge, Vector normal, double offset)
+        private bool TesellateCap(Rect area, bool left, Edge edge, Vector verticalNormal, Vector3D offset)
         {
             if (!ShouldCloseEdge(edge, left) || area == default(Rect))
                 return false;
 
             var capUv = Terrain.UvMapping.ToUV(area);
-            var capSize = new Size(capUv.Width * EdgeUVSizeInUnits.Width, capUv.Height * EdgeUVSizeInUnits.Height);
-            var top = (left ? edge.Begin : edge.End) + normal * (capSize.Height / 2);
-            var bottom = (left ? edge.Begin : edge.End) - normal * (capSize.Height / 2);
-            var capOffset = (bottom - top).Normal() * capSize.Width;
-            var otherTop = left ? top - capOffset : top + capOffset;
-            var otherBottom = left ? bottom - capOffset : bottom + capOffset;
+            var capSize = new Size(area.Width / Terrain.PixelsPerUnit, area.Height / Terrain.PixelsPerUnit);
+
+            var top = (left ? edge.Begin : edge.End) + verticalNormal * (capSize.Height / 2) + verticalNormal * offset.Y;
+            var bottom = (left ? edge.Begin : edge.End) - verticalNormal * (capSize.Height / 2) + verticalNormal * offset.Y;
+
+            var horizontalNormal = (bottom - top).Normal();
+
+            top += horizontalNormal * offset.X * (left ? -1 : 1);
+            bottom += horizontalNormal * offset.X * (left ? -1 : 1);
+
+            var capOffset = horizontalNormal * capSize.Width;
+            var otherTop = left ? top - capOffset : top + capOffset ;
+            var otherBottom = left ? bottom - capOffset : bottom + capOffset ;
 
             if (left)
             {
@@ -231,10 +230,10 @@ namespace TerrainEditor.Core
             }
 
             EdgeData.AddQuad(
-                new Point3D(bottom.X, bottom.Y, offset),
-                new Point3D(top.X, top.Y, offset),
-                new Point3D(otherTop.X, otherTop.Y, offset),
-                new Point3D(otherBottom.X, otherBottom.Y, offset),
+                new Point3D(bottom.X, bottom.Y, offset.Z),
+                new Point3D(top.X, top.Y, offset.Z),
+                new Point3D(otherTop.X, otherTop.Y, offset.Z),
+                new Point3D(otherBottom.X, otherBottom.Y, offset.Z),
                 capUv.BottomLeft, capUv.TopLeft, capUv.TopRight, capUv.BottomRight);
 
             return true;
@@ -284,7 +283,9 @@ namespace TerrainEditor.Core
                 return;
             }
 
-            var unitsPerFill = FillUVSizeInUnits;
+            var unitsPerFill = new Size(
+                Terrain.UvMapping.FillTexture.PixelWidth / (double)Terrain.PixelsPerUnit,
+                Terrain.UvMapping.FillTexture.PixelHeight / (double)Terrain.PixelsPerUnit);
             foreach (var triangle in polygon.Triangles)
             {
                 FillData.AddTriangle(
@@ -335,11 +336,11 @@ namespace TerrainEditor.Core
             case VertexDirection.Top:
                 return candidate;
             case VertexDirection.Down:
-                return Terrain.UvMapping.Bottom != null ? candidate : VertexDirection.Top;
+                return Terrain.UvMapping?.Bottom?.Bodies.Count > 0 ? candidate : VertexDirection.Top;
             case VertexDirection.Left:
-                return Terrain.UvMapping.Left != null ? candidate : (Terrain.UvMapping.Right != null ? VertexDirection.Right : VertexDirection.Top);
+                return Terrain.UvMapping?.Left?.Bodies.Count > 0 ? candidate : (Terrain.UvMapping?.Right?.Bodies.Count > 0 ? VertexDirection.Right : VertexDirection.Top);
             case VertexDirection.Right:
-                return Terrain.UvMapping.Right != null ? candidate : (Terrain.UvMapping.Left != null ? VertexDirection.Left : VertexDirection.Top);
+                return Terrain.UvMapping?.Right?.Bodies.Count > 0 ? candidate : (Terrain.UvMapping?.Left?.Bodies.Count > 0 ? VertexDirection.Left : VertexDirection.Top);
             }
 
             return VertexDirection.None;
@@ -392,10 +393,11 @@ namespace TerrainEditor.Core
         {
             partialLengths = edges
                 .Select(e => Enumerable
-                .Range(0, resolution + 1)
-                .Select(cur => Interpolate(mode ,e.Prev ?? e.Begin, e.Begin, e.End, e.Next ?? e.End, 1.0 / resolution * cur))
-                .Pairwise((v1, v2) => (v2 - v1).Length)
-                .Sum()).ToArray();
+                    .Range(0, resolution + 1)
+                    .Select(cur => Interpolate(mode ,e.Prev ?? e.Begin, e.Begin, e.End, e.Next ?? e.End, 1.0 / resolution * cur))
+                    .Pairwise((v1, v2) => (v2 - v1).Length)
+                    .Sum())
+                .ToArray();
 
             return partialLengths.Sum();
         }

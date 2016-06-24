@@ -1,16 +1,16 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
-using MahApps.Metro.SimpleChildWindow;
-using TerrainEditor.Core.Services;
-using TerrainEditor.Utilities;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using MahApps.Metro.SimpleChildWindow;
+using TerrainEditor.Core.Services;
+using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
 
-namespace TerrainEditor.UserControls
+namespace TerrainEditor.UserControls.UvMappingControls
 {
     public partial class UvMappingEditor : ChildWindow
     {
@@ -18,6 +18,7 @@ namespace TerrainEditor.UserControls
         private static readonly DependencyProperty BodyCountProperty = DependencyProperty.Register( nameof(BodyCount), typeof(int), typeof(UvMappingEditor), new PropertyMetadata(3));
         private static readonly DependencyProperty CapsTooProperty = DependencyProperty.Register( nameof(CapsToo), typeof(bool), typeof(UvMappingEditor), new PropertyMetadata(false));
 
+        private Point m_panOrigin;
         private int BodyCount
         {
             get { return (int)GetValue(BodyCountProperty); }
@@ -73,6 +74,47 @@ namespace TerrainEditor.UserControls
             else if (e.ChangedButton == MouseButton.Right && BodyCount > 0)
                 BodyCount--;
         }
+        private void OnZoom(object sender, MouseWheelEventArgs e)
+        {
+            var scale = e.Delta >= 0 ? 1.1 : 1.0 / 1.1;
+            var position = e.GetPosition(DesignArea);
+            var matrix = PreviewTransform.Matrix;
+            matrix.ScaleAtPrepend(scale, scale, position.X, position.Y);
+
+            if (scale < 1 && matrix.M11 < 1)
+            {
+                var m = PreviewTransform.Matrix;
+                m.OffsetX = m.OffsetY = 0;
+                PreviewTransform.Matrix = m;
+                return;
+            }
+
+            PreviewTransform.Matrix = matrix;
+        }
+        private void OnStartPan(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Middle)
+            {
+                m_panOrigin = e.GetPosition(DesignArea);
+                DesignArea.CaptureMouse();
+            }
+        }
+        private void OnPan(object sender, MouseEventArgs e)
+        {
+            if (!DesignArea.IsMouseCaptured)
+                return;
+
+            var position = e.GetPosition(DesignArea) - m_panOrigin;
+            var matrix = PreviewTransform.Matrix;
+
+            matrix.TranslatePrepend(position.X, position.Y);
+            PreviewTransform.Matrix = matrix;
+        }
+        private void OnEndPan(object sender, MouseButtonEventArgs e)
+        {
+            DesignArea.ReleaseMouseCapture();
+        }
+
         private void OnSelectEdgeTexture(object sender, RoutedEventArgs e)
         {
             var relativePath = OpenSelectImageDialog(Path.GetDirectoryName(Source.EdgeTexturePath));
@@ -123,6 +165,5 @@ namespace TerrainEditor.UserControls
             return openSelectImageDialog;
         }
     }
-
     
 }
