@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -106,6 +107,10 @@ namespace TerrainEditor.Utilities
 
             if (batch.Count > 0)
                 yield return batch.ToArray();
+        }
+        internal static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> source)
+        {
+            return new ObservableCollection<T>(source);
         }
 
         public static T[] IntoANewArray<T>(this T head)

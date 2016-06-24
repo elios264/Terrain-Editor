@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using MahApps.Metro.SimpleChildWindow;
+using MahApps.Metro.Controls;
 using TerrainEditor.Annotations;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
@@ -13,7 +13,7 @@ using TerrainEditor.Viewmodels.Terrains;
 namespace TerrainEditor.UserControls.UvMappingControls
 {
 
-    public partial class SelectMappingDialog : ChildWindow , INotifyPropertyChanged
+    public partial class SelectMappingDialog : MetroWindow , INotifyPropertyChanged
     {
         private static IResourceProviderService ResourceProvider { get;  } = ServiceLocator.Get<IResourceProviderService>();
         public IEnumerable<UvMapping> CachedMappings => ResourceProvider.LoadedResources.OfType<UvMapping>();

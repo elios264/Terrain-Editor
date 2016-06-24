@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using elios.Persist;
 using TerrainEditor.Core;
+using TerrainEditor.UserControls.UvMappingControls;
 using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls
@@ -19,9 +20,9 @@ namespace TerrainEditor.UserControls
 
         public Task ShowEditor(object resource, FileInfo info)
         {
-            var editor = new UvMappingControls.UvMappingEditor { Source = (UvMapping)resource };
+            var editor = new UvMappingEditor { Source = (UvMapping)resource };
 
-            return new EditorWindowManager<UvMappingControls.UvMappingEditor,UvMapping>(this, editor, editor.Source, info).ShowEditor();
+            return new EditorWindowManager<UvMapping>(this, editor, editor.Source, info).ShowEditor();
         }
         public void Save(object resource, FileInfo info)
         {

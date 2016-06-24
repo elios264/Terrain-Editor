@@ -56,10 +56,6 @@
       <HintPath>..\packages\MahApps.Metro.1.2.4.0\lib\net45\MahApps.Metro.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MahApps.Metro.SimpleChildWindow, Version=1.3.0.0, Culture=neutral, PublicKeyToken=bbbfdff7f500a992, processorArchitecture=MSIL">
-      <HintPath>..\packages\MahApps.Metro.SimpleChildWindow.1.3.0\lib\net45\MahApps.Metro.SimpleChildWindow.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.WindowsAPICodePack-Core.1.1.0.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
       <Private>True</Private>
@@ -153,7 +149,6 @@
     <Compile Include="Utilities\ChangeListener\RecursivePropertyChangeListener.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\FileOperationAPIWrapper.cs" />
-    <Compile Include="Utilities\IndexedItemsControl.cs" />
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="UserControls\ResourceExplorer\UvMappingResourceProvider.cs" />
     <Compile Include="Utilities\WeakEvent.cs" />

@@ -26,7 +26,7 @@ namespace TerrainEditor.UserControls
     {
         private static readonly DependencyPropertyKey RootDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(RootDirectory), typeof (Directory), typeof (ResourceExplorer), new PropertyMetadata(default(Directory)));
         private static readonly DependencyPropertyKey SelectedDirectoryPropertyKey = DependencyProperty.RegisterReadOnly(nameof(SelectedDirectory), typeof (Directory), typeof (ResourceExplorer), new PropertyMetadata(default(Directory),OnRefreshResources));
-        private static readonly DependencyPropertyKey CurrentFilesPropertyKey = DependencyProperty.RegisterReadOnly(nameof(CurrentFiles), typeof (IEnumerable<File>), typeof (ResourceExplorer), new PropertyMetadata(Enumerable.Empty<File>()));
+        private static readonly DependencyPropertyKey CurrentFilesPropertyKey = DependencyProperty.RegisterReadOnly(nameof(CurrentFiles), typeof (ObservableCollection<File>), typeof (ResourceExplorer), new PropertyMetadata(new ObservableCollection<File>()));
         private static readonly DependencyProperty SelectedFileProperty = DependencyProperty.Register(nameof(SelectedFile), typeof (File), typeof (ResourceExplorer), new PropertyMetadata(default(File)));
 
         public static readonly DependencyProperty ShowAllResourcesProperty = DependencyProperty.Register(nameof(ShowAllResources), typeof(bool), typeof(ResourceExplorer), new PropertyMetadata(true, OnRefreshResources));
@@ -47,9 +47,9 @@ namespace TerrainEditor.UserControls
             get { return (File)GetValue(SelectedFileProperty); }
             set { SetValue(SelectedFileProperty, value); }
         }
-        private IEnumerable<File> CurrentFiles
+        private ObservableCollection<File> CurrentFiles
         {
-            get { return (IEnumerable<File>)GetValue(CurrentFilesPropertyKey.DependencyProperty); }
+            get { return (ObservableCollection<File>)GetValue(CurrentFilesPropertyKey.DependencyProperty); }
             set { SetValue(CurrentFilesPropertyKey, value); }
         }
         private Directory RootDirectory
@@ -97,7 +97,7 @@ namespace TerrainEditor.UserControls
                     preview.Freeze();
                     nextFile.Preview = preview;
                 }
-            }) { IsBackground = true, Name = $"{nameof(ResourceExplorer)}_preview_generator_thread"};
+            }) { IsBackground = true, Name = $"{nameof(ResourceExplorer)}_preview_generator_thread", Priority = ThreadPriority.Lowest};
             m_previewGenerator.Start();
             
             m_resourcesCache = new Dictionary<string, WeakReference>();
@@ -223,13 +223,13 @@ namespace TerrainEditor.UserControls
         {
             var instance = (ResourceExplorer) obj;
 
-            instance.SelectedDirectory.DirectoryInfo.Refresh();
+            instance.SelectedDirectory.Refresh();
 
             instance.CurrentFiles = 
                 instance.SelectedDirectory.Files
                 .Select(instance.FileFor)
                 .Where(f => instance.ShowAllResources || instance.m_resourceInfoProviders.ContainsKey(f.Info.Extension))
-                .ToList();
+                .ToObservableCollection();
         }
 
         private void TreeViewOnSelectedFolderChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -362,8 +362,15 @@ namespace TerrainEditor.UserControls
         }
         private void OnDeleteResource(object sender, ExecutedRoutedEventArgs e)
         {
-            if (FileOperationAPIWrapper.Send(string.Join("\0", FileList.SelectedItems.Cast<File>().Select(a => a.Info.FullName))))
-                OnRefreshResources(this,default(DependencyPropertyChangedEventArgs));
+            var filesToDelete = FileList.SelectedItems.Cast<File>().ToList();
+
+            if (FileOperationAPIWrapper.Send(string.Join("\0", filesToDelete.Select(a => a.Info.FullName))))
+            {
+                foreach (var file in filesToDelete)
+                {
+                    CurrentFiles.Remove(file);
+                }
+            }
         }
         private void OnNewResource(object sender, ExecutedRoutedEventArgs e)
         {
@@ -374,14 +381,15 @@ namespace TerrainEditor.UserControls
             while (System.IO.File.Exists(newFileName))
                 newFileName = Path.Combine(SelectedDirectory.DirectoryInfo.FullName, infoProvider.ResourceType.Name + count++ + infoProvider.Extensions[0]);
 
-            
-            infoProvider.Save(Activator.CreateInstance(infoProvider.ResourceType), new FileInfo(newFileName));
-            OnRefreshResources(this, default(DependencyPropertyChangedEventArgs));
-
             CurrentFiles.ForEach(f => f.IsSelected = false);
-            var newFile = CurrentFiles.First(f => f.Info.FullName == newFileName);
+
+            var newFile = FileFor(new FileInfo(newFileName));
+
+            infoProvider.Save(Activator.CreateInstance(infoProvider.ResourceType), newFile.Info);
+
             newFile.IsSelected = true;
             newFile.IsEditing = true;
+            CurrentFiles.Add(newFile);            
         }
         private void RefreshResources(object sender, ExecutedRoutedEventArgs e)
         {

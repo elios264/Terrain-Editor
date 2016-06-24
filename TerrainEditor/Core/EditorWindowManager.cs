@@ -4,22 +4,21 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using MahApps.Metro.SimpleChildWindow;
 using TerrainEditor.Core.Services;
 using TerrainEditor.UserControls;
 
 namespace TerrainEditor.Core
 {
-    public class EditorWindowManager<TChildWindow, TResource> where TChildWindow : ChildWindow where TResource : class
+    public class EditorWindowManager<TResource> where TResource : class
     {
         private bool m_resourceChanged;
         private readonly FileInfo m_info;
         private readonly TResource m_resource;
-        private readonly TChildWindow m_editorWindow;
+        private readonly Window m_editorWindow;
         private readonly IResourceInfoProvider m_provider;
         private readonly TaskCompletionSource<object> m_completionSource;
 
-        public EditorWindowManager(IResourceInfoProvider provider, TChildWindow editorWindow, TResource resource, FileInfo info)
+        public EditorWindowManager(IResourceInfoProvider provider, Window editorWindow, TResource resource, FileInfo info)
         {
             m_info = info;
             m_provider = provider;

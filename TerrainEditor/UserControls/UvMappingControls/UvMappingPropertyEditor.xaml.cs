@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
@@ -16,18 +17,24 @@ namespace TerrainEditor.UserControls.UvMappingControls
         }
         private void SelectNewMapping(object sender, RoutedEventArgs e)
         {
+            if (m_mappingDialog != null)
+            {
+                m_mappingDialog.Activate();
+                return;
+            }
+
             m_mappingDialog = new SelectMappingDialog();
-            m_mappingDialog.ClosingFinished += MappingDialogOnClosingFinished;
+            m_mappingDialog.Closed += MappingDialogOnClosingFinished;
 
             ServiceLocator
                 .Get<IDialogBoxService>()
                 .ShowCustomDialog(m_mappingDialog);
         }
-        private void MappingDialogOnClosingFinished(object sender, RoutedEventArgs routedEventArgs)
+        private void MappingDialogOnClosingFinished(object sender, EventArgs eventArgs)
         {
             DataContext = m_mappingDialog.SelectedMapping ?? DataContext;
 
-            m_mappingDialog.ClosingFinished -= MappingDialogOnClosingFinished;
+            m_mappingDialog.Closed -= MappingDialogOnClosingFinished;
             m_mappingDialog = null;
         }
         private void OnDropMapping(object sender, DragEventArgs e)

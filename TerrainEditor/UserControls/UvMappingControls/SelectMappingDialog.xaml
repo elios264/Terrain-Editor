@@ -1,22 +1,17 @@
-﻿<simpleChildWindow:ChildWindow x:Class="TerrainEditor.UserControls.UvMappingControls.SelectMappingDialog"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
-             xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
-             xmlns:viewModels="clr-namespace:TerrainEditor.Viewmodels"
-             xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
-             mc:Ignorable="d"
-            IsOpen="True"
-            Title="Choose Mapping" 
-            AllowMove="True"
-            ChildWindowWidth="200"
-            OverlayBrush="{StaticResource AccentColorBrush4}" 
-            IsModal="False" 
-            ShowCloseButton="True" Name="MainControl"
-            EnableDropShadow="True"  CloseByEscape="True" CloseOnOverlay="False"                               
-             d:DesignHeight="300" d:DesignWidth="300"   >
+﻿<Controls:MetroWindow x:Class="TerrainEditor.UserControls.UvMappingControls.SelectMappingDialog"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                      xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+                      xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
+                      xmlns:services="clr-namespace:TerrainEditor.Core.Services"
+                      mc:Ignorable="d"
+                      Title="Choose Mapping" ResizeMode="NoResize" TitleCaps="False" services:DialogBoxService.CloseByEscape="True"
+                      Width="200"
+                      SizeToContent="Height"
+                      ShowCloseButton="True" Name="MainControl"
+                      >
 
     <ListBox Name="Options" MouseDoubleClick="OnSelectMapping" SelectionMode="Single" Margin="5" ItemsSource="{Binding ElementName=MainControl, Path=CachedMappings}" >
         <ListBox.ItemTemplate>
@@ -49,5 +44,5 @@
     </ListBox>
 
 
-</simpleChildWindow:ChildWindow>
+</Controls:MetroWindow>
 

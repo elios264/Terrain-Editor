@@ -1,22 +1,20 @@
-﻿<simpleChildWindow:ChildWindow x:Class="TerrainEditor.UserControls.UvMappingControls.UvMappingEditor"
+﻿<controls:MetroWindow x:Class="TerrainEditor.UserControls.UvMappingControls.UvMappingEditor"
                                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
-                               xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
                                xmlns:utilities="clr-namespace:TerrainEditor.Utilities"
-                               xmlns:pt="http://propertytools.org/wpf"
                                xmlns:terrains="clr-namespace:TerrainEditor.Viewmodels.Terrains"
                                xmlns:uvMappingControls="clr-namespace:TerrainEditor.UserControls.UvMappingControls"
-                               xmlns:system="clr-namespace:System;assembly=mscorlib"
+                               xmlns:services="clr-namespace:TerrainEditor.Core.Services"
                                mc:Ignorable="d"
-                               IsOpen="True"
                                Title="UV Mapping Editor" 
-                               AllowMove="True"  ChildWindowWidth="800"
-                               OverlayBrush="{StaticResource AccentColorBrush4}" 
-                               IsModal="False" ShowCloseButton="True" 
-                               EnableDropShadow="True" CloseOnOverlay="False" CloseByEscape="False"
+                               Width="800"
+                               ResizeMode="NoResize"
+                               SizeToContent="Height"
+                               GlowBrush="Black"
+                               ShowCloseButton="True"  Topmost="True" TitleCaps="False" services:DialogBoxService.CloseByEscape="True"
                                x:Name="ParentControl"
                                d:DesignHeight="600" d:DesignWidth="800" >
     <Grid d:DataContext="{x:Static terrains:UvMapping.Mossy}" DataContext="{Binding ElementName=ParentControl, Path=Source}">
@@ -93,21 +91,21 @@
                 <DataTemplate.Resources>
                     <Point x:Key="Point"/>
                 </DataTemplate.Resources>
-                <utilities:IndexedItemsControl ItemsSource="{Binding Bodies, Converter={utilities:CollectionByIndexProxyConverter}}" Tag="{Binding BodySize, Mode=TwoWay}">
-                    <utilities:IndexedItemsControl.ItemsPanel>
+                <ItemsControl ItemsSource="{Binding Bodies, Converter={utilities:CollectionByIndexProxyConverter}}" Tag="{Binding BodySize, Mode=TwoWay}">
+                    <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Grid/>
                         </ItemsPanelTemplate>
-                    </utilities:IndexedItemsControl.ItemsPanel>
-                    <utilities:IndexedItemsControl.ItemTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <uvMappingControls:MoveResizeThumb 
                                 Size="{Binding Path=Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}, Mode=TwoWay}"
                                 Location="{Binding Path=Value, Mode=TwoWay}">
                             </uvMappingControls:MoveResizeThumb>
                         </DataTemplate>
-                    </utilities:IndexedItemsControl.ItemTemplate>
-                </utilities:IndexedItemsControl>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </DataTemplate>
         </Grid.Resources>
         
@@ -267,4 +265,4 @@
             </Grid>
         </ScrollViewer>
     </Grid>
-</simpleChildWindow:ChildWindow>
+</controls:MetroWindow>

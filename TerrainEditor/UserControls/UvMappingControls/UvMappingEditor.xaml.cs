@@ -5,14 +5,14 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using MahApps.Metro.SimpleChildWindow;
+using MahApps.Metro.Controls;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
 
 namespace TerrainEditor.UserControls.UvMappingControls
 {
-    public partial class UvMappingEditor : ChildWindow
+    public partial class UvMappingEditor : MetroWindow
     {
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof (UvMapping), typeof (UvMappingEditor), new PropertyMetadata(default(UvMapping)));
         private static readonly DependencyProperty BodyCountProperty = DependencyProperty.Register( nameof(BodyCount), typeof(int), typeof(UvMappingEditor), new PropertyMetadata(3));
