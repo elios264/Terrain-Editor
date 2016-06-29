@@ -12,14 +12,8 @@ namespace TerrainEditor.Core
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler RecursivePropertyChanged
         {
-            add
-            {
-                m_recursivePropertyChangeListener.PropertyChanged += value;
-            }
-            remove
-            {
-                m_recursivePropertyChangeListener.PropertyChanged -= value;
-            }
+            add { m_recursivePropertyChangeListener.PropertyChanged += value; }
+            remove { m_recursivePropertyChangeListener.PropertyChanged -= value; }
         }
 
         [NotifyPropertyChangedInvocator]

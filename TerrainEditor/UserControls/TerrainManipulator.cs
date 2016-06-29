@@ -167,7 +167,6 @@ namespace TerrainEditor.UserControls
         {
             if (Source == null || e.ChangedButton != MouseButton.Left)
                 return;
-            Mouse.Capture((IInputElement)sender);
 
             var element = (UIElement)sender;
             var position = e.GetPosition(element);
@@ -183,6 +182,7 @@ namespace TerrainEditor.UserControls
                                 Source.Vertices.Insert(index + 1, new VertexInfo(m_addVertexCallouts[index].Position.ToVector(), Source.Vertices[index].Direction, Source.Vertices[index].Split));
                                 break;
                             case HitType.Vertex:
+                                Mouse.Capture(element);
                                 m_currentVertexIndex = index;
                                 break;
                             case HitType.Direction:

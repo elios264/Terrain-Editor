@@ -179,29 +179,27 @@ namespace TerrainEditor.Core
                 }
                 TesellateCap(new Rect(segmentMapping.RightCap, segmentMapping.CapSize), false, batch[lst], normalStart.Value, offsets);
             }
-
             //close the terrain
-            if (IsClosed && batches[0][0].Prev != null)
-            {
-                var offsets = SegmentFor(batches[0][0].Direction).Offsets;
+            //if (IsClosed && batches[0][0].Prev != null)
+            //{
+            //    var offsets = SegmentFor(batches[0][0].Direction).Offsets;
 
-                var offsetY = offsets.Y / pixelsPerUnit * normalStart.Value;
-                var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
-                var bl = batches[0][0].Begin - offset + offsetY;
-                var tl = batches[0][0].Begin + offset + offsetY;
+            //    var offsetY = offsets.Y / pixelsPerUnit * normalStart.Value;
+            //    var offset = normalStart.Value * ((EdgeData.Positions[1] - EdgeData.Positions[0]).Length / 2);
+            //    var bl = batches[0][0].Begin - offset + offsetY;
+            //    var tl = batches[0][0].Begin + offset + offsetY;
 
-                EdgeData.Positions[0] = new Point3D(bl.X, bl.Y, EdgeData.Positions[0].Z);
-                EdgeData.Positions[1] = new Point3D(tl.X, tl.Y, EdgeData.Positions[1].Z);
+            //    EdgeData.Positions[0] = new Point3D(bl.X, bl.Y, EdgeData.Positions[0].Z);
+            //    EdgeData.Positions[1] = new Point3D(tl.X, tl.Y, EdgeData.Positions[1].Z);
 
-                if (firstCapDone ?? false)
-                {
-                    var horizontalNormal = (EdgeData.Positions[1].ToVector(10) - EdgeData.Positions[0].ToVector(10)).Normal() * (offsets.X / pixelsPerUnit);
+            //    if (firstCapDone ?? false)
+            //    {
+            //        var horizontalNormal = (EdgeData.Positions[1].ToVector(10) - EdgeData.Positions[0].ToVector(10)).Normal() * (offsets.X / pixelsPerUnit);
 
-                    EdgeData.Positions[6] = EdgeData.Positions[1] + new Vector3D(horizontalNormal.X, horizontalNormal.Y,0);
-                    EdgeData.Positions[7] = EdgeData.Positions[0] + new Vector3D(horizontalNormal.X, horizontalNormal.Y, 0);
-                }
-            }
-
+            //        EdgeData.Positions[6] = EdgeData.Positions[1] + new Vector3D(horizontalNormal.X, horizontalNormal.Y,0);
+            //        EdgeData.Positions[7] = EdgeData.Positions[0] + new Vector3D(horizontalNormal.X, horizontalNormal.Y, 0);
+            //    }
+            //}
         }
         private bool TesellateCap(Rect area, bool left, Edge edge, Vector verticalNormal, Vector3D offset)
         {
@@ -409,10 +407,7 @@ namespace TerrainEditor.Core
                 return new Model3DGroup();
             }
 
-            var builder = new TerrainMeshBuilder
-            {
-                Terrain = mesh
-            };
+            var builder = new TerrainMeshBuilder { Terrain = mesh };
             builder.Tesellate();
 
             var edgeAndFill = new List<Model3D>();

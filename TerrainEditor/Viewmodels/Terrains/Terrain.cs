@@ -1,15 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using elios.Persist;
 using HelixToolkit.Wpf;
+using Poly2Tri;
 using PropertyTools.DataAnnotations;
 using TerrainEditor.Core;
 using TerrainEditor.UserControls;
 using TerrainEditor.UserControls.UvMappingControls;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
+using DisplayNameAttribute = PropertyTools.DataAnnotations.DisplayNameAttribute;
+using Polygon = Poly2Tri.Polygon;
 
 namespace TerrainEditor.Viewmodels.Terrains
 {
@@ -26,6 +31,7 @@ namespace TerrainEditor.Viewmodels.Terrains
         private InterpolationMode m_interpolationMode = InterpolationMode.Hermite;
         private Color m_ambientColor = Colors.White;
         private Point3D m_position = new Point3D(0,0,1);
+        private double m_zRotation;
         private string m_name = "New Terrain";
 
         private UvMapping m_uvMapping;
@@ -51,6 +57,18 @@ namespace TerrainEditor.Viewmodels.Terrains
             {
                 if (value.Equals(m_position)) return;
                 m_position = value;
+                OnPropertyChanged();
+            }
+        }
+        [DisplayName("Z Rotation")]
+        public double ZRotation
+        {
+            get { return m_zRotation; }
+            set
+            {
+                if (value == m_zRotation)
+                    return;
+                m_zRotation = value;
                 OnPropertyChanged();
             }
         }
@@ -157,15 +175,25 @@ namespace TerrainEditor.Viewmodels.Terrains
         [Category("Terrain Data"), List(false,true),SortIndex(6)]
         public ObservableCollection<VertexInfo> Vertices { get; }
 
-        public Terrain(IEnumerable<VertexInfo> vertices)
-        {
-            Vertices = new ObservableCollection<VertexInfo>(vertices);
-            RecursivePropertyChanged += (sender, args) => m_isDirty = true;
-        }
         public Terrain()
         {
             Vertices = new ObservableCollection<VertexInfo>();
-            RecursivePropertyChanged += (sender, args) => m_isDirty = true;
+            RecursivePropertyChanged += OnRecursivePropertyChanged;
+        }
+        public Terrain(IEnumerable<VertexInfo> vertices)
+        {
+            Vertices = new ObservableCollection<VertexInfo>(vertices);
+            RecursivePropertyChanged += OnRecursivePropertyChanged;
+        }
+
+        private void OnRecursivePropertyChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName != nameof(Centroid) && args.PropertyName != nameof(Mesh))
+            {
+                m_isDirty = true;
+                OnPropertyChanged(nameof(Centroid));
+                OnPropertyChanged(nameof(Mesh));
+            }
         }
 
         [Browsable(false)]
@@ -177,12 +205,27 @@ namespace TerrainEditor.Viewmodels.Terrains
                 if (m_isDirty)
                 {
                     m_meshCache = TerrainMeshBuilder.GenerateMesh(this);
-                    m_meshCache.Transform = new TranslateTransform3D(Position.X,Position.Y,Position.Z);
+                    var transform = new Transform3DGroup();
+                    transform.Children.Add(new TranslateTransform3D(Position.X, Position.Y, Position.Z));
+                    transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), ZRotation),Centroid));
+
+                    m_meshCache.Transform = transform;
                     m_meshCache.SetName(Name);
                     m_isDirty = false;
                 }
 
                 return m_meshCache;
+            }
+        }
+        [Browsable(false)]
+        public Point3D Centroid
+        {
+            get
+            {
+                var pol = new Polygon(Vertices.Select(v => new PolygonPoint(v.Position.X,v.Position.Y)));
+                var centroid = pol.GetCentroid();
+
+                return new Point3D(Position.X + centroid.X, Position.Y + centroid.Y, Position.Z);
             }
         }
     }

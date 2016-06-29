@@ -118,6 +118,7 @@
     <Compile Include="Core\Services\IsServiceAttribute.cs" />
     <Compile Include="Core\Services\ServiceLocator.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="UserControls\PositionManipulator.cs" />
     <Compile Include="UserControls\UvMappingControls\MoveResizeThumb.cs" />
     <Compile Include="UserControls\ResourceExplorer\DefaultResourceProvider.cs" />
     <Compile Include="Core\Services\IResourceProviderService.cs" />
@@ -143,6 +144,7 @@
       <DependentUpon>UvMappingPropertyEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\TerrainManipulator.cs" />
+    <Compile Include="UserControls\WireframeViewer.cs" />
     <Compile Include="Utilities\ChangeListener\ChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\ChildChangeListener.cs" />
     <Compile Include="Utilities\ChangeListener\CollectionChangeListener.cs" />
@@ -263,6 +265,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\refresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\wireframe.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

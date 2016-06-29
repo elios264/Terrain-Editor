@@ -64,6 +64,9 @@
                 <Button Width="20" Height="20" Margin="2" ToolTip="Remove Terrain"  >
                     <Image Source="Resources/minus.png" Stretch="Fill"/>
                 </Button>
+                <CheckBox Width="25" Height="25" ToolTip="Wireframe mode" Name="ShowWireframe">
+                    <Image Source="Resources/wireframe.png"/>
+                </CheckBox>
             </ToolBar>
         </ToolBarTray>
         <StatusBar DockPanel.Dock="Bottom">
@@ -92,8 +95,9 @@
                 Grid.Row="0" Grid.Column="0" 
                 Background="#252525"
                 CalculateCursorPosition="True"
-                CameraMode="WalkAround"
-                IsRotationEnabled="False"
+                CameraMode="Inspect"
+                ShowFrameRate="True"
+                IsRotationEnabled="True"
                 ShowViewCube="False"
                 CameraRotationMode="Turntable">
 
@@ -111,6 +115,8 @@
                 </ModelVisual3D>
 
                 <lcl:TerrainManipulator  Source="{Binding SelectedTerrain}" InputSource="{Binding ElementName=HelixViewport3D}"/>
+                <lcl:WireframeViewer Model="{Binding SelectedTerrain.Mesh}" Thickness="1.5" IsVisible="{Binding ElementName=ShowWireframe, Path=IsChecked}" />
+                <lcl:PositionManipulator TargetPosition="{Binding SelectedTerrain.Position}" Position="{Binding SelectedTerrain.Centroid}" TargetRotationZ="{Binding SelectedTerrain.ZRotation}"/>
 
             </h:HelixViewport3D>
             <lcl:PropertiesEditor Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" Source="{Binding SelectedTerrain}" Background="#252525" />

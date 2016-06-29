@@ -66,7 +66,7 @@ namespace TerrainEditor.Utilities
         }
     }
 
-    public sealed class ProxyValueCollection<T> : ObservableCollection<ProxiedValue<T>>, INotifyPropertyChanged, INotifyCollectionChanged
+    public sealed class ProxyValueCollection<T> : ObservableCollection<ProxiedValue<T>>
     {
         private readonly ObservableCollection<T> m_realCollection;
         private WeakEvent<NotifyCollectionChangedEventHandler> m_realCollectionCollectionChangedEvent;

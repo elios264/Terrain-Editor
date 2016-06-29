@@ -29,7 +29,10 @@ namespace TerrainEditor.Viewmodels
 
         public TerrainEditorDataContext()
         {
-            new RecursivePropertyChangeListener(Terrains).PropertyChanged += (sender, args) => OnPropertyChanged(nameof(TerrainsMeshes));
+            new RecursivePropertyChangeListener(Terrains).PropertyChanged += (sender, args) =>
+            {
+                OnPropertyChanged(nameof(TerrainsMeshes));
+            };
 
             Terrains.Add(new Terrain(new[]
             {

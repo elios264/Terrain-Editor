@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace TerrainEditor.Utilities
 {
     /// <summary>
-    /// Created from a normal event every time you subscribe through this it'll store a weak reference to your delegate target
+    /// Created from a normal event, every time you subscribe through this it'll store a weak reference to your delegate target
     /// everytime the event is invoked it'll either call your delegate or if the reference is lost it'll unsubscribe the proxy delegate
     /// from the event
     /// </summary>
@@ -46,13 +46,12 @@ namespace TerrainEditor.Utilities
         }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
-        public void add(TDelegate handler)
+        public void add(TDelegate handler,bool addManualRemoveAbility = true)
         {
             var del = handler as Delegate;
             if (del.Target == null)
             {
                 m_eventInfo.AddEventHandler(m_eventOwner, del);
-                
             }
             else
             {
@@ -63,9 +62,10 @@ namespace TerrainEditor.Utilities
                     weakEventHandler.WeakDelegate as Delegate);
 
                 //this is only for the remove ability
-                m_realWeakMapping
-                    .GetOrCreateValue(del.Target)
-                    .Add(del.Method,weakEventHandler.WeakDelegate);
+                if (addManualRemoveAbility)
+                    m_realWeakMapping
+                        .GetOrCreateValue(del.Target)
+                        .Add(del.Method,weakEventHandler.WeakDelegate);
             }
         }
         [SuppressMessage("ReSharper", "InconsistentNaming")]
