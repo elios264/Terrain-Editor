@@ -30,9 +30,14 @@ namespace TerrainEditor.Core.Services
 
         public static void Register<TServiceInterface>(TServiceInterface instance)
         {
-            Services.Add(typeof(TServiceInterface), instance);
+            Services[typeof(TServiceInterface)] = instance;
         }
 
+        public static void Unregister<TServiceInterface>()
+        {
+            Services.Remove(typeof(TServiceInterface));
+        }
+      
         public static bool IsRegistered<TService>()
         {
             return Services.ContainsKey(typeof(TService));
@@ -44,7 +49,10 @@ namespace TerrainEditor.Core.Services
         }
         public static object Get(Type type)
         {
-            return Services[type];
+            object service;
+            return Services.TryGetValue(type, out service) 
+                ? service 
+                : null;
         }
     }
 }

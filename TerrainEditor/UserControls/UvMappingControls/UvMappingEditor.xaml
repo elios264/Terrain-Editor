@@ -88,9 +88,7 @@
                 </DataTemplate.Triggers>                
             </DataTemplate>
             <DataTemplate x:Key="PreviewBodiesTemplate" DataType="{x:Type terrains:Segment}" >
-                <DataTemplate.Resources>
-                    <Point x:Key="Point"/>
-                </DataTemplate.Resources>
+  
                 <ItemsControl ItemsSource="{Binding Bodies, Converter={utilities:CollectionByIndexProxyConverter}}" Tag="{Binding BodySize, Mode=TwoWay}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

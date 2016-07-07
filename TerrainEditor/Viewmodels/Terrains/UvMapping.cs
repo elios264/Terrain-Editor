@@ -1,11 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Windows;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 using elios.Persist;
 using TerrainEditor.Core;
 using TerrainEditor.Utilities;
+using Urho;
 
 namespace TerrainEditor.Viewmodels.Terrains
 {
@@ -153,18 +155,17 @@ namespace TerrainEditor.Viewmodels.Terrains
         }
         public Rect ToUV(Rect rect)
         {
-            double width = EdgeTexture.PixelWidth;
-            double height = EdgeTexture.PixelHeight;
+            float width = EdgeTexture.PixelWidth;
+            float height = EdgeTexture.PixelHeight;
 
-            rect.X /= width;
-            rect.Y /= height;
+            rect.Min.X = rect.Min.X/width;
+            rect.Min.Y = rect.Min.Y/height;
 
-            rect.Width /= width;
-            rect.Height /= height;
+            rect.Max.X = rect.Max.X/width;
+            rect.Max.Y = rect.Max.Y/height;
 
             return rect;
         }
-
 
         public static readonly UvMapping Pipe;
         public static readonly UvMapping Mossy;
@@ -177,18 +178,18 @@ namespace TerrainEditor.Viewmodels.Terrains
                 EdgeTexture = Utils.LoadBitmapFromResource("Resources/pipe.png"),
                 Top = new Segment
                 {
-                    Offsets = new Vector3D(0,0,0.01),
-                    CapSize = new Size(50, 128),
-                    BodySize = new Size(128, 128),
+                    Offsets = new Vector3(0,0,0.01f),
+                    CapSize = new Vector2(50, 128),
+                    BodySize = new Vector2(128, 128),
 
-                    LeftCap = new Point(14,0),
-                    RightCap = new Point(448,0),
+                    LeftCap = new Vector2(14,0),
+                    RightCap = new Vector2(448,0),
 
-                    Bodies = new ObservableCollection<Point>
+                    Bodies = new ObservableCollection<Vector2>
                     {
-                        new Point(64, 0),
-                        new Point(192, 0),
-                        new Point(320, 0)
+                        new Vector2(64, 0),
+                        new Vector2(192, 0),
+                        new Vector2(320, 0)
                     }
                 }
             };
@@ -200,31 +201,31 @@ namespace TerrainEditor.Viewmodels.Terrains
                 FillTexture = Utils.LoadBitmapFromResource("Resources/MossyFill.png"),
                 Top = new Segment
                 {
-                    Offsets = new Vector3D(0, 0, 0.04),
-                    CapSize = new Size(64, 220),
-                    BodySize = new Size(192, 220),
+                    Offsets = new Vector3(0, 0, 0.04f),
+                    CapSize = new Vector2(64, 220),
+                    BodySize = new Vector2(192, 220),
 
-                    LeftCap = new Point(0, 0),
-                    RightCap = new Point(448, 0),
-                    Bodies = new ObservableCollection<Point> { new Point(64,0), new Point(256,0) }
+                    LeftCap = new Vector2(0, 0),
+                    RightCap = new Vector2(448, 0),
+                    Bodies = new ObservableCollection<Vector2> { new Vector2(64,0), new Vector2(256,0) }
                 },
                 Left = new Segment
                 {
-                    Offsets = new Vector3D(0, 0, 0.01),
-                    BodySize = new Size(232, 64),
-                    Bodies = new ObservableCollection<Point> { new  Point(5, 231) }
+                    Offsets = new Vector3(0, 0, 0.01f),
+                    BodySize = new Vector2(232, 64),
+                    Bodies = new ObservableCollection<Vector2> { new Vector2(5, 231) }
                 },
                 Right = new Segment
                 {
-                    Offsets = new Vector3D(0, 0, 0.02),
-                    BodySize = new Size(232, 64),
-                    Bodies = new ObservableCollection<Point> { new Point(5, 231) },
+                    Offsets = new Vector3(0, 0, 0.02f),
+                    BodySize = new Vector2(232, 64),
+                    Bodies = new ObservableCollection<Vector2> { new Vector2(5, 231) },
                 },
                 Bottom = new Segment
                 {
-                    Offsets = new Vector3D(0, 0, 0.03),
-                    BodySize = new Size(232, 98),
-                    Bodies = new ObservableCollection<Point> { new Point(261, 199) }
+                    Offsets = new Vector3(0, 0, 0.03f),
+                    BodySize = new Vector2(232, 98),
+                    Bodies = new ObservableCollection<Vector2> { new Vector2(261, 199) }
                 }
             };
         }
@@ -232,14 +233,14 @@ namespace TerrainEditor.Viewmodels.Terrains
 
     public class Segment : PropertyChangeBase
     {
-        private Size m_capSize;
-        private Size m_bodySize;
-        private Point m_leftCap;
-        private Point m_rightCap;
-        private Vector3D m_offsets;
-        private ObservableCollection<Point> m_bodies = new ObservableCollection<Point>();
+        private Vector2 m_capSize;
+        private Vector2 m_bodySize;
+        private Vector2 m_leftCap;
+        private Vector2 m_rightCap;
+        private Vector3 m_offsets;
+        private ObservableCollection<Vector2> m_bodies = new ObservableCollection<Vector2>();
 
-        public Vector3D Offsets
+        public Vector3 Offsets
         {
             get { return m_offsets; }
             set
@@ -250,7 +251,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Size CapSize
+        public Vector2 CapSize
         {
             get { return m_capSize; }
             set
@@ -261,7 +262,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Size BodySize
+        public Vector2 BodySize
         {
             get { return m_bodySize; }
             set
@@ -272,7 +273,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Point LeftCap
+        public Vector2 LeftCap
         {
             get { return m_leftCap; }
             set
@@ -283,7 +284,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Point RightCap
+        public Vector2 RightCap
         {
             get { return m_rightCap; }
             set
@@ -294,7 +295,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public ObservableCollection<Point> Bodies
+        public ObservableCollection<Vector2> Bodies
         {
             get { return m_bodies; }
             set
@@ -307,78 +308,63 @@ namespace TerrainEditor.Viewmodels.Terrains
         }
     }
 
-    /*[TypeConverter(typeof(PointConverter))]
-    public class Point : PropertyChangeBase
+    [MetadataType(typeof(Vector2))]
+    [TypeConverter(typeof(Vector234Converter))]
+    public class Vector2Meta {}
+    [MetadataType(typeof(Vector3))]
+    [TypeConverter(typeof(Vector234Converter))]
+    public class Vector3Meta {}
+
+    public class Vector234Converter : TypeConverter
     {
-        private double m_x;
-        private double m_y;
-
-        public double X
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
-            get { return m_x; }
-            set
-            {
-                if (value.Equals(m_x))
-                    return;
-                m_x = value;
-                OnPropertyChanged();
-            }
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
         }
-        public double Y
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
         {
-            get { return m_y; }
-            set
-            {
-                if (value.Equals(m_y))
-                    return;
-                m_y = value;
-                OnPropertyChanged();
-            }
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
         }
-
-        public Point() {}
-        public Point(double x, double y)
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
-            m_x = x;
-            m_y = y;
-        }
+            var str = value as string;
 
-        public static implicit operator System.Windows.Point(Point point)
+            if (str != null)
+            {
+                var values = str.Split(',');
+                switch (values.Length)
+                {
+                case 2:
+                    return new Vector2(float.Parse(values[0], culture), float.Parse(values[1], culture));
+                case 3:
+                    return new Vector3(float.Parse(values[0], culture), float.Parse(values[1], culture),
+                        float.Parse(values[2], culture));
+                case 4:
+                    return new Vector4(float.Parse(values[0], culture), float.Parse(values[1], culture),
+                        float.Parse(values[2], culture), float.Parse(values[3], culture));
+                }
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            return point == null
-                ? default(System.Windows.Point)
-                : new System.Windows.Point(point.X,point.Y);
+            if (value is Vector2)
+            {
+                var v2 = (Vector2) value;
+                return string.Format(culture, "{0},{1}", v2.X, v2.Y);
+            }
+            if (value is Vector3)
+            {
+                var v3 = (Vector3)value;
+                return string.Format(culture, "{0},{1},{2}", v3.X, v3.Y, v3.Z);
+            }
+            if (value is Vector4)
+            {
+                var v4 = (Vector4)value;
+                return string.Format(culture, "{0},{1},{2},{3}", v4.X, v4.Y, v4.Z, v4.W);
+            }
+
+            return base.ConvertTo(context, culture, value, destinationType);
         }
-
-        public override string ToString()
-        {
-            return ((System.Windows.Point)this).ToString();
-        }
- 
-
-        public class PointConverter : TypeConverter
-        {
-            private static readonly System.Windows.PointConverter Pconverter = new System.Windows.PointConverter();
-
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-            {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-            }
-            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-            {
-                return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-            }
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            {
-                var p = (System.Windows.Point)Pconverter.ConvertFrom(context, culture, value);
-
-                return new Point { X = p.X, Y = p.Y };
-            }
-            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-            {
-                var point = (Point)value ?? new Point();
-                return Pconverter.ConvertTo(context, culture, new System.Windows.Point(point.X, point.Y), destinationType);
-            }
-        }
-    }*/
+    }
 }

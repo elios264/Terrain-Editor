@@ -1,16 +1,16 @@
-using System.Windows;
 using TerrainEditor.Core;
+using Urho;
 
 namespace TerrainEditor.Viewmodels.Terrains
 {
 
     public class VertexInfo : PropertyChangeBase
     {
-        private Vector m_position;
+        private Vector2 m_position;
         private VertexDirection m_direction = VertexDirection.Auto;
         private SplitMode m_split;
 
-        public Vector Position
+        public Vector2 Position
         {
             get { return m_position; }
             set
@@ -43,11 +43,11 @@ namespace TerrainEditor.Viewmodels.Terrains
         }
 
         public VertexInfo() { }
-        public VertexInfo(double x = 0, double y = 0)
+        public VertexInfo(float x = 0, float y = 0)
         {
-            Position = new Vector(x, y);
+            Position = new Vector2(x, y);
         }
-        public VertexInfo(Vector pos, VertexDirection dir, SplitMode split)
+        public VertexInfo(Vector2 pos, VertexDirection dir, SplitMode split)
         {
             Position = pos;
             Direction = dir;

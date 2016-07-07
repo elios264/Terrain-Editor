@@ -9,6 +9,9 @@ using MahApps.Metro.Controls;
 using TerrainEditor.Core.Services;
 using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
+using Urho;
+using MouseButton = System.Windows.Input.MouseButton;
+using MouseWheelEventArgs = System.Windows.Input.MouseWheelEventArgs;
 
 namespace TerrainEditor.UserControls.UvMappingControls
 {
@@ -43,7 +46,7 @@ namespace TerrainEditor.UserControls.UvMappingControls
 
         private void OnAddBody(object sender, RoutedEventArgs e)
         {
-            ((Segment)((Button)sender).CommandParameter).Bodies.Add(new Point());
+            ((Segment)((Button)sender).CommandParameter).Bodies.Add(new Vector2());
         }
         private void OnRegenerateBodies(object sender, RoutedEventArgs e)
         {
@@ -51,18 +54,18 @@ namespace TerrainEditor.UserControls.UvMappingControls
 
             var startPoint = seg.Bodies.Count > 0
                 ? seg.Bodies[0]
-                : new Point();
+                : new Vector2();
 
             if (CapsToo)
             {
-                seg.LeftCap = new Point(startPoint.X - seg.CapSize.Width,startPoint.Y);
-                seg.RightCap = new Point(startPoint.X + BodyCount*seg.BodySize.Width,startPoint.Y);
+                seg.LeftCap = new Vector2(startPoint.X - seg.CapSize.X,startPoint.Y);
+                seg.RightCap = new Vector2(startPoint.X + BodyCount*seg.BodySize.X,startPoint.Y);
             }
 
-            seg.Bodies = new ObservableCollection<Point>(Enumerable.Range(0,BodyCount).Select(i =>
+            seg.Bodies = new ObservableCollection<Vector2>(Enumerable.Range(0,BodyCount).Select(i =>
             {
-                var p = new Point(startPoint.X,startPoint.Y);
-                startPoint.X += seg.BodySize.Width;
+                var p = new Vector2(startPoint.X,startPoint.Y);
+                startPoint.X += seg.BodySize.X;
                 return p;
             }));
 

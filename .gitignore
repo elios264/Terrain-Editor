@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/TerrainEditor/obj/Debug
+/TerrainEditor/bin/Debug
+/.vs/TerrainEditor/v14
+/packages
+/TerrainEditor.sln.DotSettings.user
+/TerrainEditor.sln.DotSettings

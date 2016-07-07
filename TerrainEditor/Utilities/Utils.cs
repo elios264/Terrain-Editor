@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
-using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
-using HelixToolkit.Wpf;
+using Urho;
 
 namespace TerrainEditor.Utilities
 {
@@ -27,64 +24,53 @@ namespace TerrainEditor.Utilities
             int n = source.Count;
             return i < 0 || i >= n ? (looped ? source[((i%n) + n)%n] : default(T)) : source[i];
         }
-        internal static Vector Normal(this Vector v)
+        internal static Vector2 Normal(this Vector2 v)
         {
-            var normal = new Vector(-v.Y,v.X);
+            var normal = new Vector2(-v.Y,v.X);
             normal.Normalize();
 
             return normal;
         }
-        internal static Vector LinearInterpolate(Vector a, Vector b, double percentaje)
+        internal static Vector2 LinearInterpolate(Vector2 a, Vector2 b, float percentaje)
         {
-            return new Vector(a.X + (b.X - a.X) * percentaje, a.Y + (b.Y - a.Y) * percentaje);
+            return new Vector2(a.X + (b.X - a.X) * percentaje, a.Y + (b.Y - a.Y) * percentaje);
         }
-        internal static Vector HermiteInterpolate(Vector prev, Vector begin, Vector end, Vector next, double percentage, double tension = 0, double bias = 0)
+        internal static Vector2 HermiteInterpolate(Vector2 prev, Vector2 begin, Vector2 end, Vector2 next, float percentage, float tension = 0, float bias = 0)
         {
-            return new Vector(
+            return new Vector2(
                 Hermite(prev.X, begin.X, end.X, next.X, percentage, tension, bias),
                 Hermite(prev.Y, begin.Y, end.Y, next.Y, percentage, tension, bias));
         }
-        internal static Vector CubicInterpolate(Vector a, Vector b, Vector c, Vector d, double percentage)
+        internal static Vector2 CubicInterpolate(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float percentage)
         {
-            return new Vector(
+            return new Vector2(
                 Cubic(a.X, b.X, c.X, d.X, percentage),
                 Cubic(a.Y, b.Y, c.Y, d.Y, percentage));
         }
-        internal static double Hermite(double v1, double v2, double v3, double v4, double aPercentage, double aTension, double aBias)
+        internal static float Hermite(float v1, float v2, float v3, float v4, float aPercentage, float aTension, float aBias)
         {
-            double mu2 = aPercentage * aPercentage;
-            double mu3 = mu2 * aPercentage;
-            double m0 = (v2 - v1) * (1 + aBias) * (1 - aTension) / 2;
+            float mu2 = aPercentage * aPercentage;
+            float mu3 = mu2 * aPercentage;
+            float m0 = (v2 - v1) * (1 + aBias) * (1 - aTension) / 2;
             m0 += (v3 - v2) * (1 - aBias) * (1 - aTension) / 2;
-            double m1 = (v3 - v2) * (1 + aBias) * (1 - aTension) / 2;
+            float m1 = (v3 - v2) * (1 + aBias) * (1 - aTension) / 2;
             m1 += (v4 - v3) * (1 - aBias) * (1 - aTension) / 2;
-            double a0 = 2 * mu3 - 3 * mu2 + 1;
-            double a1 = mu3 - 2 * mu2 + aPercentage;
-            double a2 = mu3 - mu2;
-            double a3 = -2 * mu3 + 3 * mu2;
+            float a0 = 2 * mu3 - 3 * mu2 + 1;
+            float a1 = mu3 - 2 * mu2 + aPercentage;
+            float a2 = mu3 - mu2;
+            float a3 = -2 * mu3 + 3 * mu2;
 
             return (a0 * v2 + a1 * m0 + a2 * m1 + a3 * v3);
         }
-        internal static double Cubic(double v1, double v2, double v3, double v4, double aPercentage)
+        internal static float Cubic(float v1, float v2, float v3, float v4, float aPercentage)
         {
-            double percentageSquared = aPercentage * aPercentage;
-            double a1 = v4 - v3 - v1 + v2;
-            double a2 = v1 - v2 - a1;
-            double a3 = v3 - v1;
-            double a4 = v2;
+            float percentageSquared = aPercentage * aPercentage;
+            float a1 = v4 - v3 - v1 + v2;
+            float a2 = v1 - v2 - a1;
+            float a3 = v3 - v1;
+            float a4 = v2;
 
             return a1 * aPercentage * percentageSquared + a2 * percentageSquared + a3 * aPercentage + a4;
-        }
-        internal static void Clear(this MeshBuilder builder)
-        {
-            builder.Positions.Clear();
-            builder.TriangleIndices.Clear();
-
-            if (builder.CreateTextureCoordinates)
-                builder.TextureCoordinates.Clear();
-
-            if (builder.CreateNormals)
-                builder.Normals.Clear();
         }
         internal static void RenameKey<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey fromKey, TKey toKey)
         {
@@ -112,24 +98,37 @@ namespace TerrainEditor.Utilities
         {
             return new ObservableCollection<T>(source);
         }
+        internal static Vector3 FindAnyPerpendicular(this Vector3 n)
+        {
+            n.Normalize();
+            var vector3D = Vector3.Cross(Vector3.UnitY, n);
+            if (vector3D.LengthSquared < 0.001)
+                vector3D = Vector3.Cross(Vector3.UnitX, n);
+            return vector3D;
+        }
+        internal static void Merge(ref BoundingBox box, Vector3 point)
+        {
+            if (point.X < box.Min.X)
+                box.Min.X = point.X;
+            if (point.Y < box.Min.Y)
+                box.Min.Y = point.Y;
+            if (point.Z < box.Min.Z)
+                box.Min.Z = point.Z;
+            if (point.X > box.Max.X)
+                box.Max.X = point.X;
+            if (point.Y > box.Max.Y)
+                box.Max.Y = point.Y;
+            if (point.Z > box.Max.Z)
+                box.Max.Z = point.Z;
+        }
+        internal static Color ToUrhoColor(this System.Windows.Media.Color color)
+        {
+            return new Color(color.R/255f, color.G/255f, color.B/255f, color.A/255f);
+        }
 
         public static T[] IntoANewArray<T>(this T head)
         {
             return new[] {head};
-        }
-        public static DiffuseMaterial CreateImageMaterial(BitmapImage image, bool tile = false, bool freezeBrush = true)
-        {
-            ImageBrush imageBrush = new ImageBrush(image)
-            {
-                ViewportUnits = BrushMappingMode.Absolute,
-                Opacity = 1,
-                TileMode = tile ? TileMode.Tile : TileMode.None
-            };
-            if (freezeBrush)
-                imageBrush.Freeze();
-
-            DiffuseMaterial imageMaterial = new DiffuseMaterial(imageBrush);
-            return imageMaterial;
         }
         public static BitmapImage LoadBitmapFromResource(string pathInApplication, Assembly assembly = null)
         {
@@ -140,13 +139,13 @@ namespace TerrainEditor.Utilities
 
             return new BitmapImage(new Uri($"pack://application:,,,/{assembly.GetName().Name};component/{pathInApplication}", UriKind.Absolute));
         }
-        public static Point3D ToPoint3D(this Vector vector, double z = 0)
+        public static Vector3 ToVector3(this Vector2 vector, float z = 0)
         {
-            return new Point3D(vector.X,vector.Y,z);
+            return new Vector3(vector.X,vector.Y,z);
         }
-        public static Vector ToVector(this Point3D point, int decimalRounds = 2)
+        public static Vector2 ToVector(this Vector3 point, int decimalRounds = 2)
         {
-            return new Vector(Math.Round(point.X, decimalRounds),Math.Round(point.Y,decimalRounds));
+            return new Vector2((float) Math.Round(point.X, decimalRounds),(float) Math.Round(point.Y,decimalRounds));
         }
         public static string GetRelativePath(string filespec)
         {
@@ -162,6 +161,43 @@ namespace TerrainEditor.Utilities
         public static string RelativePath(this DirectoryInfo info)
         {
             return GetRelativePath(info.FullName);
+        }
+        public static bool PlaneIntersection(this Ray ray, Vector3 position, Vector3 normal, out Vector3 intersection)
+        {
+            float num1 = Vector3.Dot(normal, ray.Direction);
+            if (num1 == 0.0f)
+            {
+                intersection = new Vector3(float.NaN, float.NaN, float.NaN);
+                return false;
+            }
+
+            float num2 = Vector3.Dot(normal, position - ray.Origin) / num1;
+            intersection = ray.Origin + num2 * ray.Direction;
+            return true;
+        }
+        public static Vector3 ScreenPointToWorld(this Viewport vp, int x, int y, Plane plane)
+        {
+            var ray = vp.GetScreenRay(x, y);
+
+            Vector3 intersection;
+            ray.PlaneIntersection(plane.Normal * plane.D, plane.Normal, out intersection);
+            return intersection;
+        }
+        public static Vector2 TopLeft(this Rect r)
+        {
+            return r.Min;
+        }
+        public static Vector2 TopRight(this Rect r)
+        {
+            return new Vector2(r.Min.X + r.Max.X, r.Min.Y);
+        }
+        public static Vector2 BottomLeft(this Rect r)
+        {
+            return new Vector2(r.Min.X, r.Min.Y +  r.Max.Y);
+        }
+        public static Vector2 BottomRight(this Rect r)
+        {
+            return new Vector2(r.Min.X + r.Max.X, r.Min.Y +  r.Max.Y);
         }
 
     }

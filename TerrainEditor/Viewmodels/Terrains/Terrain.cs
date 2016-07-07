@@ -3,18 +3,18 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media;
-using System.Windows.Media.Media3D;
 using elios.Persist;
-using HelixToolkit.Wpf;
 using Poly2Tri;
 using PropertyTools.DataAnnotations;
 using TerrainEditor.Core;
 using TerrainEditor.UserControls;
 using TerrainEditor.UserControls.UvMappingControls;
+using Urho;
 using BrowsableAttribute = System.ComponentModel.BrowsableAttribute;
 using CategoryAttribute = PropertyTools.DataAnnotations.CategoryAttribute;
+using Color = System.Windows.Media.Color;
 using DisplayNameAttribute = PropertyTools.DataAnnotations.DisplayNameAttribute;
-using Polygon = Poly2Tri.Polygon;
+using Node = Urho.Node;
 
 namespace TerrainEditor.Viewmodels.Terrains
 {
@@ -24,19 +24,19 @@ namespace TerrainEditor.Viewmodels.Terrains
         private bool m_splitWhenDifferent;
 
         private int m_smoothFactor = 5;
-        private double m_strechThreshold;
+        private float m_strechThreshold;
         private int m_pixelsPerUnit = 64;
 
         private FillMode m_fillMode = FillMode.None;
         private InterpolationMode m_interpolationMode = InterpolationMode.Hermite;
         private Color m_ambientColor = Colors.White;
-        private Point3D m_position = new Point3D(0,0,1);
-        private double m_zRotation;
+        private Vector3 m_position = new Vector3(0,0,-0.1f);
+        private float m_zRotation;
         private string m_name = "New Terrain";
 
         private UvMapping m_uvMapping;
 
-        private Model3DGroup m_meshCache;
+        private Node m_meshCache;
         private bool m_isDirty = true;
 
         [Category("Misc")]
@@ -50,7 +50,7 @@ namespace TerrainEditor.Viewmodels.Terrains
                 OnPropertyChanged();
             }
         }
-        public Point3D Position
+        public Vector3 Position
         {
             get { return m_position; }
             set
@@ -61,7 +61,7 @@ namespace TerrainEditor.Viewmodels.Terrains
             }
         }
         [DisplayName("Z Rotation")]
-        public double ZRotation
+        public float ZRotation
         {
             get { return m_zRotation; }
             set
@@ -130,7 +130,7 @@ namespace TerrainEditor.Viewmodels.Terrains
         }
         [Slidable(-1.0, 1.0)]
         [FormatString("0.00")]
-        public double StrechThreshold
+        public float StrechThreshold
         {
             get { return m_strechThreshold; }
             set
@@ -185,32 +185,32 @@ namespace TerrainEditor.Viewmodels.Terrains
             Vertices = new ObservableCollection<VertexInfo>(vertices);
             RecursivePropertyChanged += OnRecursivePropertyChanged;
         }
+        ~Terrain()
+        {
+            m_meshCache?.ReleaseRef();
+        }
 
         private void OnRecursivePropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName != nameof(Centroid) && args.PropertyName != nameof(Mesh))
+            if (args.PropertyName != nameof(Centroid) && args.PropertyName != nameof(MeshNode))
             {
                 m_isDirty = true;
                 OnPropertyChanged(nameof(Centroid));
-                OnPropertyChanged(nameof(Mesh));
+                OnPropertyChanged(nameof(MeshNode));
             }
         }
 
         [Browsable(false)]
         [Persist(Ignore = true)]
-        public Model3DGroup Mesh
+        public Node MeshNode
         {
             get
             {
                 if (m_isDirty)
                 {
-                    m_meshCache = TerrainMeshBuilder.GenerateMesh(this);
-                    var transform = new Transform3DGroup();
-                    transform.Children.Add(new TranslateTransform3D(Position.X, Position.Y, Position.Z));
-                    transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), ZRotation),Centroid));
-
-                    m_meshCache.Transform = transform;
-                    m_meshCache.SetName(Name);
+                    m_meshCache?.ReleaseRef();
+                    m_meshCache = TerrainGeometryBuilder.GenerateMeshNode(this);
+                    m_meshCache.AddRef();
                     m_isDirty = false;
                 }
 
@@ -218,14 +218,14 @@ namespace TerrainEditor.Viewmodels.Terrains
             }
         }
         [Browsable(false)]
-        public Point3D Centroid
+        public Vector3 Centroid
         {
             get
             {
                 var pol = new Polygon(Vertices.Select(v => new PolygonPoint(v.Position.X,v.Position.Y)));
                 var centroid = pol.GetCentroid();
 
-                return new Point3D(Position.X + centroid.X, Position.Y + centroid.Y, Position.Z);
+                return new Vector3(Position.X + centroid.Xf, Position.Y + centroid.Yf, Position.Z);
             }
         }
     }

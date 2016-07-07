@@ -1,17 +1,21 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Media.Media3D;
+using System.IO;
 using TerrainEditor.Core;
+using TerrainEditor.Core.Services;
 using TerrainEditor.UserControls;
 using TerrainEditor.Utilities;
 using TerrainEditor.Viewmodels.Terrains;
+using Urho;
+using FillMode = TerrainEditor.Viewmodels.Terrains.FillMode;
+using Terrain = TerrainEditor.Viewmodels.Terrains.Terrain;
 
 namespace TerrainEditor.Viewmodels
 {
     public class TerrainEditorDataContext : PropertyChangeBase
     {
         private Terrain m_selectedTerrain;
+        private Node m_terrainNodes;
 
         public Terrain SelectedTerrain
         {
@@ -24,16 +28,10 @@ namespace TerrainEditor.Viewmodels
             }
         }
         public ObservableCollection<Terrain> Terrains { get; } = new ObservableCollection<Terrain>();
-        public Model3DCollection TerrainsMeshes => new Model3DCollection(Terrains.Select(mesh => mesh.Mesh));
         public IEnumerable<IResourceInfoProvider> ResourceInfoProviders { get;  } = new IResourceInfoProvider[] {new UvMappingResourceProvider() };
 
         public TerrainEditorDataContext()
         {
-            new RecursivePropertyChangeListener(Terrains).PropertyChanged += (sender, args) =>
-            {
-                OnPropertyChanged(nameof(TerrainsMeshes));
-            };
-
             Terrains.Add(new Terrain(new[]
             {
                 new VertexInfo(-5, 5),
@@ -48,6 +46,23 @@ namespace TerrainEditor.Viewmodels
                 SmoothFactor = 5
             });
 
+
+            Urho.Application.Started += () =>
+            {
+                m_terrainNodes = ServiceLocator.Get<IUrho3DService>().Scene.CreateChild("TerrainNodes");
+
+                var resource = ServiceLocator.Get<IResourceProviderService>().LoadResource(new FileInfo("Mossy.uvmapping"));
+                SelectedTerrain.UvMapping = (UvMapping)resource;
+
+                m_terrainNodes.AddChild(SelectedTerrain.MeshNode);
+
+                new RecursivePropertyChangeListener(Terrains,nameof(Terrains)).PropertyChanged += (sender, args) =>
+                {
+                    m_terrainNodes.RemoveChildren(true, true, false);
+                    m_terrainNodes.AddChild(SelectedTerrain.MeshNode);
+                };
+
+            };
             SelectedTerrain = Terrains[0];
         }
     }

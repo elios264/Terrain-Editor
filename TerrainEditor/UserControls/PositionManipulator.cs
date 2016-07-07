@@ -111,17 +111,17 @@ namespace TerrainEditor.UserControls
 
             m_yArrow.Model = new GeometryModel3D(builder.ToMesh(true), RedMat) { BackMaterial = RedMat };
 
-            builder.Clear();
+           // builder.Clear();
             builder.AddArrow(Position, Position + new Vector3D(1, 0, 0) * Length, Diameter);
 
             m_xArrow.Model = new GeometryModel3D(builder.ToMesh(true), BlueMat) { BackMaterial = BlueMat };
 
-            builder.Clear();
+         //   builder.Clear();
             builder.AddArrow(Position, Position + new Vector3D(-0.70, -0.70, 0) * Length, Diameter);
 
             m_zArrow.Model = new GeometryModel3D(builder.ToMesh(true), GreenMat) { BackMaterial = GreenMat };
 
-            builder.Clear();
+          //  builder.Clear();
             var pos = Position;
             var axis = new Vector3D(0,0,1);
             builder.AddPipe(pos - axis * 0.1 * 0.5, pos + axis * 0.1 * 0.5, 2.4, 2.7, 60);
